@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = 1.1
+const AUDI_VERSION = 1.2
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -24,8 +24,10 @@ const AUDI_SERVER_API = {
   login: 'https://audi2c.faw-vw.com/capi/v1/user/login',
   token: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/oauth2/v1/token',
   mine: 'https://audi2c.faw-vw.com/capi/v1/user/mine',
-  vehiclesStatus: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/bs/vsr/v1/vehicles/${vin}/status`,
-  vehiclesPosition: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/bs/cf/v1/vehicles/${vin}/position`
+  mal1aVehiclesStatus: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/bs/vsr/v1/vehicles/${vin}/status`,
+  mal1aVehiclesPosition: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/bs/cf/v1/vehicles/${vin}/position`,
+  mal3aVehiclesStatus: vin => `https://mal-3a.prd.cn.dp.vwg-connect.cn/api/bs/vsr/v1/vehicles/${vin}/status`,
+  mal3aVehiclesPosition: vin => `https://mal-3a.prd.cn.dp.vwg-connect.cn/api/bs/cf/v1/vehicles/${vin}/position`
 }
 const REQUEST_HEADER = {
   Accept: 'application/json',
@@ -66,11 +68,12 @@ class Widget extends Base {
     if (config.runsInApp) {
       this.registerAction('账户登录', this.actionStatementSettings)
       this.registerAction('个性化配置', this.actionPreferenceSettings)
+      this.registerAction('兼容设置', this.actionCompatible)
       this.registerAction('退出登录', this.actionLogOut)
+      this.registerAction('重载数据', this.actionLogAction)
       this.registerAction('检查更新', this.actionCheckUpdate)
       this.registerAction('打赏作者', this.actionDonation)
       this.registerAction('关于小组件', this.actionAbout)
-      this.registerAction('获取日志', this.actionLogAction)
     }
   }
 
@@ -192,13 +195,15 @@ class Widget extends Base {
     _trips.textOpacity = 0.75
     _trips.font = Font.systemFont(14)
 
-    const carLocation = data.carLocation
-    this.splitStr2Arr(carLocation, 14).forEach(item => {
-      const _location = leftStack.addText(item)
-      _location.textOpacity = 0.75
-      _location.font = Font.systemFont(12)
-    })
-
+    // 根据选项是否开启位置显示
+    if (this.settings['showLocation']) {
+      const carLocation = data.carLocation
+      this.splitStr2Arr(carLocation, 14).forEach(item => {
+        const _location = leftStack.addText(item)
+        _location.textOpacity = 0.75
+        _location.font = Font.systemFont(12)
+      })
+    }
     // endregion leftStack end
 
     // region rightStack start
@@ -333,7 +338,6 @@ class Widget extends Base {
     const getVehicleData = getUserMineData.vehicleDto
 
     GLOBAL_USER_DATA.seriesName = this.settings['myCarName'] ? this.settings['myCarName'] : getVehicleData?.seriesName
-    // if (getVehicleData.seriesName) GLOBAL_USER_DATA.seriesName = getVehicleData?.seriesName // 车辆型号
     if (getVehicleData.carModelName) GLOBAL_USER_DATA.modelShortName = getVehicleData?.carModelName // 车辆功率类型
     if (getVehicleData.vin) GLOBAL_USER_DATA.vin = getVehicleData?.vin // 车架号
     if (getVehicleData.engineNo) GLOBAL_USER_DATA.engineNo = getVehicleData?.engineNo // 发动机型号
@@ -348,7 +352,8 @@ class Widget extends Base {
 
     const getCarStatusArr = getVehiclesStatusArr.find(i => i.id === '0x0301FFFFFF')?.field
     const enduranceVal = getCarStatusArr.find(i => i.id === '0x0301030005')?.value // 燃料总行程
-    const fuelLevelVal = getCarStatusArr.find(i => i.id === '0x030103000A')?.value // 燃料百分比
+    // todo 电车燃料改成电量 字段 0301030002
+    const fuelLevelVal = getCarStatusArr.find(i => i.id === '0301030002')?.value ? getCarStatusArr.find(i => i.id === '0301030002')?.value : getCarStatusArr.find(i => i.id === '0x030103000A')?.value // 燃料百分比
     const mileageVal = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.value // 总里程
 
     // 检查门锁 车门 车窗等状态
@@ -363,11 +368,19 @@ class Widget extends Base {
     if (getVehiclesAddress) GLOBAL_USER_DATA.carLocation = getVehiclesAddress // 详细地理位置
     if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = getVehiclesPosition.longitude // 车辆经度
     if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = getVehiclesPosition.latitude // 车辆纬度
-    if (isLocked !== undefined) GLOBAL_USER_DATA.status = isLocked // 车辆状态 true = 已锁车
+    if (isLocked) GLOBAL_USER_DATA.status = isLocked // 车辆状态 true = 已锁车
     if (equipmentStatusArr) GLOBAL_USER_DATA.doorAndWindow = equipmentStatusArr.length === 0 // true 车窗已关闭 | false 请检查车窗是否关闭
     if (this.settings['myOne']) GLOBAL_USER_DATA.myOne = this.settings['myOne'] // 一言
 
     return GLOBAL_USER_DATA
+  }
+
+  /**
+   * 获取数据
+   */
+  async getData() {
+    // 判断用户是否已经登录
+    return Keychain.contains('userBaseInfoData') ? await this.bootstrap() : false
   }
 
   /**
@@ -460,14 +473,6 @@ class Widget extends Base {
   }
 
   /**
-   * 获取数据
-   */
-  async getData() {
-    // 判断用户是否已经登录
-    return Keychain.contains('userBaseInfoData') ? await this.bootstrap() : false
-  }
-
-  /**
    * 获取用户车辆照片
    * @returns {Promise<Image|*>}
    */
@@ -510,7 +515,7 @@ class Widget extends Base {
       } else {
         // 登录异常
         await this.notify('登录失败', response.message)
-        console.log('用户登录失败：' + response.message)
+        console.error('用户登录失败：' + response.message)
       }
     } else {
       // 已存在用户信息
@@ -529,7 +534,7 @@ class Widget extends Base {
   async handleQueryDefaultVehicleData() {
     if (!Keychain.contains('defaultVehicleData')) {
       if (!Keychain.contains('userBaseInfoData')) {
-        return this.notify('获取密钥数据失败', '没有拿到用户登录信息，请重新登录再重试！')
+        return console.error('获取密钥数据失败，没有拿到用户登录信息，请重新登录再重试！')
       }
       const getUserBaseInfoData =JSON.parse(Keychain.get('userBaseInfoData'))
       const options = {
@@ -553,7 +558,7 @@ class Widget extends Base {
         await this.handleAudiGetToken('userRefreshToken')
       } else {
         // 获取异常
-        await this.notify('车辆信息获取失败', '请稍后重新登录再重试！')
+        await console.error('车辆信息获取失败，请稍后重新登录再重试！')
       }
     }
   }
@@ -566,7 +571,7 @@ class Widget extends Base {
   async handleUserMineData(isDebug = false) {
     if (!Keychain.contains('userMineData')) {
       if (!Keychain.contains('userBaseInfoData')) {
-        return this.notify('获取密钥数据失败', '没有拿到用户登录信息，请重新登录再重试！')
+        return console.error('获取密钥数据失败，没有拿到用户登录信息，请重新登录再重试！')
       }
       const getUserBaseInfoData =JSON.parse(Keychain.get('userBaseInfoData'))
       const options = {
@@ -592,7 +597,7 @@ class Widget extends Base {
         await this.handleAudiGetToken('userRefreshToken')
       } else {
         // 获取异常
-        await this.notify('个人信息获取失败', '请稍后重新登录再重试！')
+        console.error('个人信息获取失败，请稍后重新登录再重试！')
       }
     } else {
       console.log('userMineData 信息已存在，开始获取 userRefreshToken')
@@ -610,10 +615,10 @@ class Widget extends Base {
   async handleAudiGetToken(type, forceRefresh = false) {
     if (forceRefresh || !Keychain.contains(type)) {
       if (type === 'userIDToken' && !Keychain.contains('userBaseInfoData')) {
-        return this.notify('获取密钥数据失败', '没有拿到用户登录信息，请重新登录再重试！')
+        return console.error('获取密钥数据失败，没有拿到用户登录信息，请重新登录再重试！')
       }
       if (type === 'userRefreshToken' && !Keychain.contains('userIDToken')) {
-        return this.notify('获取密钥数据失败', '没有拿到用户 ID Token，请重新登录再重试！')
+        return console.error('获取密钥数据失败，没有拿到用户 ID Token，请重新登录再重试！')
       }
 
       // 根据交换token请求参数不同
@@ -640,7 +645,7 @@ class Widget extends Base {
       if (response.error) {
         switch (response.error) {
           case 'invalid_grant':
-            await this.notify('IDToken 数据过期', '正在重新获取数据中，请耐心等待...')
+            console.error('IDToken 数据过期，正在重新获取数据中，请耐心等待...')
             await this.handleAudiGetToken('userIDToken', true)
             break
         }
@@ -666,17 +671,28 @@ class Widget extends Base {
    * 获取车辆当前状态
    * 需要实时获取
    * @param {boolean} isDebug
-   * @returns {Promise<void>}
+   * @returns {Promise<string | void>}
    */
   async handleVehiclesStatus(isDebug = false) {
     if (!Keychain.contains('authToken')) {
-      return this.notify('获取 authToken 密钥失败', '请退出登录再登录重试！')
+      return console.error('获取 authToken 密钥失败，请退出登录再登录重试！')
     }
     if (!Keychain.contains('myCarVIN')) {
-      return this.notify('获取 myCarVIN 数据失败', '请退出登录再登录重试！')
+      return console.error('获取 myCarVIN 数据失败，请退出登录再登录重试！')
     }
+
+    let url = AUDI_SERVER_API.mal1aVehiclesStatus
+    switch (this.settings['compatibilityMode']) {
+      case 'standard':
+        url = AUDI_SERVER_API.mal1aVehiclesStatus
+        break
+      case 'compatible':
+        url = AUDI_SERVER_API.mal3aVehiclesStatus
+        break
+    }
+
     const options = {
-      url: AUDI_SERVER_API.vehiclesStatus(Keychain.get('myCarVIN')),
+      url: url(Keychain.get('myCarVIN')),
       method: 'GET',
       headers: {
         ...{
@@ -694,10 +710,10 @@ class Widget extends Base {
     // 判断接口状态
     if (response.error) {
       // 接口异常
-      console.log('vehiclesStatus 接口异常' + response.error.errorCode + ' - ' + response.error.description)
+      console.error('vehiclesStatus 接口异常' + response.error.errorCode + ' - ' + response.error.description)
       switch (response.error.errorCode) {
         case 'gw.error.authentication':
-          console.log('获取车辆状态失败 error: ' + response.error.errorCode)
+          console.error('获取车辆状态失败 error: ' + response.error.errorCode)
           await this.handleAudiGetToken('userRefreshToken', true)
           await this.handleVehiclesStatus()
           break
@@ -707,10 +723,17 @@ class Widget extends Base {
           alert.message = '请检查您的车辆是否已经开启车联网服务，请到一汽奥迪应用查看！'
           alert.addCancelAction('关闭')
           break
+        case 'mbbc.rolesandrights.unknownService':
+          break
+        default:
+          await this.notify('未知错误', '未知错误:' + response.error.description)
       }
-      return false
+      if (Keychain.contains('vehiclesStatusResponse')) {
+        return JSON.parse(Keychain.get('vehiclesStatusResponse'))
+      }
     } else {
       // 接口获取数据成功
+      Keychain.set('vehiclesStatusResponse', JSON.stringify(response))
       return response
     }
   }
@@ -723,15 +746,26 @@ class Widget extends Base {
    */
   async handleVehiclesPosition(isDebug = false) {
     if (!Keychain.contains('authToken')) {
-      await this.notify('获取 authToken 密钥失败', '请退出登录再登录重试！')
+      console.error('获取 authToken 密钥失败，请退出登录再登录重试！')
       return Keychain.get('carPosition')
     }
     if (!Keychain.contains('myCarVIN')) {
-      await this.notify('获取 myCarVIN 数据失败', '请退出登录再登录重试！')
+      await console.error('获取 myCarVIN 数据失败，请退出登录再登录重试！')
       return Keychain.get('carPosition')
     }
+
+    let url = AUDI_SERVER_API.mal1aVehiclesPosition
+    switch (this.settings['compatibilityMode']) {
+      case 'standard':
+        url = AUDI_SERVER_API.mal1aVehiclesPosition
+        break
+      case 'compatible':
+        url = AUDI_SERVER_API.mal3aVehiclesPosition
+        break
+    }
+
     const options = {
-      url: AUDI_SERVER_API.vehiclesPosition(Keychain.get('myCarVIN')),
+      url: url(Keychain.get('myCarVIN')),
       method: 'GET',
       headers: {
         ...{
@@ -750,10 +784,10 @@ class Widget extends Base {
       // 判断接口状态
       if (response.error) {
         // 接口异常
-        console.log('vehiclesPosition 接口异常' + response.error.errorCode + ' - ' + response.error.description)
+        console.error('vehiclesPosition 接口异常' + response.error.errorCode + ' - ' + response.error.description)
         switch (response.error.errorCode) {
           case 'gw.error.authentication':
-            await this.notify('获取车辆位置失败 error: ' + response.error.errorCode)
+            console.error('获取车辆位置失败 error: ' + response.error.errorCode)
             await this.handleAudiGetToken('userRefreshToken', true)
             await this.handleVehiclesPosition()
             break
@@ -776,7 +810,7 @@ class Widget extends Base {
         return Keychain.get('carPosition')
       }
     } catch (error) {
-      console.log('vehiclesPosition 接口捕获异常：' + error)
+      console.error('vehiclesPosition 接口捕获异常：' + error)
       // 如果出现异常说明 当前车辆处于运行状态或者车辆没有上传位置信息
       if (Keychain.contains('carPosition')) {
         return Keychain.get('carPosition')
@@ -795,7 +829,7 @@ class Widget extends Base {
    */
   async handleGetCarAddress() {
     if (!Keychain.contains('storedPositionResponse') && !Keychain.contains('carPosition')) {
-      await this.notify('获取车辆经纬度失败', '请退出登录再登录重试！')
+      await console.error('获取车辆经纬度失败，请退出登录再登录重试！')
       return '暂无位置信息'
     }
     const carPosition = JSON.parse(Keychain.get('carPosition'))
@@ -819,7 +853,7 @@ class Widget extends Base {
       Keychain.set('carAddress', address)
       return address
     } else {
-      await this.notify('获取车辆位置失败', '请检查高德地图 key 是否填写正常')
+      console.error('获取车辆位置失败，请检查高德地图 key 是否填写正常')
       if (Keychain.contains('carAddress')) {
         return Keychain.get('carAddress')
       } else {
@@ -880,31 +914,37 @@ class Widget extends Base {
     alert.title = '组件个性化配置'
     alert.message = '根据您的喜好设置，更好展示组件数据'
 
-    const menuList = [{
-      name: 'myCarName',
-      text: '自定义车辆名称',
-      icon: '💡'
-    }, {
-      name: 'myCarPhoto',
-      text: '自定义车辆照片',
-      icon: '🚙'
-    }, {
-      name: 'myOne',
-      text: '一言',
-      icon: '📝'
-    }, {
-      name: 'lightBgColor',
-      text: '浅色背景色',
-      icon: '🌕'
-    }, {
-      name: 'darkBgColor',
-      text: '深色背景色',
-      icon: '🌑'
-    }, {
-      name: 'aMapKey',
-      text: '高德地图 Key',
-      icon: '🎯'
-    }]
+    const menuList = [
+      {
+        name: 'myCarName',
+        text: '自定义车辆名称',
+        icon: '💡'
+      }, {
+        name: 'myCarPhoto',
+        text: '自定义车辆照片',
+        icon: '🚙'
+      }, {
+        name: 'myOne',
+        text: '一言',
+        icon: '📝'
+      }, {
+        name: 'lightBgColor',
+        text: '浅色模式',
+        icon: '🌕'
+      }, {
+        name: 'darkBgColor',
+        text: '深色模式',
+        icon: '🌑'
+      }, {
+        name: 'aMapKey',
+        text: '高德地图密钥',
+        icon: '🎯'
+      }, {
+        name: 'showLocation',
+        text: '显示位置',
+        icon: '✈️'
+      }
+    ]
 
     menuList.forEach(item => {
       alert.addAction(item.icon + ' ' +item.text)
@@ -1050,7 +1090,7 @@ class Widget extends Base {
    */
   async actionPreferenceSettings5() {
     const alert = new Alert()
-    alert.title = '高德地图 Key'
+    alert.title = '高德地图密钥'
     alert.message = '请输入组件所需要的高德地图 key 用于车辆逆地理编码以及地图资源\n\r获取途径可以在「关于小组件」菜单里加微信群进行咨询了解'
     alert.addTextField('key 密钥', this.settings['aMapKey'])
     alert.addAction('确定')
@@ -1066,6 +1106,60 @@ class Widget extends Base {
     this.saveSettings()
 
     return await this.actionPreferenceSettings()
+  }
+
+  /**
+   * 车辆位置显示
+   * @returns {Promise<void>}
+   */
+  async actionPreferenceSettings6() {
+    const alert = new Alert()
+    alert.title = '车辆地址显示'
+    alert.message = '如果你不需要该功能可以选择关闭\n\r' +
+      '当前位置显示状态：' + this.settings['showLocation'] ? '开启' : '关闭'
+    alert.addAction('开启')
+    alert.addCancelAction('关闭')
+
+    const id = await alert.presentAlert()
+    if (id === -1) {
+      // 关闭显示位置
+      this.settings['showLocation'] = false
+      this.saveSettings()
+      return await this.actionPreferenceSettings()
+    }
+    // 开启显示位置
+    this.settings['showLocation'] = true
+    this.saveSettings()
+    return await this.actionPreferenceSettings()
+  }
+
+  /**
+   * 兼容配置
+   * @returns {Promise<void>}
+   */
+  async actionCompatible() {
+    const alert = new Alert()
+    alert.title = '兼容配置'
+    alert.message = ''
+
+    const menuList = [{
+      name: 'standard',
+      text: '标准模式(支持绝大部分车型)'
+    }, {
+      name: 'compatible',
+      text: '兼容模式(A3和部分A6车型)'
+    }]
+
+    const mode = this.settings['compatibilityMode'] ? this.settings['compatibilityMode'] : 'standard'
+    menuList.forEach(item => {
+      alert.addAction(mode === item.name ? '✅' + ' ' + item.text : '❌' + ' ' + item.text)
+    })
+
+    alert.addCancelAction('取消设置')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    this.settings['compatibilityMode'] = menuList[id].name
+    this.saveSettings()
   }
 
   /**
@@ -1094,6 +1188,7 @@ class Widget extends Base {
       'findCarResponse',
       'carPosition',
       'carAddress',
+      'vehiclesStatusResponse',
       this.SETTING_KEY
     ]
     keys.forEach(key => {
@@ -1114,20 +1209,20 @@ class Widget extends Base {
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
     const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/version.json')
     const response = await request.loadJSON()
-    console.log(`远程版本：${response['version']}`)
-    if (response['version'] === AUDI_VERSION) return this.notify('无需更新', '远程版本一致，暂无更新')
+    console.log(`远程版本：${response?.version}`)
+    if (response?.version === AUDI_VERSION) return this.notify('无需更新', '远程版本一致，暂无更新')
     console.log('发现新的版本')
 
-    const log = response['changelog'].join('\n')
+    const log = response?.changelog.join('\n')
     const alert = new Alert()
     alert.title = '更新提示'
-    alert.message = `是否需要升级到${response['version'].toString()}版本\n\r${log}`
+    alert.message = `是否需要升级到${response?.version.toString()}版本\n\r${log}`
     alert.addAction('更新')
     alert.addCancelAction('取消')
     const id = await alert.presentAlert()
     if (id === -1) return
     await this.notify('正在更新中...')
-    const REMOTE_REQ = new Request(response['download'])
+    const REMOTE_REQ = new Request(response?.download)
     const REMOTE_RES = await REMOTE_REQ.load()
     FILE_MGR.write(FILE_MGR.joinPath(FILE_MGR.documentsDirectory(), UPDATE_FILE), REMOTE_RES)
 
@@ -1147,26 +1242,26 @@ class Widget extends Base {
   }
 
   /**
-   * 日志系统
+   * 重载数据
    * @return {Promise<void>}
    */
   async actionLogAction() {
     const alert = new Alert()
-    alert.title = '获取函数日志'
-    alert.message = '开发者所需日志数据'
+    alert.title = '重载数据'
+    alert.message = '如果发现数据延迟，选择对应函数获取最新数据，同样也是获取日志分享给开发者使用。'
 
     const menuList = [{
       name: 'handleAudiLogin',
-      text: '登陆日志'
+      text: '登陆数据'
     }, {
       name: 'handleUserMineData',
-      text: '用户信息日志'
+      text: '用户信息数据'
     }, {
       name: 'handleVehiclesStatus',
-      text: '当前车辆状态日志'
+      text: '当前车辆状态数据'
     }, {
       name: 'handleVehiclesPosition',
-      text: '车辆经纬度日志'
+      text: '车辆经纬度数据'
     }, {
       name: 'getDeviceInfo',
       text: '获取设备信息'
@@ -1188,10 +1283,14 @@ class Widget extends Base {
    * @return {Promise<void>}
    */
   async getDeviceInfo() {
-    console.log('当前系统:' + Device.model() + ' ' + Device.systemName() + ' ' + Device.systemVersion())
-    console.log('屏幕尺寸宽:' + Device.screenSize().width + ', 高:' + Device.screenSize().height)
-    console.log('屏幕分辨率宽:' + Device.screenResolution().width + ', 高:' + Device.screenResolution().height)
-    console.log('屏幕比例:' + Device.screenScale())
+    const data = {
+      systemVersion: Device.model() + ' ' + Device.systemName() + ' ' + Device.systemVersion(), // 系统版本号
+      screenSize: Device.screenSize(), // 屏幕尺寸
+      screenResolution: Device.screenResolution(), // 屏幕分辨率
+      screenScale: Device.screenScale(), // 屏幕比例
+      version: AUDI_VERSION // 版本号
+    }
+    console.log(JSON.stringify(data))
   }
 
   /**
