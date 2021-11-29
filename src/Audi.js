@@ -333,7 +333,7 @@ class Widget extends Base {
     const getVehicleData = getUserMineData.vehicleDto
 
     GLOBAL_USER_DATA.seriesName = this.settings['myCarName'] ? this.settings['myCarName'] : getVehicleData?.seriesName
-    if (getVehicleData.seriesName) GLOBAL_USER_DATA.seriesName = getVehicleData?.seriesName // 车辆型号
+    // if (getVehicleData.seriesName) GLOBAL_USER_DATA.seriesName = getVehicleData?.seriesName // 车辆型号
     if (getVehicleData.carModelName) GLOBAL_USER_DATA.modelShortName = getVehicleData?.carModelName // 车辆功率类型
     if (getVehicleData.vin) GLOBAL_USER_DATA.vin = getVehicleData?.vin // 车架号
     if (getVehicleData.engineNo) GLOBAL_USER_DATA.engineNo = getVehicleData?.engineNo // 发动机型号
