@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = 1.5
+const AUDI_VERSION = 1.7
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -50,10 +50,11 @@ const GLOBAL_USER_DATA = {
   endurance: 0, // NEDC 续航
   fuelLevel: 0, // 汽油 单位百分比
   mileage: 0, // 总里程
+  updateDate: new Date(), // 更新时间
   carLocation: '',
   longitude: '',
   latitude: '',
-  status: true, // 0 = 已锁车
+  status: true, // false = 没锁车 true = 已锁车
   doorAndWindow: '', // 门窗状态
   myOne: '世间美好，与你环环相扣'
 }
@@ -71,7 +72,7 @@ class Widget extends Base {
 
     if (config.runsInApp) {
       if (!Keychain.contains('authToken')) this.registerAction('账户登录', this.actionStatementSettings)
-      if (Keychain.contains('authToken')) this.registerAction('个性化配置', this.actionPreferenceSettings)
+      if (Keychain.contains('authToken')) this.registerAction('偏好配置', this.actionPreferenceSettings)
       this.registerAction('兼容设置', this.actionCompatible)
       if (Keychain.contains('authToken')) this.registerAction('退出登录', this.actionLogOut)
       if (Keychain.contains('authToken')) this.registerAction('重载数据', this.actionLogAction)
@@ -170,11 +171,22 @@ class Widget extends Base {
     // 添加 Audi Stack
     const logoStack = widget.addStack()
     logoStack.size = new Size(widgetWidth, logoStack.size.height)
-    logoStack.addSpacer(width * 2 - 50) // 使图片顶到右边显示
+
+    // 显示车牌信息
+    if (this.showPlate()) {
+      logoStack.addSpacer(width * 2 - 110) // 使图片顶到右边显示
+      // 车牌显示
+      const plateText = logoStack.addText(data.plateNo)
+      plateText.textColor = this.dynamicFontColor()
+      plateText.font = Font.systemFont(12)
+    } else {
+      logoStack.addSpacer(width * 2 - 50) // 使图片顶到右边显示
+    }
+
     // 添加 Audi Logo
     const _audiLogo = logoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
     _audiLogo.imageSize = new Size(50, 15)
-
+    _audiLogo.tintColor = this.dynamicFontColor()
 
     const stack = widget.addStack()
     stack.size = new Size(widgetWidth, stack.size.height)
@@ -183,17 +195,19 @@ class Widget extends Base {
     const leftStack = stack.addStack()
     leftStack.size = new Size(width, leftStack.size.height)
     leftStack.layoutVertically()
-
+    // 车辆名称
     const _title = leftStack.addText(data.seriesName)
     _title.textOpacity = 1
     _title.textColor = this.dynamicFontColor()
     _title.font = Font.systemFont(18)
+
     leftStack.addSpacer(2)
+    // 车辆功率
     const _desc = leftStack.addText(data.modelShortName)
     _desc.textOpacity = 0.75
     _desc.textColor = this.dynamicFontColor()
-    _desc.font = Font.systemFont(14)
-    leftStack.addSpacer(10)
+    _desc.font = Font.systemFont(12)
+    // leftStack.addSpacer(10)
     const content = leftStack.addStack()
     content.bottomAlignContent()
     const _fuelStroke = content.addText(data.endurance + 'km')
@@ -214,6 +228,20 @@ class Widget extends Base {
     _trips.textOpacity = 0.75
     _trips.font = Font.systemFont(14)
     _trips.textColor = this.dynamicFontColor()
+    // 更新时间
+    const updateStack = leftStack.addStack()
+    updateStack.backgroundColor = new Color('#ffffff', 0.25)
+    updateStack.setPadding(2, 3, 2, 3)
+    updateStack.cornerRadius = 5
+    // 格式化时间
+    const formatter = new DateFormatter()
+    formatter.dateFormat = "HH:mm"
+    const updateDate = new Date(data.updateDate)
+    const updateDateString = formatter.string(updateDate)
+    const _updateTime = updateStack.addText(updateDateString + ' ' + (data.status ? '已锁车' : '未锁车'))
+    _updateTime.textOpacity = 0.75
+    _updateTime.font = Font.systemFont(12)
+    _updateTime.textColor = data.status ? this.dynamicFontColor() : new Color('#FF9900', 1)
 
     // 根据选项是否开启位置显示
     if (this.showLocation()) {
@@ -242,16 +270,10 @@ class Widget extends Base {
     const rightBottomStack = rightStack.addStack()
     rightBottomStack.size = new Size(rightStack.size.width, 15)
     // 车辆状态
-    let getCarStatus = data.status ? '已锁车' : '未锁车'
-    data.doorAndWindow ? getCarStatus += '并且门窗已关闭' : getCarStatus = '请检查车窗是否已关闭'
-    const _audiStatus = rightBottomStack.addText(getCarStatus)
+    const doorAndWindowStatus = data.doorAndWindow ? '车门车窗已关闭' : '请检查车门车窗是否已关闭'
+    const _audiStatus = rightBottomStack.addText(doorAndWindowStatus)
     _audiStatus.font = Font.systemFont(12)
-    if (!data.status || !data.doorAndWindow) {
-      _audiStatus.textColor = new Color('#FF9900', 1)
-    } else {
-      _audiStatus.textColor = this.dynamicFontColor()
-    }
-
+    _audiStatus.textColor = data.doorAndWindow ? this.dynamicFontColor() : new Color('#FF9900', 1)
     // endregion
 
     // 祝语
@@ -383,7 +405,7 @@ class Widget extends Base {
       // 车辆名称
       GLOBAL_USER_DATA.seriesName = this.settings['myCarName'] ? this.settings['myCarName'] : getVehicleData?.seriesName
       // 车辆功率类型
-      GLOBAL_USER_DATA.modelShortName = this.settings['myCarModelName'] ? this.settings['myCarModelName'] : getVehicleData?.seriesName
+      GLOBAL_USER_DATA.modelShortName = this.settings['myCarModelName'] ? this.settings['myCarModelName'] : getVehicleData?.carModelName
       if (getVehicleData.vin) GLOBAL_USER_DATA.vin = getVehicleData?.vin // 车架号
       if (getVehicleData.engineNo) GLOBAL_USER_DATA.engineNo = getVehicleData?.engineNo // 发动机型号
       if (getVehicleData.plateNo) GLOBAL_USER_DATA.plateNo = getVehicleData?.plateNo // 车牌号
@@ -393,11 +415,17 @@ class Widget extends Base {
 
     // 是否开启位置
     if (this.showLocation()) {
-      const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition())
-      const getVehiclesAddress = await this.handleGetCarAddress()
-      if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = getVehiclesPosition.longitude // 车辆经度
-      if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = getVehiclesPosition.latitude // 车辆纬度
-      if (getVehiclesAddress) GLOBAL_USER_DATA.carLocation = getVehiclesAddress // 详细地理位置
+      try {
+        const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition())
+        const getVehiclesAddress = await this.handleGetCarAddress()
+        if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = getVehiclesPosition.longitude // 车辆经度
+        if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = getVehiclesPosition.latitude // 车辆纬度
+        if (getVehiclesAddress) GLOBAL_USER_DATA.carLocation = getVehiclesAddress // 详细地理位置
+      } catch (error) {
+        GLOBAL_USER_DATA.longitude = -1 // 车辆经度
+        GLOBAL_USER_DATA.latitude = -1 // 车辆纬度
+        GLOBAL_USER_DATA.carLocation = '暂无位置信息' // 详细地理位置
+      }
     }
 
     try {
@@ -411,6 +439,8 @@ class Widget extends Base {
       // 0x030103000A = 燃料
       const fuelLevelVal = getCarStatusArr.find(i => i.id === '0301030002')?.value ? getCarStatusArr.find(i => i.id === '0301030002')?.value : getCarStatusArr.find(i => i.id === '0x030103000A')?.value // 燃料百分比
       const mileageVal = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.value // 总里程
+      // 更新时间
+      const updateDate = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.tsCarSent
 
       // 检查门锁 车门 车窗等状态
       const isLocked = await this.getCarIsLocked(getCarStatusArr)
@@ -423,8 +453,9 @@ class Widget extends Base {
       if (fuelLevelVal) GLOBAL_USER_DATA.fuelLevel = fuelLevelVal
       // 总里程
       if (mileageVal) GLOBAL_USER_DATA.mileage = mileageVal
+      if (updateDate) GLOBAL_USER_DATA.updateDate = updateDate
       // 车辆状态 true = 已锁车
-      if (isLocked) GLOBAL_USER_DATA.status = isLocked
+      GLOBAL_USER_DATA.status = isLocked
       // true 车窗已关闭 | false 请检查车窗是否关闭
       if (equipmentStatusArr) GLOBAL_USER_DATA.doorAndWindow = equipmentStatusArr.length === 0
     } catch (error) {
@@ -451,7 +482,7 @@ class Widget extends Base {
    */
   async getCarIsLocked (arr) {
     // 先判断车辆是否锁定
-    const lockArr = ['0x0301040001', '0x0301040004', '0x0301040007', '0x030104000A', '0x030104000D']
+    const lockArr = ['0x0301040001', '0x0301040004', '0x0301040007', '0x030104000A', '0x030104000D', '0x0301040010']
     // 筛选出对应的数组
     const filterArr = arr.filter(item => lockArr.some(i => i === item.id))
     // 判断是否都锁门
@@ -837,7 +868,14 @@ class Widget extends Base {
         ...REQUEST_HEADER
       }
     }
-    const response = await this.http(options)
+    let response = {}
+
+    try {
+      response = await this.http(options)
+    } catch (error) {
+      return '暂无位置'
+    }
+
     if (isDebug) console.log('获取车辆位置信息：')
     if (isDebug) console.log(response)
     // 判断接口状态
@@ -979,7 +1017,7 @@ class Widget extends Base {
         icon: '🚙'
       }, {
         name: 'myOne',
-        text: '一言',
+        text: '一言一句',
         icon: '📝'
       }, {
         name: 'lightBgColor',
@@ -997,6 +1035,10 @@ class Widget extends Base {
         name: 'showLocation',
         text: '设置车辆位置',
         icon: '✈️'
+      }, {
+        name: 'showPlate',
+        text: '设置车牌显示',
+        icon: '🚘'
       }
     ]
 
@@ -1024,10 +1066,7 @@ class Widget extends Base {
 
     const id = await alert.presentAlert()
     if (id === -1) return await this.actionPreferenceSettings()
-    const value = alert.textFieldValue(0)
-    if (!value) return await this.actionPreferenceSettings0()
-
-    this.settings['myCarName'] = value
+    this.settings['myCarName'] = alert.textFieldValue(0)
     this.saveSettings()
 
     return await this.actionPreferenceSettings()
@@ -1047,10 +1086,7 @@ class Widget extends Base {
 
     const id = await alert.presentAlert()
     if (id === -1) return await this.actionPreferenceSettings()
-    const value = alert.textFieldValue(0)
-    if (!value) return await this.actionPreferenceSettings1()
-
-    this.settings['myCarModelName'] = value
+    this.settings['myCarModelName'] = alert.textFieldValue(0)
     this.saveSettings()
 
     return await this.actionPreferenceSettings()
@@ -1230,6 +1266,30 @@ class Widget extends Base {
     }
     // 开启显示位置
     this.settings['showLocation'] = true
+    this.saveSettings()
+    return await this.actionPreferenceSettings()
+  }
+
+  /**
+   * 车牌显示
+   * @returns {Promise<void>}
+   */
+  async actionPreferenceSettings8() {
+    const alert = new Alert()
+    alert.title = '是否显示车牌显示'
+    alert.message = this.showPlate() ? '当前车牌显示状态已开启' : '当前车牌显示状态已关闭'
+    alert.addAction('开启')
+    alert.addCancelAction('关闭')
+
+    const id = await alert.presentAlert()
+    if (id === -1) {
+      // 关闭车牌显示
+      this.settings['showPlate'] = false
+      this.saveSettings()
+      return await this.actionPreferenceSettings()
+    }
+    // 开启车牌显示
+    this.settings['showPlate'] = true
     this.saveSettings()
     return await this.actionPreferenceSettings()
   }
@@ -1441,6 +1501,13 @@ class Widget extends Base {
    */
   showLocation() {
     return this.settings['showLocation']
+  }
+
+  /**
+   * 是否开启位置显示
+   */
+  showPlate() {
+    return this.settings['showPlate']
   }
 }
 
