@@ -482,7 +482,7 @@ class Widget extends Base {
    */
   async getCarIsLocked (arr) {
     // 先判断车辆是否锁定
-    const lockArr = ['0x0301040001', '0x0301040004', '0x0301040007', '0x030104000A', '0x030104000D', '0x0301040010']
+    const lockArr = ['0x0301040001', '0x0301040004', '0x0301040007', '0x030104000A', '0x030104000D']
     // 筛选出对应的数组
     const filterArr = arr.filter(item => lockArr.some(i => i === item.id))
     // 判断是否都锁门
