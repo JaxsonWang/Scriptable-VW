@@ -27,7 +27,12 @@ const AUDI_SERVER_API = {
   mal1aVehiclesStatus: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/bs/vsr/v1/vehicles/${vin}/status`,
   mal1aVehiclesPosition: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/bs/cf/v1/vehicles/${vin}/position`,
   mal3aVehiclesStatus: vin => `https://mal-3a.prd.cn.dp.vwg-connect.cn/api/bs/vsr/v1/vehicles/${vin}/status`,
-  mal3aVehiclesPosition: vin => `https://mal-3a.prd.cn.dp.vwg-connect.cn/api/bs/cf/v1/vehicles/${vin}/position`
+  mal3aVehiclesPosition: vin => `https://mal-3a.prd.cn.dp.vwg-connect.cn/api/bs/cf/v1/vehicles/${vin}/position`,
+  vehicleServer: (appKey,nonce,sign, signt) => `https://audioneapp.faw-vw.com:443/v2/audi-vehicle-server/public/vehicleServer/queryDefaultVehicleDetails?appkey=${appKey}&nonce=${nonce}&sign=${sign}&signt=${signt}`
+  
+}
+const SIGN_SERVER_API = {
+  sign: 'https://api.zhous.cloud/audiServer/signature/getSignature'
 }
 const REQUEST_HEADER = {
   Accept: 'application/json',
@@ -559,34 +564,52 @@ class Widget extends Base {
    * 该接口因为加密问题暂时放弃
    * @returns {Promise<void>}
    */
-  async handleQueryDefaultVehicleData() {
+   async handleQueryDefaultVehicleData() {
     if (!Keychain.contains('defaultVehicleData')) {
       if (!Keychain.contains('userBaseInfoData')) {
         return console.error('获取密钥数据失败，没有拿到用户登录信息，请重新登录再重试！')
       }
       const getUserBaseInfoData =JSON.parse(Keychain.get('userBaseInfoData'))
-      const options = {
-        url: AUDI_SERVER_API.vehicleServer,
-        method: 'GET',
+      //服务器获取签名
+      const signOptions = {
+        url: SIGN_SERVER_API.sign,
+        method: 'POST',
         headers: {
           ...{
-            Authorization: 'Bearer ' + getUserBaseInfoData.accessToken
+            Platform : "1"
           },
           ...REQUEST_HEADER
         }
       }
-      const response = await this.http(options)
-      // 判断接口状态
-      if (response.status !== 'SUCCEED') {
-        // 存储车辆信息
-        Keychain.set('defaultVehicleData', JSON.stringify(response.data))
-        Keychain.set('myCarVIN', response.data?.vin)
-        console.log('车辆基本信息获取成功')
-        // 准备交换验证密钥数据
-        await this.handleAudiGetToken('userRefreshToken')
-      } else {
-        // 获取异常
-        await console.error('车辆信息获取失败，请稍后重新登录再重试！')
+      const signatureREesponse = await this.http(signOptions)
+      if (signatureREesponse.code !== 0){
+        return console.error(signatureREesponse.data)
+      } else{
+        const data = signatureREesponse.data
+        const options = {
+          url: AUDI_SERVER_API.vehicleServer(data.appkey, data.nonce, data.sign, data.signt),
+          method: 'GET',
+          headers: {
+            ...{
+              token: 'Bearer ' + getUserBaseInfoData.accessToken
+            },
+            ...REQUEST_HEADER
+          }
+        }
+        const response = await this.http(options)
+        // 判断接口状态
+        if (response.status === 'SUCCEED') {
+          // 存储车辆信息
+          console.log(response)
+          // Keychain.set('defaultVehicleData', JSON.stringify(response.data))
+          // Keychain.set('myCarVIN', response.data?.vin)
+          console.log('车辆基本信息获取成功')
+          // 准备交换验证密钥数据
+          await this.handleAudiGetToken('userRefreshToken')
+        } else {
+          // 获取异常
+          await console.error('车辆信息获取失败，请稍后重新登录再重试！')
+        }
       }
     }
   }
