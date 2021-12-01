@@ -236,7 +236,7 @@ class Widget extends Base {
     // 格式化时间
     const formatter = new DateFormatter()
     formatter.dateFormat = "HH:mm"
-    const updateDate = new Date(data.updateDate)
+    const updateDate = new Date(data.updateDate + '+0000')
     const updateDateString = formatter.string(updateDate)
     const _updateTime = updateStack.addText(updateDateString + ' ' + (data.status ? '已锁车' : '未锁车'))
     _updateTime.textOpacity = 0.75
