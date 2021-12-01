@@ -1,7 +1,8 @@
 // This widget was created by Max Zeryck @mzeryck
-const filename = Script.name() + ".jpg"
+const filename = "1.jpg"
 const files = FileManager.local()
-const path = files.joinPath(files.documentsDirectory(), filename)
+// const path = files.joinPath(files.documentsDirectory(), filename)
+const path = files.documentsDirectory() + '/1.jpg'
 
 if (config.runsInWidget) {
   const widget = new ListWidget()

@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = 1.8
+const AUDI_VERSION = 2.0
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -42,8 +42,8 @@ const REQUEST_HEADER = {
 const DEFAULT_MY_CAR_PHOTO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/cars/2020A4LB9_20211127.png'
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 const GLOBAL_USER_DATA = {
-  seriesName: '奥迪A4L B9',
-  modelShortName: '2.0 140KW',
+  seriesName: '',
+  modelShortName: '',
   vin: '',
   engineNo: '',
   plateNo: '', // 车牌号
@@ -74,7 +74,7 @@ class Widget extends Base {
       if (!Keychain.contains('authToken')) this.registerAction('账户登录', this.actionStatementSettings)
       if (Keychain.contains('authToken')) this.registerAction('偏好配置', this.actionPreferenceSettings)
       this.registerAction('兼容设置', this.actionCompatible)
-      if (Keychain.contains('authToken')) this.registerAction('退出登录', this.actionLogOut)
+      this.registerAction('重置组件', this.actionLogOut)
       if (Keychain.contains('authToken')) this.registerAction('重载数据', this.actionLogAction)
       this.registerAction('检查更新', this.actionCheckUpdate)
       this.registerAction('打赏作者', this.actionDonation)
@@ -236,7 +236,7 @@ class Widget extends Base {
     // 格式化时间
     const formatter = new DateFormatter()
     formatter.dateFormat = "HH:mm"
-    const updateDate = new Date(data.updateDate + '+0000')
+    const updateDate = new Date(data.updateDate)
     const updateDateString = formatter.string(updateDate)
     const _updateTime = updateStack.addText(updateDateString + ' ' + (data.status ? '已锁车' : '未锁车'))
     _updateTime.textOpacity = 0.75
@@ -434,13 +434,13 @@ class Widget extends Base {
       const getVehiclesStatusArr = getVehicleResponseData ? getVehicleResponseData : []
       const getCarStatusArr = getVehiclesStatusArr.find(i => i.id === '0x0301FFFFFF')?.field
       const enduranceVal = getCarStatusArr.find(i => i.id === '0x0301030005')?.value // 燃料总行程
-      // 判断电车电池容量
-      // 0301030002 = 电池
+      // 判断电车
+      // 0x0301030002 = 电池
       // 0x030103000A = 燃料
-      const fuelLevelVal = getCarStatusArr.find(i => i.id === '0301030002')?.value ? getCarStatusArr.find(i => i.id === '0301030002')?.value : getCarStatusArr.find(i => i.id === '0x030103000A')?.value // 燃料百分比
+      const fuelLevelVal = getCarStatusArr.find(i => i.id === '0x0301030002')?.value ? getCarStatusArr.find(i => i.id === '0x0301030002')?.value : getCarStatusArr.find(i => i.id === '0x030103000A')?.value
       const mileageVal = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.value // 总里程
       // 更新时间
-      const updateDate = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.tsCarSent
+      const updateDate = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.tsCarSentUtc
 
       // 检查门锁 车门 车窗等状态
       const isLocked = await this.getCarIsLocked(getCarStatusArr)
@@ -688,7 +688,9 @@ class Widget extends Base {
         method: 'GET',
         headers: {
           ...{
-            'X-ACCESS-TOKEN': getUserBaseInfoData.accessToken
+            'X-ACCESS-TOKEN': getUserBaseInfoData.accessToken,
+            'X-CHANNEL': 'IOS',
+            'x-mobile': getUserBaseInfoData.user.mobile
           },
           ...REQUEST_HEADER
         }
@@ -699,14 +701,17 @@ class Widget extends Base {
       // 判断接口状态
       if (response.code === 0) {
         // 存储车辆信息
-        console.log('用户基本信息获取成功')
+        console.log('获取用户基本信息成功')
         Keychain.set('userMineData', JSON.stringify(response.data))
         Keychain.set('myCarVIN', response.data?.vehicleDto?.vin)
         // 准备交换验证密钥数据
         await this.handleAudiGetToken('userRefreshToken')
       } else {
         // 获取异常
-        console.error('个人信息获取失败，请稍后重新登录再重试！')
+        console.error('获取用户基本信息失败，准备重新登录获取密钥')
+        if (Keychain.contains('userBaseInfoData')) Keychain.remove('userBaseInfoData')
+        // 重新登录
+        await this.handleAudiLogin()
       }
     } else {
       console.log('userMineData 信息已存在，开始获取 userRefreshToken')
