@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = 2.0
+const AUDI_VERSION = '1.2.0'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -59,6 +59,8 @@ const GLOBAL_USER_DATA = {
   myOne: '世间美好，与你环环相扣'
 }
 const AUDI_AMAP_KEY = 'c078fb16379c25bc0aad8633d82cf1dd'
+
+const Files = FileManager.local()
 
 class Widget extends Base {
   /**
@@ -325,7 +327,6 @@ class Widget extends Base {
     const widget = new ListWidget()
 
     widget.backgroundImage = await this.shadowImage(await this.getImageByUrl(DEFAULT_MY_CAR_PHOTO))
-    // widget.backgroundImage = await this.shadowImage(Image.fromFile(this.settings['myCarPhoto']))
 
     const text = widget.addText('欢迎使用 Audi-Joiner iOS 桌面组件')
     switch (this.widgetFamily) {
@@ -396,9 +397,10 @@ class Widget extends Base {
 
   /**
    * 处理数据业务
+   * @param {Boolean} isDebug
    * @returns {Promise<{Object}>}
    */
-  async bootstrap() {
+  async bootstrap(isDebug = false) {
     try {
       const getUserMineData = JSON.parse(Keychain.get('userMineData'))
       const getVehicleData = getUserMineData.vehicleDto
@@ -416,8 +418,8 @@ class Widget extends Base {
     // 是否开启位置
     if (this.showLocation()) {
       try {
-        const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition())
-        const getVehiclesAddress = await this.handleGetCarAddress()
+        const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition(isDebug))
+        const getVehiclesAddress = await this.handleGetCarAddress(isDebug)
         if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = getVehiclesPosition.longitude // 车辆经度
         if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = getVehiclesPosition.latitude // 车辆纬度
         if (getVehiclesAddress) GLOBAL_USER_DATA.carLocation = getVehiclesAddress // 详细地理位置
@@ -570,8 +572,7 @@ class Widget extends Base {
    */
   async getMyCarPhoto() {
     let myCarPhoto = await this.getImageByUrl(DEFAULT_MY_CAR_PHOTO)
-    // if (this.settings['myCarPhoto']) myCarPhoto = await Image.fromFile(this.settings['myCarPhoto'])
-    if (this.settings['myCarPhoto']) myCarPhoto = await Image.fromData(Data.fromBase64String(this.settings['myCarPhoto']))
+    if (this.settings['myCarPhoto']) myCarPhoto = await Files.readImage(this.settings['myCarPhoto'])
     return myCarPhoto
   }
 
@@ -581,7 +582,7 @@ class Widget extends Base {
    * @returns {Promise<void>}
    */
   async handleAudiLogin(isDebug = false) {
-    if (!Keychain.contains('userBaseInfoData')) {
+    if (isDebug || !Keychain.contains('userBaseInfoData')) {
       const options = {
         url: AUDI_SERVER_API.login,
         method: 'POST',
@@ -603,8 +604,8 @@ class Widget extends Base {
         Keychain.set('userBaseInfoData', JSON.stringify(response.data))
         await this.notify('登录成功', '正在从 Audi 服务器获取车辆数据，请耐心等待！')
         // 准备交换验证密钥数据
-        await this.handleAudiGetToken('userIDToken')
-        await this.handleUserMineData()
+        await this.handleAudiGetToken('userIDToken', isDebug)
+        await this.handleUserMineData(isDebug)
       } else {
         // 登录异常
         await this.notify('登录失败', response.message)
@@ -681,7 +682,7 @@ class Widget extends Base {
    * @returns {Promise<void>}
    */
   async handleUserMineData(isDebug = false) {
-    if (!Keychain.contains('userMineData')) {
+    if (isDebug || !Keychain.contains('userMineData')) {
       const getUserBaseInfoData =JSON.parse(Keychain.get('userBaseInfoData'))
       const options = {
         url: AUDI_SERVER_API.mine,
@@ -705,13 +706,13 @@ class Widget extends Base {
         Keychain.set('userMineData', JSON.stringify(response.data))
         Keychain.set('myCarVIN', response.data?.vehicleDto?.vin)
         // 准备交换验证密钥数据
-        await this.handleAudiGetToken('userRefreshToken')
+        await this.handleAudiGetToken('userRefreshToken', isDebug)
       } else {
         // 获取异常
         console.error('获取用户基本信息失败，准备重新登录获取密钥')
         if (Keychain.contains('userBaseInfoData')) Keychain.remove('userBaseInfoData')
         // 重新登录
-        await this.handleAudiLogin()
+        await this.handleAudiLogin(isDebug)
       }
     } else {
       console.log('userMineData 信息已存在，开始获取 userRefreshToken')
@@ -723,11 +724,11 @@ class Widget extends Base {
   /**
    * 获取密钥数据
    * @param {'userIDToken' | 'userRefreshToken'} type
-   * @param {boolean} forceRefresh
+   * @param {boolean} isDebug
    * @returns {Promise<void>}
    */
-  async handleAudiGetToken(type, forceRefresh = false) {
-    if (forceRefresh || !Keychain.contains(type)) {
+  async handleAudiGetToken(type, isDebug = false) {
+    if (isDebug || !Keychain.contains(type)) {
       if (type === 'userIDToken' && !Keychain.contains('userBaseInfoData')) {
         return console.error('获取密钥数据失败，没有拿到用户登录信息，请重新登录再重试！')
       }
@@ -737,12 +738,15 @@ class Widget extends Base {
 
       // 根据交换token请求参数不同
       let requestParams = ''
-      const getUserBaseInfoData =JSON.parse(Keychain.get('userBaseInfoData'))
-      if (type === 'userIDToken') {
-        requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(getUserBaseInfoData.idToken)}&scope=${encodeURIComponent('sc2:fal')}`
-      } else if (type === 'userRefreshToken') {
-        const getUserIDToken =JSON.parse(Keychain.get('userIDToken'))
-        requestParams = `grant_type=${encodeURIComponent('refresh_token')}&token=${encodeURIComponent(getUserIDToken.refresh_token)}&scope=${encodeURIComponent('sc2:fal')}&vin=${Keychain.get('myCarVIN')}`
+      const getUserBaseInfoData = JSON.parse(Keychain.get('userBaseInfoData'))
+      switch (type) {
+        case 'userIDToken':
+          requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(getUserBaseInfoData.idToken)}&scope=${encodeURIComponent('sc2:fal')}`
+          break
+        case 'userRefreshToken':
+          const getUserIDToken =JSON.parse(Keychain.get('userIDToken'))
+          requestParams = `grant_type=${encodeURIComponent('refresh_token')}&token=${encodeURIComponent(getUserIDToken.refresh_token)}&scope=${encodeURIComponent('sc2:fal')}&vin=${Keychain.get('myCarVIN')}`
+          break
       }
 
       const options = {
@@ -755,6 +759,8 @@ class Widget extends Base {
         body: requestParams
       }
       const response = await this.http(options)
+      if (isDebug) console.log('用户密钥信息：')
+      if (isDebug) console.log(response)
       // 判断接口状态
       if (response.error) {
         switch (response.error) {
@@ -771,7 +777,7 @@ class Widget extends Base {
           Keychain.set('authToken', response.access_token)
           console.log('authToken 密钥设置成功')
           // 正式获取车辆信息
-          await this.bootstrap()
+          await this.bootstrap(isDebug)
         }
       }
     } else {
@@ -828,7 +834,7 @@ class Widget extends Base {
           await this.notify('unauthorized 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽奥迪应用查看！')
           break
         case 'mbbc.rolesandrights.unknownService':
-          await this.notify('unknownService 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽奥迪应用查看！')
+          await this.notify('unknownService 错误', '未知服务，请联系开发者处理。')
           break
         default:
           await this.notify('未知错误' + response.error.errorCode, '未知错误:' + response.error.description)
@@ -918,9 +924,10 @@ class Widget extends Base {
 
   /**
    * 获取车辆地址
+   * @param {Boolean} isDebug
    * @returns {Promise<string>}
    */
-  async handleGetCarAddress() {
+  async handleGetCarAddress(isDebug = false) {
     if (!Keychain.contains('storedPositionResponse') && !Keychain.contains('carPosition')) {
       await console.error('获取车辆经纬度失败，请退出登录再登录重试！')
       return '暂无位置信息'
@@ -939,6 +946,8 @@ class Widget extends Base {
       method: 'GET'
     }
     const response = await this.http(options)
+    if (isDebug) console.log('车辆地理位置信息：')
+    if (isDebug) console.log(response)
     if (response.status === '1') {
       // const address = response.regeocode.formatted_address
       const addressComponent = response.regeocode.addressComponent
@@ -999,7 +1008,7 @@ class Widget extends Base {
   }
 
   /**
-   * 个性化配置
+   * 偏好设置
    * @returns {Promise<void>}
    */
   async actionPreferenceSettings () {
@@ -1021,17 +1030,13 @@ class Widget extends Base {
         text: '自定义车辆照片',
         icon: '🚙'
       }, {
+        name: 'setBackgroundConfig',
+        text: '自定义组件背景',
+        icon: '🌕'
+      }, {
         name: 'myOne',
         text: '一言一句',
         icon: '📝'
-      }, {
-        name: 'lightBgColor',
-        text: '系统浅色模式',
-        icon: '🌕'
-      }, {
-        name: 'darkBgColor',
-        text: '系统深色模式',
-        icon: '🌑'
       }, {
         name: 'aMapKey',
         text: '高德地图密钥',
@@ -1098,42 +1103,266 @@ class Widget extends Base {
   }
 
   /**
-   * 使用图片
+   * 自定义车辆图片
    * @returns {Promise<void>}
    */
   async actionPreferenceSettings2() {
     const alert = new Alert()
     alert.title = '车辆图片'
     alert.message = '请在相册选择你最喜欢的车辆图片以便展示到小组件上，最好是全透明背景PNG图。'
-    // alert.addTextField('请输入地址', this.settings['myCarPhoto'])
     alert.addAction('选择照片')
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
     if (id === -1) return await this.actionPreferenceSettings()
-    // const value = alert.textFieldValue(0)
-    // if (!value) {
-    //   this.settings['myCarPhoto'] = DEFAULT_MY_CAR_PHOTO
-    //   this.saveSettings()
-    //   return await this.actionPreferenceSettings()
-    // }
-    //
-    // this.settings['myCarPhoto'] = value
-    // this.saveSettings()
-    //
-    // return await this.actionPreferenceSettings()
     try {
       const image = await Photos.fromLibrary()
-      // 缓存选择图片
-      // const cacheKey = 'myCarPhoto'
-      // const cacheFile = FileManager.local().joinPath(FileManager.local().temporaryDirectory(), cacheKey)
-      // // 存储到缓存
-      // FileManager.local().writeImage(cacheFile, image)
-      // this.settings['myCarPhoto'] = cacheFile
-      // this.saveSettings()
-      // 将图片转 raw 数据
-      this.settings['myCarPhoto'] = Data.fromPNG(image).toBase64String()
+      await Files.writeImage(this.filePath('myCarPhoto'), image)
+      this.settings['myCarPhoto'] = this.filePath('myCarPhoto')
+      this.saveSettings()
+    } catch (error) {
+      // 取消图片会异常 暂时不用管
+    }
+  }
 
+  /**
+   * 自定义组件背景
+   * @returns {Promise<void>}
+   */
+  async actionPreferenceSettings3() {
+    const alert = new Alert()
+    alert.title = '自定义组件背景'
+    alert.message = '颜色背景和图片背景共同存存在时，图片背景设置优先级更高，将会加载图片背景\n' +
+      '只有清除组件背景图片时候颜色背景才能生效！'
+
+    const menuList = [{
+      text: '设置颜色背景',
+      icon: '🖍'
+    }, {
+      text: '设置图片背景',
+      icon: '🏞'
+    }]
+
+    menuList.forEach(item => {
+      alert.addAction(item.icon + ' ' +item.text)
+    })
+
+    alert.addCancelAction('取消设置')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    await this['backgroundSettings' + id]()
+  }
+
+  /**
+   * 设置组件颜色背景
+   * @returns {Promise<void>}
+   */
+  async backgroundSettings0() {
+    const alert = new Alert()
+    alert.title = '自定义颜色背景'
+    alert.message = '系统浅色模式适用于白天情景\n' +
+      '系统深色模式适用于晚上情景\n' +
+      '请根据自己的偏好进行设置'
+
+    const menuList = [{
+      name: 'lightBgColor',
+      text: '系统浅色模式',
+      icon: '🌕'
+    }, {
+      name: 'darkBgColor',
+      text: '系统深色模式',
+      icon: '🌑'
+    }]
+
+    menuList.forEach(item => {
+      alert.addAction(item.icon + ' ' +item.text)
+    })
+
+    alert.addCancelAction('取消设置')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    await this['backgroundColorSettings' + id]()
+  }
+
+  /**
+   * 设置组件图片背景
+   * @returns {Promise<void>}
+   */
+  async backgroundSettings1() {
+    const alert = new Alert()
+    alert.title = '自定义图片背景'
+    alert.message = '目前自定义图片背景可以设置下列俩种场景\n' +
+      '透明背景：因为组件限制无法实现，目前使用桌面图片裁剪实现所谓对透明组件，设置之前需要先对桌面壁纸进行裁剪哦，请选择「裁剪壁纸」菜单进行获取透明背景图片\n' +
+      '图片背景：选择你最喜欢的图片作为背景'
+
+    const menuList = [{
+      text: '透明图片',
+      icon: ''
+    }, {
+      text: '自选图片',
+      icon: ''
+    }]
+
+    menuList.forEach(item => {
+      alert.addAction(item.icon + ' ' +item.text)
+    })
+
+    alert.addCancelAction('取消设置')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    await this['backgroundImageSettings' + id]()
+  }
+
+  /**
+   * 浅色模式背景
+   * @returns {Promise<void>}
+   */
+  async backgroundColorSettings0() {
+    const alert = new Alert()
+    alert.title = '浅色模式颜色代码'
+    alert.message = '如果都输入相同的颜色代码小组件则是纯色背景色，如果是不同的代码则是渐变背景色，不填写采取默认背景色\n\r' +
+      '默认背景颜色代码：' + DEFAULT_LIGHT_BACKGROUND_COLOR_1 + ' 和 ' + DEFAULT_LIGHT_BACKGROUND_COLOR_2 + '\n\r' +
+      '默认字体颜色代码：#000000'
+    alert.addTextField('背景颜色代码一', this.settings['lightBgColor1'])
+    alert.addTextField('背景颜色代码二', this.settings['lightBgColor2'])
+    alert.addTextField('字体颜色', this.settings['lightFontColor'])
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.backgroundSettings0()
+    const lightBgColor1 = alert.textFieldValue(0)
+    const lightBgColor2 = alert.textFieldValue(1)
+    const lightFontColor = alert.textFieldValue(2)
+
+    this.settings['lightBgColor1'] = lightBgColor1
+    this.settings['lightBgColor2'] = lightBgColor2
+    this.settings['lightFontColor'] = lightFontColor
+    this.saveSettings()
+
+    return await this.backgroundSettings0()
+  }
+
+  /**
+   * 深色模式背景
+   * @returns {Promise<void>}
+   */
+  async backgroundColorSettings1() {
+    const alert = new Alert()
+    alert.title = '深色模式颜色代码'
+    alert.message = '如果都输入相同的颜色代码小组件则是纯色背景色，如果是不同的代码则是渐变背景色，不填写采取默认背景色\n\r' +
+      '默认背景颜色代码：' + DEFAULT_DARK_BACKGROUND_COLOR_1 + ' 和 ' + DEFAULT_DARK_BACKGROUND_COLOR_2 + '\n\r' +
+      '默认字体颜色代码：#ffffff'
+    alert.addTextField('颜色代码一', this.settings['darkBgColor1'])
+    alert.addTextField('颜色代码二', this.settings['darkBgColor2'])
+    alert.addTextField('字体颜色', this.settings['darkFontColor'])
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.backgroundSettings0()
+    const darkBgColor1 = alert.textFieldValue(0)
+    const darkBgColor2 = alert.textFieldValue(1)
+    const darkFontColor = alert.textFieldValue(2)
+
+    this.settings['darkBgColor1'] = darkBgColor1
+    this.settings['darkBgColor2'] = darkBgColor2
+    this.settings['darkFontColor'] = darkFontColor
+    this.saveSettings()
+
+    return await this.backgroundSettings0()
+  }
+
+  /**
+   * 剪裁壁纸
+   * @returns {Promise<void>}
+   */
+  async backgroundImageSettings0() {
+    // Determine if user has taken the screenshot.
+    let message = 'Before you start, go to your home screen and enter wiggle mode. Scroll to the empty page on the far right and take a screenshot.'
+    const exitOptions = ['Continue','Exit to Take Screenshot']
+    const shouldExit = await this.generateAlert(message,exitOptions)
+    if (shouldExit) return await this.backgroundSettings1()
+
+    try {
+      // Get screenshot and determine phone size.
+      const img = await Photos.fromLibrary()
+      const height = img.size.height
+      const phone = phoneSizes()[height]
+      if (!phone) {
+        message = 'It looks like you selected an image that isn\'t an iPhone screenshot, or your iPhone is not supported. Try again with a different image.'
+        await this.generateAlert(message,['OK'])
+        return
+      }
+
+      // Prompt for widget size and position.
+      message = 'What size of widget are you creating?'
+      const sizes = ['Small','Medium','Large']
+      const size = await this.generateAlert(message,sizes)
+      const widgetSize = sizes[size]
+
+      message = 'What position will it be in?'
+      message += (height === 1136 ? ' (Note that your device only supports two rows of widgets, so the middle and bottom options are the same.)' : '')
+
+      // Determine image crop based on phone size.
+      const crop = { w: '', h: '', x: '', y: '' }
+      let positions = ''
+      let position = ''
+      switch (widgetSize) {
+        case 'Small':
+          crop.w = phone.small
+          crop.h = phone.small
+          positions = ['Top left','Top right','Middle left','Middle right','Bottom left','Bottom right']
+          position = await this.generateAlert(message,positions)
+
+          // Convert the two words into two keys for the phone size dictionary.
+          const keys = positions[position].toLowerCase().split(' ')
+          crop.y = phone[keys[0]]
+          crop.x = phone[keys[1]]
+          break
+        case 'Medium':
+          crop.w = phone.medium
+          crop.h = phone.small
+
+          // Medium and large widgets have a fixed x-value.
+          crop.x = phone.left
+          positions = ['Top','Middle','Bottom']
+          position = await this.generateAlert(message,positions)
+          const key = positions[position].toLowerCase()
+          crop.y = phone[key]
+          break
+        case 'Large':
+          crop.w = phone.medium
+          crop.h = phone.large
+          crop.x = phone.left
+          positions = ['Top','Bottom']
+          position = await this.generateAlert(message,positions)
+
+          // Large widgets at the bottom have the 'middle' y-value.
+          crop.y = position ? phone.middle : phone.top
+          break
+      }
+
+      // Crop image and finalize the widget.
+      const imgCrop = cropImage(img, new Rect(crop.x,crop.y,crop.w,crop.h))
+
+      await Files.writeImage(this.filePath('myBackgroundPhoto'), imgCrop)
+      this.settings['myBackgroundPhoto'] = this.filePath('myBackgroundPhoto')
+      this.saveSettings()
+    } catch (error) {
+      // 取消图片会异常 暂时不用管
+    }
+  }
+
+  /**
+   * 自选图片
+   * @returns {Promise<void>}
+   */
+  async backgroundImageSettings1() {
+    try {
+      const image = await Photos.fromLibrary()
+      await Files.writeImage(this.filePath('myBackgroundPhoto'), image)
+      this.settings['myBackgroundPhoto'] = this.filePath('myBackgroundPhoto')
       this.saveSettings()
     } catch (error) {
       // 取消图片会异常 暂时不用管
@@ -1144,7 +1373,7 @@ class Widget extends Base {
    * 输入一言
    * @returns {Promise<void>}
    */
-  async actionPreferenceSettings3() {
+  async actionPreferenceSettings4() {
     const alert = new Alert()
     alert.title = '输入一言'
     alert.message = '请输入一言，将会在桌面展示语句，不填则显示 "世间美好，与你环环相扣"'
@@ -1168,70 +1397,10 @@ class Widget extends Base {
   }
 
   /**
-   * 浅色模式
-   * @returns {Promise<void>}
-   */
-  async actionPreferenceSettings4() {
-    const alert = new Alert()
-    alert.title = '浅色模式颜色代码'
-    alert.message = '如果都输入相同的颜色代码小组件则是纯色背景色，如果是不同的代码则是渐变背景色，不填写采取默认背景色\n\r' +
-      '默认背景颜色代码：' + DEFAULT_LIGHT_BACKGROUND_COLOR_1 + ' 和 ' + DEFAULT_LIGHT_BACKGROUND_COLOR_2 + '\n\r' +
-      '默认字体颜色代码：#000000'
-    alert.addTextField('背景颜色代码一', this.settings['lightBgColor1'])
-    alert.addTextField('背景颜色代码二', this.settings['lightBgColor2'])
-    alert.addTextField('字体颜色', this.settings['lightFontColor'])
-    alert.addAction('确定')
-    alert.addCancelAction('取消')
-
-    const id = await alert.presentAlert()
-    if (id === -1) return await this.actionPreferenceSettings()
-    const lightBgColor1 = alert.textFieldValue(0)
-    const lightBgColor2 = alert.textFieldValue(1)
-    const lightFontColor = alert.textFieldValue(2)
-
-    this.settings['lightBgColor1'] = lightBgColor1
-    this.settings['lightBgColor2'] = lightBgColor2
-    this.settings['lightFontColor'] = lightFontColor
-    this.saveSettings()
-
-    return await this.actionPreferenceSettings()
-  }
-
-  /**
-   * 深色模式
-   * @returns {Promise<void>}
-   */
-  async actionPreferenceSettings5() {
-    const alert = new Alert()
-    alert.title = '深色模式颜色代码'
-    alert.message = '如果都输入相同的颜色代码小组件则是纯色背景色，如果是不同的代码则是渐变背景色，不填写采取默认背景色\n\r' +
-      '默认背景颜色代码：' + DEFAULT_DARK_BACKGROUND_COLOR_1 + ' 和 ' + DEFAULT_DARK_BACKGROUND_COLOR_2 + '\n\r' +
-      '默认字体颜色代码：#ffffff'
-    alert.addTextField('颜色代码一', this.settings['darkBgColor1'])
-    alert.addTextField('颜色代码二', this.settings['darkBgColor2'])
-    alert.addTextField('字体颜色', this.settings['darkFontColor'])
-    alert.addAction('确定')
-    alert.addCancelAction('取消')
-
-    const id = await alert.presentAlert()
-    if (id === -1) return await this.actionPreferenceSettings()
-    const darkBgColor1 = alert.textFieldValue(0)
-    const darkBgColor2 = alert.textFieldValue(1)
-    const darkFontColor = alert.textFieldValue(2)
-
-    this.settings['darkBgColor1'] = darkBgColor1
-    this.settings['darkBgColor2'] = darkBgColor2
-    this.settings['darkFontColor'] = darkFontColor
-    this.saveSettings()
-
-    return await this.actionPreferenceSettings()
-  }
-
-  /**
    * 高德地图Key
    * @returns {Promise<void>}
    */
-  async actionPreferenceSettings6() {
+  async actionPreferenceSettings5() {
     const alert = new Alert()
     alert.title = '高德地图密钥'
     alert.message = '请输入组件所需要的高德地图 key 用于车辆逆地理编码以及地图资源\n\r获取途径可以在「关于小组件」菜单里加微信群进行咨询了解'
@@ -1255,7 +1424,7 @@ class Widget extends Base {
    * 车辆位置显示
    * @returns {Promise<void>}
    */
-  async actionPreferenceSettings7() {
+  async actionPreferenceSettings6() {
     const alert = new Alert()
     alert.title = '是否显示车辆地理位置'
     alert.message = this.showLocation() ? '当前地理位置状态已开启' : '当前地理位置状态已关闭'
@@ -1279,7 +1448,7 @@ class Widget extends Base {
    * 车牌显示
    * @returns {Promise<void>}
    */
-  async actionPreferenceSettings8() {
+  async actionPreferenceSettings7() {
     const alert = new Alert()
     alert.title = '是否显示车牌显示'
     alert.message = this.showPlate() ? '当前车牌显示状态已开启' : '当前车牌显示状态已关闭'
@@ -1476,6 +1645,113 @@ class Widget extends Base {
   }
 
   /**
+   * Alert 弹窗封装
+   * @param message
+   * @param options
+   * @returns {Promise<number>}
+   */
+  async generateAlert(message, options) {
+
+    const alert = new Alert()
+    alert.message = message
+
+    for (const option of options) {
+      alert.addAction(option)
+    }
+
+    return await alert.presentAlert()
+  }
+
+  /**
+   * 将图像裁剪到指定的 rect 中
+   * @param img
+   * @param rect
+   * @returns {Image}
+   */
+  cropImage(img, rect) {
+
+    const draw = new DrawContext()
+    draw.size = new Size(rect.width, rect.height)
+
+    draw.drawImageAtPoint(img,new Point(-rect.x, -rect.y))
+    return draw.getImage()
+  }
+
+  /**
+   * 手机分辨率
+   * @returns Object
+   */
+  phoneSizes() {
+    return {
+      '2688': {
+        'small': 507,
+        'medium': 1080,
+        'large': 1137,
+        'left': 81,
+        'right': 654,
+        'top': 228,
+        'middle': 858,
+        'bottom': 1488
+      },
+
+      '1792': {
+        'small': 338,
+        'medium': 720,
+        'large': 758,
+        'left': 54,
+        'right': 436,
+        'top': 160,
+        'middle': 580,
+        'bottom': 1000
+      },
+
+      '2436': {
+        'small': 465,
+        'medium': 987,
+        'large': 1035,
+        'left': 69,
+        'right': 591,
+        'top': 213,
+        'middle': 783,
+        'bottom': 1353
+      },
+
+      '2208': {
+        'small': 471,
+        'medium': 1044,
+        'large': 1071,
+        'left': 99,
+        'right': 672,
+        'top': 114,
+        'middle': 696,
+        'bottom': 1278
+      },
+
+      '1334': {
+        'small': 296,
+        'medium': 642,
+        'large': 648,
+        'left': 54,
+        'right': 400,
+        'top': 60,
+        'middle': 412,
+        'bottom': 764
+      },
+
+      '1136': {
+        'small': 282,
+        'medium': 584,
+        'large': 622,
+        'left': 30,
+        'right': 332,
+        'top': 59,
+        'middle': 399,
+        'bottom': 399
+      }
+    }
+  }
+
+  /**
    * 分割字符串
    * @param str
    * @param num
@@ -1513,6 +1789,15 @@ class Widget extends Base {
    */
   showPlate() {
     return this.settings['showPlate']
+  }
+
+  /**
+   * 文件路径
+   * @param fileName
+   * @returns {string}
+   */
+  filePath(fileName) {
+    return Files.joinPath(Files.documentsDirectory(), fileName)
   }
 }
 

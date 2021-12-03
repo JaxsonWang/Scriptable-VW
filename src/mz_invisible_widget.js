@@ -20,8 +20,7 @@ if (config.runsInWidget) {
 } else {
 
   // Determine if user has taken the screenshot.
-  let message = ''
-  message = 'Before you start, go to your home screen and enter wiggle mode. Scroll to the empty page on the far right and take a screenshot.'
+  let message = 'Before you start, go to your home screen and enter wiggle mode. Scroll to the empty page on the far right and take a screenshot.'
   const exitOptions = ['Continue','Exit to Take Screenshot']
   const shouldExit = await generateAlert(message,exitOptions)
   if (shouldExit) return
@@ -101,7 +100,7 @@ if (config.runsInWidget) {
 }
 
 // Generate an alert with the provided array of options.
-async function generateAlert(message,options) {
+async function generateAlert(message, options) {
 
   const alert = new Alert()
   alert.message = message
@@ -114,7 +113,7 @@ async function generateAlert(message,options) {
 }
 
 // Crop an image into the specified rect.
-function cropImage(img,rect) {
+function cropImage(img, rect) {
 
   const draw = new DrawContext()
   draw.size = new Size(rect.width, rect.height)
