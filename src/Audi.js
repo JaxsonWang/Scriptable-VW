@@ -116,7 +116,11 @@ class Widget extends Base {
    */
   async renderSmall(data) {
     const widget = new ListWidget()
-    widget.backgroundGradient = this.getBackgroundColor()
+    if (this.settings['myBackgroundPhotoSmall']) {
+      widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoSmall'])
+    } else {
+      widget.backgroundGradient = this.getBackgroundColor()
+    }
 
     widget.addSpacer(20)
 
@@ -126,7 +130,8 @@ class Widget extends Base {
     const _title = header.addText(data.seriesName)
     _title.textOpacity = 1
     _title.font = Font.systemFont(18)
-    _title.textColor = this.dynamicFontColor()
+    // _title.textColor = this.dynamicTextColor()
+    this.setWidgetTextColor(_title)
 
     widget.addSpacer(0)
 
@@ -134,17 +139,21 @@ class Widget extends Base {
     content.bottomAlignContent()
     const _fuelStroke = content.addText(data.endurance + 'km')
     _fuelStroke.font = Font.heavySystemFont(20)
-    _fuelStroke.textColor = this.dynamicFontColor()
+    // _fuelStroke.textColor = this.dynamicTextColor()
+    this.setWidgetTextColor(_fuelStroke)
     content.addSpacer(2)
     const _cut = content.addText('/')
     _cut.font = Font.systemFont(16)
     _cut.textOpacity = 0.75
-    _cut.textColor = this.dynamicFontColor()
+    // _cut.textColor = this.dynamicTextColor()
+    this.setWidgetTextColor(_cut)
+
     content.addSpacer(2)
     const _fuelLevel = content.addText(data.fuelLevel + '%')
     _fuelLevel.font = Font.systemFont(16)
     _fuelLevel.textOpacity = 0.75
-    _fuelLevel.textColor = this.dynamicFontColor()
+    // _fuelLevel.textColor = this.dynamicTextColor()
+    this.setWidgetTextColor(_fuelLevel)
 
     widget.addSpacer(10)
 
@@ -161,7 +170,11 @@ class Widget extends Base {
    */
   async renderMedium(data) {
     const widget = new ListWidget()
-    widget.backgroundGradient = this.getBackgroundColor()
+    if (this.settings['myBackgroundPhotoMedium']) {
+      widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoMedium'])
+    } else {
+      widget.backgroundGradient = this.getBackgroundColor()
+    }
 
     // 宽度
     const widgetWidth = Device.screenResolution().width / Device.screenScale()
@@ -179,8 +192,10 @@ class Widget extends Base {
       logoStack.addSpacer(width * 2 - 110) // 使图片顶到右边显示
       // 车牌显示
       const plateText = logoStack.addText(data.plateNo)
-      plateText.textColor = this.dynamicFontColor()
       plateText.font = Font.systemFont(12)
+      // plateText.textColor = this.dynamicTextColor()
+      this.setWidgetTextColor(plateText)
+
     } else {
       logoStack.addSpacer(width * 2 - 50) // 使图片顶到右边显示
     }
@@ -188,7 +203,8 @@ class Widget extends Base {
     // 添加 Audi Logo
     const _audiLogo = logoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
     _audiLogo.imageSize = new Size(50, 15)
-    _audiLogo.tintColor = this.dynamicFontColor()
+    // _audiLogo.tintColor = this.dynamicTextColor()
+    this.setWidgetImageColor(_audiLogo)
 
     const stack = widget.addStack()
     stack.size = new Size(widgetWidth, stack.size.height)
@@ -200,36 +216,45 @@ class Widget extends Base {
     // 车辆名称
     const _title = leftStack.addText(data.seriesName)
     _title.textOpacity = 1
-    _title.textColor = this.dynamicFontColor()
     _title.font = Font.systemFont(18)
+    // _title.textColor = this.dynamicTextColor()
+    this.setWidgetTextColor(_title)
 
     leftStack.addSpacer(2)
     // 车辆功率
     const _desc = leftStack.addText(data.modelShortName)
     _desc.textOpacity = 0.75
-    _desc.textColor = this.dynamicFontColor()
     _desc.font = Font.systemFont(12)
+    // _desc.textColor = this.dynamicTextColor()
+    this.setWidgetTextColor(_desc)
     // leftStack.addSpacer(10)
     const content = leftStack.addStack()
     content.bottomAlignContent()
     const _fuelStroke = content.addText(data.endurance + 'km')
     _fuelStroke.font = Font.heavySystemFont(20)
-    _fuelStroke.textColor = this.dynamicFontColor()
+    // _fuelStroke.textColor = this.dynamicTextColor()
+    this.setWidgetTextColor(_fuelStroke)
+
     content.addSpacer(2)
     const _cut = content.addText('/')
     _cut.font = Font.systemFont(16)
     _cut.textOpacity = 0.75
-    _cut.textColor = this.dynamicFontColor()
+    // _cut.textColor = this.dynamicTextColor()
+    this.setWidgetTextColor(_cut)
+
     content.addSpacer(2)
     const _fuelLevel = content.addText(data.fuelLevel + '%')
     _fuelLevel.font = Font.systemFont(16)
     _fuelLevel.textOpacity = 0.75
-    _fuelLevel.textColor = this.dynamicFontColor()
+    // _fuelLevel.textColor = this.dynamicTextColor()
+    this.setWidgetTextColor(_fuelLevel)
     // 总行程
     const _trips = leftStack.addText('总里程: ' + data.mileage + ' km')
     _trips.textOpacity = 0.75
     _trips.font = Font.systemFont(14)
-    _trips.textColor = this.dynamicFontColor()
+    // _trips.textColor = this.dynamicTextColor()
+    this.setWidgetTextColor(_trips)
+
     // 更新时间
     const updateStack = leftStack.addStack()
     updateStack.backgroundColor = new Color('#ffffff', 0.25)
@@ -243,7 +268,8 @@ class Widget extends Base {
     const _updateTime = updateStack.addText(updateDateString + ' ' + (data.status ? '已锁车' : '未锁车'))
     _updateTime.textOpacity = 0.75
     _updateTime.font = Font.systemFont(12)
-    _updateTime.textColor = data.status ? this.dynamicFontColor() : new Color('#FF9900', 1)
+    data.status ? this.setWidgetTextColor(_updateTime) : _updateTime.textColor = new Color('#FF9900', 1)
+
 
     // 根据选项是否开启位置显示
     if (this.showLocation()) {
@@ -251,8 +277,9 @@ class Widget extends Base {
       this.splitStr2Arr(carLocation, 14).forEach(item => {
         const _location = leftStack.addText(item)
         _location.textOpacity = 0.75
-        _location.textColor = this.dynamicFontColor()
         _location.font = Font.systemFont(12)
+        // _location.textColor = this.dynamicTextColor()
+        this.setWidgetTextColor(_location)
       })
     }
     // endregion leftStack end
@@ -275,7 +302,8 @@ class Widget extends Base {
     const doorAndWindowStatus = data.doorAndWindow ? '车门车窗已关闭' : '请检查车门车窗是否已关闭'
     const _audiStatus = rightBottomStack.addText(doorAndWindowStatus)
     _audiStatus.font = Font.systemFont(12)
-    _audiStatus.textColor = data.doorAndWindow ? this.dynamicFontColor() : new Color('#FF9900', 1)
+    // _audiStatus.textColor = data.doorAndWindow ? this.dynamicTextColor() : new Color('#FF9900', 1)
+    data.doorAndWindow ? this.setWidgetTextColor(_audiStatus) : _audiStatus.textColor = new Color('#FF9900', 1)
     // endregion
 
     // 祝语
@@ -286,8 +314,9 @@ class Widget extends Base {
     const _tips = tipStack.addText(data.myOne)
     _tips.textOpacity = 1
     _tips.font = Font.systemFont(12)
-    _tips.textColor = this.dynamicFontColor()
     _tips.centerAlignText()
+    // _tips.textColor = this.dynamicTextColor()
+    this.setWidgetTextColor(_tips)
 
     // debug
     // stack.backgroundColor = Color.green()
@@ -313,7 +342,7 @@ class Widget extends Base {
 
     const text = widget.addText('靓仔，还不支持大组件，等耐心等待作者开发！')
     text.font = Font.blackSystemFont(15)
-    text.textColor = this.dynamicFontColor()
+    text.textColor = this.dynamicTextColor()
     text.centerAlignText()
 
     return widget
@@ -1032,7 +1061,7 @@ class Widget extends Base {
       }, {
         name: 'setBackgroundConfig',
         text: '自定义组件背景',
-        icon: '🌕'
+        icon: '🎨'
       }, {
         name: 'myOne',
         text: '一言一句',
@@ -1141,6 +1170,9 @@ class Widget extends Base {
     }, {
       text: '设置图片背景',
       icon: '🏞'
+    }, {
+      text: '返回上一级',
+      icon: '👈'
     }]
 
     menuList.forEach(item => {
@@ -1165,13 +1197,14 @@ class Widget extends Base {
       '请根据自己的偏好进行设置'
 
     const menuList = [{
-      name: 'lightBgColor',
       text: '系统浅色模式',
       icon: '🌕'
     }, {
-      name: 'darkBgColor',
       text: '系统深色模式',
       icon: '🌑'
+    }, {
+      text: '返回上一级',
+      icon: '👈'
     }]
 
     menuList.forEach(item => {
@@ -1196,11 +1229,20 @@ class Widget extends Base {
       '图片背景：选择你最喜欢的图片作为背景'
 
     const menuList = [{
-      text: '透明图片',
-      icon: ''
+      text: '裁剪壁纸',
+      icon: '🌅'
     }, {
       text: '自选图片',
-      icon: ''
+      icon: '🌄'
+    }, {
+      text: '字体颜色',
+      icon: '✍️'
+    }, {
+      text: '移除图片',
+      icon: '🪣'
+    }, {
+      text: '返回上一级',
+      icon: '👈'
     }]
 
     menuList.forEach(item => {
@@ -1211,6 +1253,14 @@ class Widget extends Base {
     const id = await alert.presentSheet()
     if (id === -1) return
     await this['backgroundImageSettings' + id]()
+  }
+
+  /**
+   * 返回上一级菜单
+   * @returns {Promise<void>}
+   */
+  async backgroundSettings2() {
+    return await this.actionPreferenceSettings()
   }
 
   /**
@@ -1225,7 +1275,7 @@ class Widget extends Base {
       '默认字体颜色代码：#000000'
     alert.addTextField('背景颜色代码一', this.settings['lightBgColor1'])
     alert.addTextField('背景颜色代码二', this.settings['lightBgColor2'])
-    alert.addTextField('字体颜色', this.settings['lightFontColor'])
+    alert.addTextField('字体颜色', this.settings['lightTextColor'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
@@ -1233,11 +1283,11 @@ class Widget extends Base {
     if (id === -1) return await this.backgroundSettings0()
     const lightBgColor1 = alert.textFieldValue(0)
     const lightBgColor2 = alert.textFieldValue(1)
-    const lightFontColor = alert.textFieldValue(2)
+    const lightTextColor = alert.textFieldValue(2)
 
     this.settings['lightBgColor1'] = lightBgColor1
     this.settings['lightBgColor2'] = lightBgColor2
-    this.settings['lightFontColor'] = lightFontColor
+    this.settings['lightTextColor'] = lightTextColor
     this.saveSettings()
 
     return await this.backgroundSettings0()
@@ -1255,7 +1305,7 @@ class Widget extends Base {
       '默认字体颜色代码：#ffffff'
     alert.addTextField('颜色代码一', this.settings['darkBgColor1'])
     alert.addTextField('颜色代码二', this.settings['darkBgColor2'])
-    alert.addTextField('字体颜色', this.settings['darkFontColor'])
+    alert.addTextField('字体颜色', this.settings['darkTextColor'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
@@ -1263,14 +1313,22 @@ class Widget extends Base {
     if (id === -1) return await this.backgroundSettings0()
     const darkBgColor1 = alert.textFieldValue(0)
     const darkBgColor2 = alert.textFieldValue(1)
-    const darkFontColor = alert.textFieldValue(2)
+    const darkTextColor = alert.textFieldValue(2)
 
     this.settings['darkBgColor1'] = darkBgColor1
     this.settings['darkBgColor2'] = darkBgColor2
-    this.settings['darkFontColor'] = darkFontColor
+    this.settings['darkTextColor'] = darkTextColor
     this.saveSettings()
 
     return await this.backgroundSettings0()
+  }
+
+  /**
+   * 返回上一级菜单
+   * @return {Promise<void>}
+   */
+  async backgroundColorSettings2() {
+    return await this.actionPreferenceSettings3()
   }
 
   /**
@@ -1278,42 +1336,44 @@ class Widget extends Base {
    * @returns {Promise<void>}
    */
   async backgroundImageSettings0() {
-    // Determine if user has taken the screenshot.
-    let message = 'Before you start, go to your home screen and enter wiggle mode. Scroll to the empty page on the far right and take a screenshot.'
-    const exitOptions = ['Continue','Exit to Take Screenshot']
-    const shouldExit = await this.generateAlert(message,exitOptions)
-    if (shouldExit) return await this.backgroundSettings1()
+    let message = '开始之前，请转到主屏幕并进入桌面编辑模式，滚动到最右边的空页面，然后截图！'
+    const exitOptions = ['前去截图', '继续']
+    const shouldExit = await this.generateAlert(message, exitOptions)
+    if (!shouldExit) return
 
+    // Get screenshot and determine phone size.
     try {
-      // Get screenshot and determine phone size.
       const img = await Photos.fromLibrary()
       const height = img.size.height
-      const phone = phoneSizes()[height]
+      const phone = this.phoneSizes()[height]
       if (!phone) {
-        message = 'It looks like you selected an image that isn\'t an iPhone screenshot, or your iPhone is not supported. Try again with a different image.'
+        message = '您选择的照片好像不是正确的截图，或者您的机型暂时不支持。'
         await this.generateAlert(message,['OK'])
-        return
+        return await this.backgroundSettings1()
       }
 
       // Prompt for widget size and position.
-      message = 'What size of widget are you creating?'
-      const sizes = ['Small','Medium','Large']
-      const size = await this.generateAlert(message,sizes)
-      const widgetSize = sizes[size]
+      message = '您创建组件的是什么规格？'
+      const sizes = ['小组件', '中组件', '大组件']
+      const _sizes = ['Small', 'Medium', 'Large']
+      const size = await this.generateAlert(message, sizes)
+      const widgetSize = _sizes[size]
 
-      message = 'What position will it be in?'
-      message += (height === 1136 ? ' (Note that your device only supports two rows of widgets, so the middle and bottom options are the same.)' : '')
+      message = '在桌面上组件存在什么位置？'
+      message += (height === 1136 ? ' （备注：当前设备只支持两行小组件，所以下边选项中的「中间」和「底部」的选项是一致的）' : '')
 
       // Determine image crop based on phone size.
       const crop = { w: '', h: '', x: '', y: '' }
       let positions = ''
+      let _positions = ''
       let position = ''
       switch (widgetSize) {
         case 'Small':
           crop.w = phone.small
           crop.h = phone.small
-          positions = ['Top left','Top right','Middle left','Middle right','Bottom left','Bottom right']
-          position = await this.generateAlert(message,positions)
+          positions = ['Top left', 'Top right', 'Middle left', 'Middle right', 'Bottom left', 'Bottom right']
+          _positions = ['左上角', '右上角', '中间左', '中间右', '左下角', '右下角']
+          position = await this.generateAlert(message, _positions)
 
           // Convert the two words into two keys for the phone size dictionary.
           const keys = positions[position].toLowerCase().split(' ')
@@ -1326,8 +1386,9 @@ class Widget extends Base {
 
           // Medium and large widgets have a fixed x-value.
           crop.x = phone.left
-          positions = ['Top','Middle','Bottom']
-          position = await this.generateAlert(message,positions)
+          positions = ['Top', 'Middle', 'Bottom']
+          _positions = ['顶部', '中部', '底部']
+          position = await this.generateAlert(message, _positions)
           const key = positions[position].toLowerCase()
           crop.y = phone[key]
           break
@@ -1335,22 +1396,23 @@ class Widget extends Base {
           crop.w = phone.medium
           crop.h = phone.large
           crop.x = phone.left
-          positions = ['Top','Bottom']
-          position = await this.generateAlert(message,positions)
+          positions = ['Top', 'Bottom']
+          _positions = ['顶部', '底部']
+          position = await this.generateAlert(message, _positions)
 
           // Large widgets at the bottom have the 'middle' y-value.
           crop.y = position ? phone.middle : phone.top
           break
       }
-
       // Crop image and finalize the widget.
-      const imgCrop = cropImage(img, new Rect(crop.x,crop.y,crop.w,crop.h))
+      const imgCrop = this.cropImage(img, new Rect(crop.x, crop.y, crop.w, crop.h))
 
-      await Files.writeImage(this.filePath('myBackgroundPhoto'), imgCrop)
-      this.settings['myBackgroundPhoto'] = this.filePath('myBackgroundPhoto')
+      await Files.writeImage(this.filePath('myBackgroundPhoto' + widgetSize), imgCrop)
+      this.settings['myBackgroundPhoto' + widgetSize] = this.filePath('myBackgroundPhoto' + widgetSize)
       this.saveSettings()
     } catch (error) {
       // 取消图片会异常 暂时不用管
+      console.error(error)
     }
   }
 
@@ -1360,13 +1422,58 @@ class Widget extends Base {
    */
   async backgroundImageSettings1() {
     try {
+      const message = '您创建组件的是什么规格？'
+      const sizes = ['小组件', '中组件', '大组件']
+      const _sizes = ['Small','Medium','Large']
+      const size = await this.generateAlert(message, sizes)
+      const widgetSize = _sizes[size]
+
       const image = await Photos.fromLibrary()
-      await Files.writeImage(this.filePath('myBackgroundPhoto'), image)
-      this.settings['myBackgroundPhoto'] = this.filePath('myBackgroundPhoto')
+      await Files.writeImage(this.filePath('myBackgroundPhoto' + widgetSize), image)
+      this.settings['myBackgroundPhoto' + widgetSize] = this.filePath('myBackgroundPhoto' + widgetSize)
       this.saveSettings()
     } catch (error) {
       // 取消图片会异常 暂时不用管
     }
+  }
+
+  /**
+   * 设置字体颜色
+   * @return {Promise<void>}
+   */
+  async backgroundImageSettings2() {
+    const alert = new Alert()
+    alert.title = '字体颜色'
+    alert.message = '仅在设置图片背景情境下进行对字体颜色更改，字体规格：#ffffff'
+    alert.addTextField('请输入字体颜色值', this.settings['backgroundImageTextColor'])
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.backgroundSettings1()
+    this.settings['backgroundImageTextColor'] = alert.textFieldValue(0)
+    this.saveSettings()
+
+    return await this.backgroundSettings1()
+  }
+
+  /**
+   * 移除背景图片
+   * @return {Promise<void>}
+   */
+  async backgroundImageSettings3() {
+    this.settings['myBackgroundPhotoSmall'] = undefined
+    this.settings['myBackgroundPhotoMedium'] = undefined
+    this.settings['myBackgroundPhotoLarge'] = undefined
+    this.saveSettings()
+  }
+
+  /**
+   * 返回上一级菜单
+   * @return {Promise<void>}
+   */
+  async backgroundImageSettings4() {
+    return await this.backgroundSettings1()
   }
 
   /**
@@ -1651,14 +1758,11 @@ class Widget extends Base {
    * @returns {Promise<number>}
    */
   async generateAlert(message, options) {
-
     const alert = new Alert()
     alert.message = message
-
     for (const option of options) {
       alert.addAction(option)
     }
-
     return await alert.presentAlert()
   }
 
@@ -1669,7 +1773,6 @@ class Widget extends Base {
    * @returns {Image}
    */
   cropImage(img, rect) {
-
     const draw = new DrawContext()
     draw.size = new Size(rect.width, rect.height)
 
@@ -1771,10 +1874,34 @@ class Widget extends Base {
    * 获取动态字体颜色
    * @return {Color}
    */
-  dynamicFontColor() {
-    const lightFontColor = this.settings['lightFontColor'] ? this.settings['lightFontColor'] : '#000000'
-    const darkFontColor = this.settings['darkFontColor'] ? this.settings['darkFontColor'] : '#ffffff'
-    return Color.dynamic(new Color(lightFontColor, 1), new Color(darkFontColor, 1))
+  dynamicTextColor() {
+    const lightTextColor = this.settings['lightTextColor'] ? this.settings['lightTextColor'] : '#000000'
+    const darkTextColor = this.settings['darkTextColor'] ? this.settings['darkTextColor'] : '#ffffff'
+    return Color.dynamic(new Color(lightTextColor, 1), new Color(darkTextColor, 1))
+  }
+
+  /**
+   * 动态设置组件字体颜色
+   * @param {WidgetText} widget
+   */
+  setWidgetTextColor(widget) {
+    if (this.settings['myBackgroundPhoto']) {
+      widget.textColor = this.settings['backgroundImageTextColor'] ? new Color(this.settings['backgroundImageTextColor'], 1) : new Color('#ffffff', 1)
+    } else {
+      widget.textColor = this.dynamicTextColor()
+    }
+  }
+
+  /**
+   * 动态设置组件字体颜色
+   * @param {WidgetImage} widget
+   */
+  setWidgetImageColor(widget) {
+    if (this.settings['myBackgroundPhoto']) {
+      widget.tintColor = this.settings['backgroundImageTextColor'] ? new Color(this.settings['backgroundImageTextColor'], 1) : new Color('#ffffff', 1)
+    } else {
+      widget.tintColor = this.dynamicTextColor()
+    }
   }
 
   /**
