@@ -162,12 +162,11 @@ class Widget extends Base {
    */
   async renderSmall(data) {
     const widget = new ListWidget()
-    if (this.settings['myBackgroundPhotoSmallLight'] || this.settings['myBackgroundPhotoSmallDark']) {
-      if (await this.isUsingDarkAppearance()) {
-        widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoSmallDark'])
-      } else {
-        widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoSmallLight'])
-      }
+
+    if (await this.isUsingDarkAppearance() && this.settings['myBackgroundPhotoSmallLight']) {
+      widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoSmallLight'])
+    } else if (await this.isUsingDarkAppearance() && this.settings['myBackgroundPhotoSmallDark']) {
+      widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoSmallDark'])
     } else {
       widget.backgroundGradient = this.getBackgroundColor()
     }
@@ -218,12 +217,10 @@ class Widget extends Base {
   async renderMedium(data) {
     const widget = new ListWidget()
 
-    if (this.settings['myBackgroundPhotoMediumLight'] || this.settings['myBackgroundPhotoMediumDark']) {
-      if (await this.isUsingDarkAppearance()) {
-        widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoMediumDark'])
-      } else {
-        widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoMediumLight'])
-      }
+    if (await this.isUsingDarkAppearance() && this.settings['myBackgroundPhotoMediumLight']) {
+      widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoMediumLight'])
+    } else if (await this.isUsingDarkAppearance() && this.settings['myBackgroundPhotoMediumDark']) {
+      widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoMediumDark'])
     } else {
       widget.backgroundGradient = this.getBackgroundColor()
     }
@@ -386,12 +383,10 @@ class Widget extends Base {
   async renderLarge(data) {
     const widget = new ListWidget()
 
-    if (this.settings['myBackgroundPhotoLargeLight'] || this.settings['myBackgroundPhotoLargeDark']) {
-      if (await this.isUsingDarkAppearance()) {
-        widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoLargeDark'])
-      } else {
-        widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoLargeLight'])
-      }
+    if (await this.isUsingDarkAppearance() && this.settings['myBackgroundPhotoLargeLight']) {
+      widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoLargeLight'])
+    } else if (await this.isUsingDarkAppearance() && this.settings['myBackgroundPhotoLargeDark']) {
+      widget.backgroundImage = await Files.readImage(this.settings['myBackgroundPhotoLargeDark'])
     } else {
       widget.backgroundGradient = this.getBackgroundColor()
     }
@@ -400,6 +395,7 @@ class Widget extends Base {
     const height = data?.size?.height
     const widgetSize = height => new Size(width, height)
 
+    // region header
     // 头部
     const headerStack = widget.addStack()
     headerStack.size = widgetSize(headerStack.size.height)
@@ -437,10 +433,11 @@ class Widget extends Base {
     audiLogo.imageSize = new Size(logoStack.size.width, 20)
     this.setWidgetImageColor(audiLogo)
     // audiLogo.rightAlignImage()
+    // endregion
 
     widget.addSpacer(5)
 
-    // 主体信息
+    // region 主体信息
     const carInfoStack = widget.addStack()
     // carInfoStack.backgroundColor = Color.red()
     carInfoStack.size = widgetSize(carInfoStack.size.height)
@@ -481,12 +478,12 @@ class Widget extends Base {
     fuelText.textOpacity = 0.75
     this.setWidgetTextColor(fuelText)
 
-    // if (data.oilLevel) {
-    //   const oilStack = carInfoStack.addStack()
-    //   const oilText = oilStack.addText(`机油量: ${data.oilLevel}%`)
-    //   oilText.font = Font.systemFont(16)
-    //   this.setWidgetTextColor(oilText)
-    // }
+    if (data.oilLevel) {
+      const oilStack = carInfoStack.addStack()
+      const oilText = oilStack.addText(`机油量: ${data.oilLevel}%`)
+      oilText.font = Font.systemFont(16)
+      this.setWidgetTextColor(oilText)
+    }
 
     const travelText = carInfoStack.addText(`总里程: ${data.mileage} km`)
     travelText.font = Font.systemFont(16)
@@ -496,9 +493,9 @@ class Widget extends Base {
 
     // 更新时间
     const updateTimeStack = carInfoStack.addStack()
-    updateTimeStack.backgroundColor = new Color('#ffffff', 0.25)
-    updateTimeStack.setPadding(2, 3, 2, 3)
-    updateTimeStack.cornerRadius = 5
+    // updateTimeStack.backgroundColor = new Color('#ffffff', 0.25)
+    // updateTimeStack.setPadding(2, 3, 2, 3)
+    // updateTimeStack.cornerRadius = 5
     // 格式化时间
     const formatter = new DateFormatter()
     formatter.dateFormat = 'yyyy-MM-dd HH:mm'
@@ -510,6 +507,17 @@ class Widget extends Base {
     data.status ? this.setWidgetTextColor(metaText5) : metaText5.textColor = new Color('#FF9900', 1)
 
     carInfoStack.addSpacer(5)
+
+    // 车辆状态
+    const statusStack = carInfoStack.addStack()
+    statusStack.size = widgetSize(statusStack.size.height)
+    const doorAndWindowStatus = data.doorAndWindow ? '车门车窗已关闭' : '请检查车门车窗是否已关闭'
+    const metaText7 = statusStack.addText(doorAndWindowStatus)
+    metaText7.font = Font.systemFont(12)
+    data.doorAndWindow ? this.setWidgetTextColor(metaText7) : metaText7.textColor = new Color('#FF9900', 1)
+
+    carInfoStack.addSpacer(5)
+
     // 地理位置
     if (this.showLocation() && data.carCompleteLocation !== '暂无位置信息') {
       const locationStack = carInfoStack.addStack()
@@ -525,21 +533,26 @@ class Widget extends Base {
     }
 
     carInfoStack.addSpacer(30)
-    // 车辆照片1
-    const carPhotoStack = carInfoStack.addStack()
+    // endregion
+
+    // region 车辆照片
+    // todo 图片动态高度调整
+    const carPhotoStack = widget.addStack()
     // carPhotoStack.backgroundColor = Color.brown()
     carPhotoStack.size = widgetSize(carPhotoStack.size.height)
     const metaImage = carPhotoStack.addImage(await this.getMyCarPhoto())
-    metaImage.imageSize = new Size(carInfoStack.size.width - 80, 120)
+    metaImage.imageSize = new Size(width - 80, height - headerStack.size.height - carInfoStack.size.height)
     metaImage.centerAlignImage()
+    // endregion
 
-    // 车辆状态
-    const statusStack = carInfoStack.addStack()
-    statusStack.size = widgetSize(statusStack.size.height)
-    const doorAndWindowStatus = data.doorAndWindow ? '车门车窗已关闭' : '请检查车门车窗是否已关闭'
-    const metaText7 = statusStack.addText(doorAndWindowStatus)
-    metaText7.font = Font.systemFont(12)
-    data.doorAndWindow ? this.setWidgetTextColor(metaText7) : metaText7.textColor = new Color('#FF9900', 1)
+    // region 车辆状态
+    // const statusStack = widget.addStack()
+    // statusStack.size = widgetSize(statusStack.size.height)
+    // const doorAndWindowStatus = data.doorAndWindow ? '车门车窗已关闭' : '请检查车门车窗是否已关闭'
+    // const metaText7 = statusStack.addText(doorAndWindowStatus)
+    // metaText7.font = Font.systemFont(12)
+    // data.doorAndWindow ? this.setWidgetTextColor(metaText7) : metaText7.textColor = new Color('#FF9900', 1)
+    // endregion
 
     return widget
   }
