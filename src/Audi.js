@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = '1.2.6'
+const AUDI_VERSION = '1.2.7'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -282,6 +282,7 @@ class Widget extends Base {
 
     // 车辆功率
     const powerStack = leftStack.addStack()
+    // powerStack.backgroundColor = Color.blue()
     const powerText = powerStack.addText(`${data.modelShortName}`)
     powerText.font = Font.systemFont(14)
     this.setWidgetTextColor(powerText)
@@ -289,6 +290,7 @@ class Widget extends Base {
     // 显示续航
     const enduranceStack = leftStack.addStack()
     enduranceStack.bottomAlignContent()
+    // enduranceStack.backgroundColor = Color.cyan()
     const enduranceText = enduranceStack.addText( `${data.endurance}km`)
     enduranceText.font = Font.heavySystemFont(16)
     this.setWidgetTextColor(enduranceText)
@@ -303,15 +305,18 @@ class Widget extends Base {
     fuelText.textOpacity = 0.75
     this.setWidgetTextColor(fuelText)
     // 总里程
-    const travelText = leftStack.addText(`总里程: ${data.mileage} km`)
+    const travelStack = leftStack.addStack()
+    // travelStack.backgroundColor = Color.red()
+    const travelText = travelStack.addText(`总里程: ${data.mileage} km`)
     travelText.font = Font.systemFont(12)
     travelText.textOpacity = 0.5
     this.setWidgetTextColor(travelText)
 
-    leftStack.addSpacer(5)
+    // leftStack.addSpacer(5)
 
     // 车辆状态
     const updateStack = leftStack.addStack()
+    // updateStack.backgroundColor = Color.gray()
     updateStack.layoutVertically()
     // 格式化时间
     const formatter = new DateFormatter()
@@ -326,7 +331,7 @@ class Widget extends Base {
     updateTimeText.font = Font.systemFont(12)
     data.status ? this.setWidgetTextColor(updateTimeText) : updateTimeText.textColor = new Color('#FF9900', 1)
     if (!(this.showLocation() && data.carSimpleLocation !== '暂无位置信息')) {
-      updateStack.addSpacer(5)
+      // updateStack.addSpacer(5)
       const updateTimeText = updateStack.addText('更新日期: ' + updateDateString)
       updateTimeText.textOpacity = 0.75
       updateTimeText.font = Font.systemFont(12)
@@ -337,9 +342,10 @@ class Widget extends Base {
     // data.carSimpleLocation = '测试位置测试位置测试位置位置测试位置测试位置'
     if (this.showLocation() && data.carSimpleLocation !== '暂无位置信息') {
       const carLocationStack = leftStack.addStack()
+      // carLocationStack.backgroundColor = Color.red()
       carLocationStack.topAlignContent()
       carLocationStack.layoutVertically()
-      carLocationStack.size = new Size(leftStack.size.width - 20, 30)
+      carLocationStack.size = new Size(leftStack.size.width - 20, tipStackHeight * 2)
 
       const locationText = carLocationStack.addText(data.carSimpleLocation)
       locationText.textOpacity = 0.75
