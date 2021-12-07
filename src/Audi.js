@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = '1.2.7'
+const AUDI_VERSION = '1.2.8'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -718,7 +718,10 @@ class Widget extends Base {
 
       // 获取机油
       const oilArr = getVehiclesStatusArr.find(i => i.id === '0x0204FFFFFF')?.field
-      const oilLevelVal = oilArr.find(i => i.id === '0x0204040003')?.value
+      const oilLevelVal = oilArr ? oilArr.find(i => i.id === '0x0204040003')?.value : undefined
+      // 机油信息
+      if (oilLevelVal) GLOBAL_USER_DATA.oilLevel = oilLevelVal
+
 
       // 判断电车
       // 0x0301030002 = 电池
@@ -740,8 +743,6 @@ class Widget extends Base {
       // 总里程
       if (mileageVal) GLOBAL_USER_DATA.mileage = mileageVal
       if (updateDate) GLOBAL_USER_DATA.updateDate = updateDate
-      // 机油信息
-      if (oilLevelVal) GLOBAL_USER_DATA.oilLevel = oilLevelVal
       // 车辆状态 true = 已锁车
       GLOBAL_USER_DATA.status = isLocked
       // true 车窗已关闭 | false 请检查车窗是否关闭
