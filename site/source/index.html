@@ -71,7 +71,7 @@
           <p class="m-5">Scriptable 可以让您脑海中所有想法展示出来，我所开发的小组件基于该平台运行</p>
         </div>
         <div class="feature-content">
-          <h2>2. 安装 Audi Joiner 小组件</h2>
+          <h2>2. 安装 Audi Joiner 小组件 <span id="version">当前版本号：v1.0.0</span></h2>
           <textarea id="js" readonly class="d-none">const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']();
 await Promise.all(['Audi-Joiner.js'].map(async js => {
   const REQ = new Request(`https://gitee.com/JaxsonWang/scriptable-audi/raw/master/build/${encodeURIComponent(js)}`);
@@ -85,7 +85,7 @@ Safari.open('scriptable:///run?scriptName=Audi-Joiner');
           <p class="mt-5"><strong>点击上面按钮进行复制代码</strong></p>
         </div>
         <div class="feature-content">
-          <h2>3. 执行 Audi Joiner 小组件 <span id="version">v1.0.0</span></h2>
+          <h2>3. 执行 Audi Joiner 小组件</h2>
           <a id="open" href="scriptable:///add?scriptName=AudiJoinerInstaller" class="btn btn-primary">打开 Scriptable</a>
           <p class="m-5"><strong>点击上面按钮后，在 Scriptable 应用点击 ➕，粘贴，运行 ▶️</strong></p>
           <p class="mx-auto my-3 w-50" style="font-weight: bold;color: red;">⚠️️️⚠️️️⚠️️️ 请务必确认自己车辆已经开通车联网</p>

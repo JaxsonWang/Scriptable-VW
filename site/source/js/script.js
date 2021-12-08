@@ -77,7 +77,7 @@
       getGiteeTree(dataRoo1[1].url + token, null, function(dataRoo4) {
         var base64 = dataRoo4.content
         var json = JSON.parse(window.atob(base64))
-        document.querySelector('#version').innerHTML = 'v' + json.version
+        document.querySelector('#version').innerHTML = '当前版本号：v' + json.version
       })
     })
   })
@@ -120,7 +120,7 @@ function renderImageList(arr) {
     arr.forEach(item => {
       var create = document.createElement('p')
       create.className = 'py-0'
-      create.innerHTML = item.replace('.png', '') + '：<a href="https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/cars/'+ encodeURI(item) +'" target="_blank">点击下载</a>'
+      create.innerHTML = item.replace('.png', '').replace('_', ' ') + '：<a href="https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/cars/'+ encodeURI(item) +'" target="_blank">点击下载</a>'
       document.querySelector('.car-images-list').appendChild(create)
     })
   } else {

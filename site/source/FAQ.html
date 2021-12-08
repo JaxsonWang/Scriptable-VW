@@ -128,6 +128,91 @@
           <div class="faq-item">
             <div class="faq-item-title">
               <h2>
+                快捷指令
+              </h2>
+            </div>
+            <div id="siriContent" data-children=".item">
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#siriContent1">
+                    怎么和 Siri 进行交互呢？
+                  </a>
+                </div>
+                <div id="siriContent1" class="collapse accordion-block">
+                  <p>
+                    目前只有 「Audi Joiner v1.3.0」以上版本包括此版本支持和系统的 Siri 交互，请到脚本的弹窗脚本进行检查版本。
+                  </p>
+                  <p>
+                    然后进行在下列资源列表下载快捷指令导入就可以使用了。
+                  </p>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#siriContent2">
+                    如果用「Audi Joiner」和「Siri」进行交互需要注意什么？
+                  </a>
+                </div>
+                <div id="siriContent2" class="collapse accordion-block">
+                  <p>
+                    除了版本限制以外，还要保证「Audi Joiner」的脚本名称是不允许更改的，否则快捷指令无法使用。目前脚本名称叫「Audi-Joiner.js」
+                  </p>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#siriContent4">
+                    如果我想根据「Audi Joiner」自定义新的快捷指令，怎么设计？
+                  </a>
+                </div>
+                <div id="siriContent4" class="collapse accordion-block">
+                  <p class="pb-0">
+                    目前脚本只把车辆的基本信息暴露出来，作为一个词典数据（也叫 JSON 格式数据），目前数据格式如下：
+                  </p>
+                  <pre>
+{
+  size: '', // 暂无用处
+  seriesName: '', // 车辆名称
+  modelShortName: '', // 车辆功率
+  vin: '', // 车架号
+  engineNo: '', // 发动机型号
+  plateNo: '', // 车牌号码
+  endurance: 0, // 当前车辆续航
+  fuelLevel: 0, // 当前燃油/电池容量
+  oilLevel: undefined, // 机油信息（如果出现 undefined 则车辆不支持显示）
+  mileage: 0, // 当前车辆总里程
+  updateDate: '', // 更新日期
+  carSimpleLocation: '', // 简洁的地理位置
+  carCompleteLocation: '', // 完整的地理位置
+  longitude: '', // 车辆纬度
+  latitude: '', // 车辆经度
+  status: true, // 车辆锁车状态 布尔值 true = 已锁车 false = 未锁车
+  doorAndWindow: '', // 车窗状态 布尔值 true = 车门车窗已关闭 false = 车门车窗没有关闭
+  myOne: '世间美好，与您环环相扣' // 一言
+}
+                </pre>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#siriContent3">
+                    快捷指令下载列表（如果你制作好的快捷指令可以和开发者分享到此网站）
+                  </a>
+                </div>
+                <div id="siriContent3" class="collapse accordion-block">
+                  <p class="pb-0">
+                    「嘿 Siri，我的车在哪里」：<a href="https://www.icloud.com/shortcuts/a4f336ba15794d0a9baa8d8afef1916d" target="_blank">点击打开</a>
+                  </p>
+                  <p class="pt-0">
+                    「嘿 Siri，我的车状态如何」：<a href="https://www.icloud.com/shortcuts/c3f355ec2fdd4c8584ce67218fb19c04" target="_blank">点击打开</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-item-title">
+              <h2>
                 联系方式
               </h2>
             </div>
