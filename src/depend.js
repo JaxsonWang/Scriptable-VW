@@ -329,8 +329,12 @@ const Running = async (Widget, default_args = '') => {
     const W = await M.render()
     Script.setWidget(W)
     Script.complete()
+  } else if (config.runsWithSiri) {
+    M = new Widget(args.shortcutParameter || '')
+    const data = await M.siriShortcutData()
+    Script.setShortcutOutput(data)
   } else {
-    let {act, data, __arg, __size} = args.queryParameters
+    let { act, data, __arg, __size } = args.queryParameters
     M = new Widget(__arg || default_args || '')
     if (__size) M.init(__size)
     if (!act || !M['_actions']) {
@@ -371,8 +375,12 @@ const Testing = async (Widget, default_args = '') => {
     const W = await M.render()
     Script.setWidget(W)
     Script.complete()
+  } else if (config.runsWithSiri) {
+    M = new Widget(args.shortcutParameter || '')
+    const data = await M.siriShortcutData()
+    Script.setShortcutOutput(data)
   } else {
-    let {act, data, __arg, __size} = args.queryParameters
+    let { act, data, __arg, __size } = args.queryParameters
     M = new Widget(__arg || default_args || '')
     if (__size) M.init(__size)
     if (!act || !M['_actions']) {

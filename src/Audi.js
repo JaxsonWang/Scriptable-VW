@@ -697,8 +697,8 @@ class Widget extends Base {
         const getVehiclesAddress = await this.handleGetCarAddress(isDebug)
         // simple: '暂无位置信息',
         //   complete: '暂无位置信息'
-        if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = getVehiclesPosition.longitude // 车辆经度
-        if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = getVehiclesPosition.latitude // 车辆纬度
+        if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = parseInt(getVehiclesPosition.longitude, 10) / 1000000 // 车辆经度
+        if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = parseInt(getVehiclesPosition.latitude, 10) / 1000000// 车辆纬度
         if (getVehiclesAddress) GLOBAL_USER_DATA.carSimpleLocation = getVehiclesAddress.simple // 简略地理位置
         if (getVehiclesAddress) GLOBAL_USER_DATA.carCompleteLocation = getVehiclesAddress.complete // 详细地理位置
       } catch (error) {
@@ -1121,7 +1121,11 @@ class Widget extends Base {
           await this.notify('unauthorized 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽奥迪应用查看！')
           break
         case 'mbbc.rolesandrights.unknownService':
-          await this.notify('unknownService 错误', '未知服务，请联系开发者处理。')
+          await this.notify('unknownService 错误', '请到菜单「路线配置」更换对应车型路线！')
+          break
+        case 'mbbc.rolesandrights.unauthorizedUserDisabled':
+          // todo 错误
+          await this.notify('unauthorizedUserDisabled 错误', '')
           break
         default:
           await this.notify('未知错误' + response.error.errorCode, '未知错误:' + response.error.description)
@@ -1881,16 +1885,16 @@ class Widget extends Base {
    */
   async actionCompatible() {
     const alert = new Alert()
-    alert.title = '兼容配置'
-    alert.message = '标准模式：支持绝大部分车型\n' +
-      '兼容模式：A3、部分A6车型、Q3、Q7车主'
+    alert.title = '路线配置'
+    alert.message = '标准路线：支持绝大部分车型\n' +
+      '其它模式：A3、部分A6车型、Q3、Q7车主'
 
     const menuList = [{
       name: 'standard',
-      text: '标准模式'
+      text: '标准路线'
     }, {
       name: 'compatible',
-      text: '兼容模式'
+      text: '其它模式'
     }]
 
     const mode = this.settings['compatibilityMode'] ? this.settings['compatibilityMode'] : 'standard'
@@ -2076,6 +2080,14 @@ class Widget extends Base {
   }
 
   /**
+   * 传送给 Siri 快捷指令车辆信息数据
+   * @returns {Promise<{Object}|boolean>}
+   */
+  async siriShortcutData() {
+    return await this.getData()
+  }
+
+  /**
    * 将图像裁剪到指定的 rect 中
    * @param img
    * @param rect
@@ -2141,7 +2153,6 @@ class Widget extends Base {
         middle: 580,
         bottom: 1000
       },
-
 
       // 11 Pro, XS, X
       '2436': {

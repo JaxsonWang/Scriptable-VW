@@ -61,5 +61,69 @@
     //     console.log(response)
     //   }
     // })
+
+    // 列表刷新
+    var token = '?access_token=aa19b0893e94790f3a253e1a19e5f91d'
+    getGiteeTree('https://gitee.com/api/v5/repos/JaxsonWang/scriptable-audi/git/trees/master' + token, ['assets', 'version.json'], function(dataRoo1) {
+      getGiteeTree(dataRoo1[0].url + token, ['cars'], function(dataRoo2) {
+        getGiteeTree(dataRoo2[0].url + token, null, function(dataRoo3) {
+          var imageArr = []
+          for (var i = 0; i < dataRoo3.length; i++) {
+            imageArr.push(dataRoo3[i].path)
+          }
+          renderImageList(imageArr)
+        })
+      })
+      getGiteeTree(dataRoo1[1].url + token, null, function(dataRoo4) {
+        var base64 = dataRoo4.content
+        var json = JSON.parse(window.atob(base64))
+        document.querySelector('#version').innerHTML = 'v' + json.version
+      })
+    })
   })
 })(jQuery)
+
+/**
+ * 从 gitee 获取数据
+ * @param url
+ * @param name
+ * @param callback
+ */
+function getGiteeTree(url, name, callback) {
+  $.ajax({
+    type: 'get',
+    dataType: 'json',
+    url: url,
+    success: function (response) {
+      if (response.tree && response.tree.length !== 0) {
+        var treeList = response.tree
+        if (name) {
+          var params = []
+          for (var i = 0; i < treeList.length; i++) {
+            if (name.indexOf(treeList[i].path) !== -1) {
+              params.push(treeList[i])
+            }
+          }
+          callback(params)
+        } else {
+          callback(treeList)
+        }
+      } else {
+        callback(response)
+      }
+    }
+  })
+}
+
+function renderImageList(arr) {
+  if (arr && arr.length !== 0) {
+    arr.forEach(item => {
+      var create = document.createElement('p')
+      create.className = 'py-0'
+      create.innerHTML = item.replace('.png', '') + '：<a href="https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/cars/'+ encodeURI(item) +'" target="_blank">点击下载</a>'
+      document.querySelector('.car-images-list').appendChild(create)
+    })
+  } else {
+    document.querySelector('.car-images-list').innerHTML = '暂无数据'
+  }
+}
