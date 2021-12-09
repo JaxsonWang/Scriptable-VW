@@ -14,30 +14,23 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = '1.3.0'
+const AUDI_VERSION = '1.2.8'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
 const DEFAULT_DARK_BACKGROUND_COLOR_2 = '#1E1E1E'
 
 const AUDI_SERVER_API = {
-  login: 'https://audi2c.faw-vw.com/capi/v1/user/login',
+  login: 'https://one-app-h5.faw-vw.com/prod-api/mobile/one-app/user/public/v1/login?appkey=6298289633',
   token: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/oauth2/v1/token',
-  mine: 'https://audi2c.faw-vw.com/capi/v1/user/mine',
   mal1aVehiclesStatus: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/bs/vsr/v1/vehicles/${vin}/status`,
-  mal1aVehiclesPosition: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/bs/cf/v1/vehicles/${vin}/position`,
-  mal3aVehiclesStatus: vin => `https://mal-3a.prd.cn.dp.vwg-connect.cn/api/bs/vsr/v1/vehicles/${vin}/status`,
-  mal3aVehiclesPosition: vin => `https://mal-3a.prd.cn.dp.vwg-connect.cn/api/bs/cf/v1/vehicles/${vin}/position`,
-  vehicleServer: (appKey, nonce, sign, signt) => `https://audioneapp.faw-vw.com:443/v2/audi-vehicle-server/public/vehicleServer/queryDefaultVehicleDetails?appkey=${appKey}&nonce=${nonce}&sign=${sign}&signt=${signt}`
+  mal1aVehiclesPosition: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/bs/cf/v1/vehicles/${vin}/position`
 }
-const SIGN_SERVER_API = {
-  sign: 'https://api.zhous.cloud/audiServer/signature/getSignature'
-}
+
 const REQUEST_HEADER = {
   Accept: 'application/json',
   'Content-Type': 'application/json',
-  'User-Agent': 'MyAuDi/3.0.2 CFNetwork/1325.0.1 Darwin/21.1.0',
-  'X-Client-ID': 'de6d8b23-792f-47b8-82f4-e4cc59c2916e'
+  'Did': 'VW_APP_iPhone_2025BD9B-0E98-49D1-A96F-2192F9598A52_15.1_3.15.2'
 }
 const DEFAULT_MY_CAR_PHOTO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png'
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
@@ -58,7 +51,7 @@ const GLOBAL_USER_DATA = {
   latitude: '',
   status: true, // false = 没锁车 true = 已锁车
   doorAndWindow: '', // 门窗状态
-  myOne: '世间美好，与您环环相扣'
+  myOne: '与你一路同行'
 }
 const AUDI_AMAP_KEY = 'c078fb16379c25bc0aad8633d82cf1dd'
 
@@ -109,13 +102,12 @@ class Widget extends Base {
    */
   constructor(arg) {
     super(arg)
-    this.name = 'Audi 挂件'
-    this.desc = 'Audi 车辆桌面组件展示'
+    this.name = '大众挂件'
+    this.desc = '大众车辆桌面组件展示'
 
     if (config.runsInApp) {
       if (!Keychain.contains('authToken')) this.registerAction('账户登录', this.actionStatementSettings)
       if (Keychain.contains('authToken')) this.registerAction('偏好配置', this.actionPreferenceSettings)
-      this.registerAction('兼容设置', this.actionCompatible)
       this.registerAction('重置组件', this.actionLogOut)
       if (Keychain.contains('authToken')) this.registerAction('重载数据', this.actionLogAction)
       this.registerAction('检查更新', this.actionCheckUpdate)
@@ -675,18 +667,13 @@ class Widget extends Base {
    * @returns {Promise<{Object}>}
    */
   async bootstrap(isDebug = false) {
-    try {
-      const getUserMineData = JSON.parse(Keychain.get('userMineData'))
-      const getVehicleData = getUserMineData.vehicleDto
-      // 车辆名称
-      GLOBAL_USER_DATA.seriesName = this.settings['myCarName'] ? this.settings['myCarName'] : getVehicleData?.seriesName
-      // 车辆功率类型
-      GLOBAL_USER_DATA.modelShortName = this.settings['myCarModelName'] ? this.settings['myCarModelName'] : getVehicleData?.carModelName
-      if (getVehicleData.vin) GLOBAL_USER_DATA.vin = getVehicleData?.vin // 车架号
-      if (getVehicleData.plateNo) GLOBAL_USER_DATA.plateNo = getVehicleData?.plateNo // 车牌号
-    } catch (error) {
-      return '获取用户信息失败，' + error
-    }
+    // 基本信息
+    // 车辆名称
+    GLOBAL_USER_DATA.seriesName = this.settings['myCarName'] || '嗨！大众！'
+    // 车辆功率类型
+    GLOBAL_USER_DATA.modelShortName = this.settings['myCarModelName'] || '您还没有定义车辆功率信息'
+    GLOBAL_USER_DATA.vin = this.settings['myCarVIN'] // 车架号
+    GLOBAL_USER_DATA.plateNo = this.settings['plateNo'] // 车牌号
 
     // 是否开启位置
     if (this.showLocation()) {
@@ -712,14 +699,16 @@ class Widget extends Base {
       const getVehicleResponseData = getVehiclesStatus?.StoredVehicleDataResponse?.vehicleData?.data
       const getVehiclesStatusArr = getVehicleResponseData ? getVehicleResponseData : []
       const getCarStatusArr = getVehiclesStatusArr.find(i => i.id === '0x0301FFFFFF')?.field
-      const enduranceVal = getCarStatusArr.find(i => i.id === '0x0301030005')?.value // 燃料总行程
+      // 燃料续航
+      // 0x0301030005 奥迪
+      // 0x0301030006 大众
+      const enduranceVal = getCarStatusArr.find(i => i.id === '0x0301030006')?.value // 燃料总行程
 
       // 获取机油
       const oilArr = getVehiclesStatusArr.find(i => i.id === '0x0204FFFFFF')?.field
       const oilLevelVal = oilArr ? oilArr.find(i => i.id === '0x0204040003')?.value : undefined
       // 机油信息
       if (oilLevelVal) GLOBAL_USER_DATA.oilLevel = oilLevelVal
-
 
       // 判断电车
       // 0x0301030002 = 电池
@@ -862,7 +851,7 @@ class Widget extends Base {
   }
 
   /**
-   * 登录奥迪服务器
+   * 登录大众服务器
    * @param {boolean} isDebug
    * @returns {Promise<void>}
    */
@@ -873,8 +862,7 @@ class Widget extends Base {
         method: 'POST',
         headers: REQUEST_HEADER,
         body: JSON.stringify({
-          loginChannelEnum: 'APP',
-          loginTypeEnum: 'ACCOUNT_PASSWORD',
+          scope: "openid profile mbb",
           account: this.settings['username'],
           password: this.settings['password']
         })
@@ -883,14 +871,13 @@ class Widget extends Base {
       if (isDebug) console.log('获取登陆信息:')
       if (isDebug) console.log(response)
       // 判断接口状态
-      if (response.code === 0) {
+      if (response.returnStatus === 'SUCCEED') {
         // 登录成功 存储登录信息
         console.log('登陆成功')
         Keychain.set('userBaseInfoData', JSON.stringify(response.data))
         await this.notify('登录成功', '正在从 Audi 服务器获取车辆数据，请耐心等待！')
         // 准备交换验证密钥数据
-        await this.handleAudiGetToken('userIDToken', isDebug)
-        await this.handleUserMineData(isDebug)
+        await this.handleAudiGetToken(isDebug)
       } else {
         // 登录异常
         await this.notify('登录失败', response.message)
@@ -900,146 +887,28 @@ class Widget extends Base {
       // 已存在用户信息
       if (isDebug) console.log('检测本地缓存已有登陆数据:')
       if (isDebug) console.log(Keychain.get('userBaseInfoData'))
-      await this.handleAudiGetToken('userIDToken')
-      await this.handleUserMineData()
-    }
-  }
-
-  /**
-   * 获取车辆基本信息
-   * 该接口返回绑定车辆的侧身照片，不过有白底背景
-   * 后期可以利用抠图api完善
-   * @returns {Promise<void>}
-   */
-   async handleQueryDefaultVehicleData() {
-    if (!Keychain.contains('defaultVehicleData')) {
-      if (!Keychain.contains('userBaseInfoData')) {
-        return console.error('获取密钥数据失败，没有拿到用户登录信息，请重新登录再重试！')
-      }
-      const getUserBaseInfoData =JSON.parse(Keychain.get('userBaseInfoData'))
-      //服务器获取签名
-      const signOptions = {
-        url: SIGN_SERVER_API.sign,
-        method: 'POST',
-        headers: {
-          ...{
-            Platform : '1'
-          },
-          ...REQUEST_HEADER
-        }
-      }
-      const signatureREesponse = await this.http(signOptions)
-      if (signatureREesponse.code !== 0){
-        return console.error(signatureREesponse.data)
-      } else{
-        const data = signatureREesponse.data
-        const options = {
-          url: AUDI_SERVER_API.vehicleServer(data.appkey, data.nonce, data.sign, data.signt),
-          method: 'GET',
-          headers: {
-            ...{
-              token: 'Bearer ' + getUserBaseInfoData.accessToken
-            },
-            ...REQUEST_HEADER
-          }
-        }
-        const response = await this.http(options)
-        // 判断接口状态
-        if (response.status === 'SUCCEED') {
-          // 存储车辆信息
-          console.log(response)
-          // Keychain.set('defaultVehicleData', JSON.stringify(response.data))
-          // Keychain.set('myCarVIN', response.data?.vin)
-          console.log('车辆基本信息获取成功')
-          // 准备交换验证密钥数据
-          await this.handleAudiGetToken('userRefreshToken')
-        } else {
-          // 获取异常
-          await console.error('车辆信息获取失败，请稍后重新登录再重试！')
-        }
-      }
-    }
-  }
-
-  /**
-   * 获取用户信息
-   * @param {boolean} isDebug
-   * @returns {Promise<void>}
-   */
-  async handleUserMineData(isDebug = false) {
-    if (isDebug || !Keychain.contains('userMineData')) {
-      const getUserBaseInfoData =JSON.parse(Keychain.get('userBaseInfoData'))
-      const options = {
-        url: AUDI_SERVER_API.mine,
-        method: 'GET',
-        headers: {
-          ...{
-            'X-ACCESS-TOKEN': getUserBaseInfoData.accessToken,
-            'X-CHANNEL': 'IOS',
-            'x-mobile': getUserBaseInfoData.user.mobile
-          },
-          ...REQUEST_HEADER
-        }
-      }
-      const response = await this.http(options)
-      if (isDebug) console.log('获取用户信息：')
-      if (isDebug) console.log(response)
-      // 判断接口状态
-      if (response.code === 0) {
-        // 存储车辆信息
-        console.log('获取用户基本信息成功')
-        Keychain.set('userMineData', JSON.stringify(response.data))
-        Keychain.set('myCarVIN', response.data?.vehicleDto?.vin)
-        // 准备交换验证密钥数据
-        await this.handleAudiGetToken('userRefreshToken', isDebug)
-      } else {
-        // 获取异常
-        console.error('获取用户基本信息失败，准备重新登录获取密钥')
-        if (Keychain.contains('userBaseInfoData')) Keychain.remove('userBaseInfoData')
-        // 重新登录
-        await this.handleAudiLogin(isDebug)
-      }
-    } else {
-      console.log('userMineData 信息已存在，开始获取 userRefreshToken')
-      if (isDebug) console.log(Keychain.get('userMineData'))
-      await this.handleAudiGetToken('userRefreshToken')
+      await this.handleAudiGetToken()
     }
   }
 
   /**
    * 获取密钥数据
-   * @param {'userIDToken' | 'userRefreshToken'} type
    * @param {boolean} isDebug
    * @returns {Promise<void>}
    */
-  async handleAudiGetToken(type, isDebug = false) {
-    if (isDebug || !Keychain.contains(type)) {
-      if (type === 'userIDToken' && !Keychain.contains('userBaseInfoData')) {
-        return console.error('获取密钥数据失败，没有拿到用户登录信息，请重新登录再重试！')
-      }
-      if (type === 'userRefreshToken' && !Keychain.contains('userIDToken')) {
-        return console.error('获取密钥数据失败，没有拿到用户 ID Token，请重新登录再重试！')
-      }
+  async handleAudiGetToken(isDebug = false) {
+    if (isDebug || !Keychain.contains('userRefreshToken')) {
 
-      // 根据交换token请求参数不同
-      let requestParams = ''
-      const getUserBaseInfoData = JSON.parse(Keychain.get('userBaseInfoData'))
-      switch (type) {
-        case 'userIDToken':
-          requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(getUserBaseInfoData.idToken)}&scope=${encodeURIComponent('sc2:fal')}`
-          break
-        case 'userRefreshToken':
-          const getUserIDToken =JSON.parse(Keychain.get('userIDToken'))
-          requestParams = `grant_type=${encodeURIComponent('refresh_token')}&token=${encodeURIComponent(getUserIDToken.refresh_token)}&scope=${encodeURIComponent('sc2:fal')}&vin=${Keychain.get('myCarVIN')}`
-          break
-      }
+      const tokenInfo = JSON.parse(Keychain.get('userBaseInfoData')).tokenInfo
+      // token 参数
+      const requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(tokenInfo.idToken)}&scope=${encodeURIComponent('t2_fawvw:fal')}`
 
       const options = {
         url: AUDI_SERVER_API.token,
         method: 'POST',
         headers: {
-          'X-Client-ID': 'de6d8b23-792f-47b8-82f4-e4cc59c2916e',
-          'User-Agent': 'MyAuDi/3.0.2 CFNetwork/1325.0.1 Darwin/21.1.0',
+          'X-Client-ID': 'a45ba796-7171-437a-9c39-8695e2f5cf88',
+          'User-Agent': 'NewAfterMarket-ios/3.15.2 CFNetwork/1325.0.1 Darwin/21.1.0',
         },
         body: requestParams
       }
@@ -1050,25 +919,26 @@ class Widget extends Base {
       if (response.error) {
         switch (response.error) {
           case 'invalid_grant':
-            console.error('IDToken 数据过期，正在重新获取数据中，请耐心等待...')
-            await this.handleAudiGetToken('userIDToken', true)
+            console.error('token 数据过期，正在重新获取数据中，请耐心等待...')
+            await this.handleAudiGetToken(true)
+            break
+          case 'invalid_request':
+            console.error('token 数据错误')
             break
         }
       } else {
         // 获取密钥数据成功，存储数据
-        Keychain.set(type, JSON.stringify(response))
-        console.log('当前密钥数据获取成功：' + type)
-        if (type === 'userRefreshToken') {
-          Keychain.set('authToken', response.access_token)
-          console.log('authToken 密钥设置成功')
-          // 正式获取车辆信息
-          await this.bootstrap(isDebug)
-        }
+        Keychain.set('userRefreshToken', JSON.stringify(response))
+        console.log('当前密钥数据获取成功：userRefreshToken')
+        Keychain.set('authToken', response.access_token)
+        console.log('authToken 密钥设置成功')
+        // 正式获取车辆信息
+        await this.bootstrap(isDebug)
       }
     } else {
       // 已存在的时候
       console.log(type + ' 信息已存在，开始 bootstrap() 函数')
-      if (type === 'userRefreshToken') await this.bootstrap()
+      await this.bootstrap()
     }
   }
 
@@ -1079,24 +949,15 @@ class Widget extends Base {
    * @returns {Promise<string | void>}
    */
   async handleVehiclesStatus(isDebug = false) {
-    let url = AUDI_SERVER_API.mal1aVehiclesStatus
-    switch (this.settings['compatibilityMode']) {
-      case 'standard':
-        url = AUDI_SERVER_API.mal1aVehiclesStatus
-        break
-      case 'compatible':
-        url = AUDI_SERVER_API.mal3aVehiclesStatus
-        break
-    }
-
+    const url = AUDI_SERVER_API.mal1aVehiclesStatus
     const options = {
       url: url(Keychain.get('myCarVIN')),
       method: 'GET',
       headers: {
         ...{
           'Authorization': 'Bearer ' + Keychain.get('authToken'),
-          'X-App-Name': 'MyAuDi',
-          'X-App-Version': '113',
+          'X-App-Name': 'BootstrapApp',
+          'X-App-Version': '1.0',
           'Accept-Language': 'de-DE'
         },
         ...REQUEST_HEADER
@@ -1112,11 +973,11 @@ class Widget extends Base {
       switch (response.error.errorCode) {
         case 'gw.error.authentication':
           console.error('获取车辆状态失败 error: ' + response.error.errorCode)
-          await this.handleAudiGetToken('userRefreshToken', true)
+          await this.handleAudiGetToken(true)
           await this.handleVehiclesStatus()
           break
         case 'mbbc.rolesandrights.unauthorized':
-          await this.notify('unauthorized 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽奥迪应用查看！')
+          await this.notify('unauthorized 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽大众应用查看！')
           break
         case 'mbbc.rolesandrights.unknownService':
           await this.notify('unknownService 错误', '请到菜单「路线配置」更换对应车型路线！')
@@ -1145,15 +1006,7 @@ class Widget extends Base {
    * @returns {Promise<string>}
    */
   async handleVehiclesPosition(isDebug = false) {
-    let url = AUDI_SERVER_API.mal1aVehiclesPosition
-    switch (this.settings['compatibilityMode']) {
-      case 'standard':
-        url = AUDI_SERVER_API.mal1aVehiclesPosition
-        break
-      case 'compatible':
-        url = AUDI_SERVER_API.mal3aVehiclesPosition
-        break
-    }
+    const url = AUDI_SERVER_API.mal1aVehiclesPosition
 
     const options = {
       url: url(Keychain.get('myCarVIN')),
@@ -1161,8 +1014,8 @@ class Widget extends Base {
       headers: {
         ...{
           'Authorization': 'Bearer ' + Keychain.get('authToken'),
-          'X-App-Name': 'MyAuDi',
-          'X-App-Version': '113',
+          'X-App-Name': 'BootstrapApp',
+          'X-App-Version': '1.0',
           'Accept-Language': 'de-DE'
         },
         ...REQUEST_HEADER
@@ -1185,7 +1038,7 @@ class Widget extends Base {
       switch (response.error.errorCode) {
         case 'gw.error.authentication':
           console.error('获取车辆位置失败 error: ' + response.error.errorCode)
-          await this.handleAudiGetToken('userRefreshToken', true)
+          await this.handleAudiGetToken(true)
           await this.handleVehiclesPosition()
           break
         case 'CF.technical.9031':
@@ -1279,9 +1132,9 @@ class Widget extends Base {
     alert.message = `
     小组件需要使用到您的一汽大众应用的账号，首次登录请配置账号、密码进行令牌获取\n\r
     小组件不会收集您的个人账户信息，所有账号信息将存在 iCloud 或者 iPhone 上但也请您妥善保管自己的账号\n\r
-    小组件是开源、并且完全免费的，由奥迪车主开发，所有责任与一汽奥迪公司无关\n\r
+    小组件是开源、并且完全免费的，由大众车主开发，所有责任与一汽大众公司无关\n\r
     开发者: 淮城一只猫\n\r
-    温馨提示：由于一汽奥迪应用支持单点登录，即不支持多终端应用登录，建议在一汽奥迪应用「用车 - 更多功能 - 用户管理」进行添加用户，这样组件和应用独立执行。
+    温馨提示：由于一汽大众应用支持单点登录，即不支持多终端应用登录，建议在一汽大众应用「用车 - 更多功能 - 用户管理」进行添加用户，这样组件和应用独立执行。
     `
     alert.addAction('同意')
     alert.addCancelAction('不同意')
@@ -1296,10 +1149,12 @@ class Widget extends Base {
    */
   async actionAccountSettings() {
     const alert = new Alert()
-    alert.title = '一汽奥迪账户登录'
-    alert.message = '登录一汽奥迪账号展示车辆数据'
-    alert.addTextField('一汽奥迪账号', this.settings['username'])
-    alert.addSecureTextField('一汽奥迪密码', this.settings['password'])
+    alert.title = '一汽大众账户登录'
+    alert.message = '登录一汽大众账号展示车辆数据'
+    alert.addTextField('一汽大众账号', this.settings['username'])
+    alert.addSecureTextField('一汽大众密码', this.settings['password'])
+    alert.addTextField('车架号', this.settings['myCarVIN'])
+    alert.addTextField('车牌号', this.settings['plateNo'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
@@ -1307,7 +1162,12 @@ class Widget extends Base {
     if (id === -1) return
     this.settings['username'] = alert.textFieldValue(0)
     this.settings['password'] = alert.textFieldValue(1)
+    this.settings['myCarVIN'] = alert.textFieldValue(2)
+    this.settings['plateNo'] = alert.textFieldValue(3)
     this.saveSettings()
+
+    Keychain.set('myCarVIN', alert.textFieldValue(2))
+
     console.log('开始进行用户登录')
     await this.handleAudiLogin()
   }
@@ -1878,36 +1738,6 @@ class Widget extends Base {
   }
 
   /**
-   * 兼容配置
-   * @returns {Promise<void>}
-   */
-  async actionCompatible() {
-    const alert = new Alert()
-    alert.title = '路线配置'
-    alert.message = '标准路线：支持绝大部分车型\n' +
-      '其它模式：A3、部分A6车型、Q3、Q7车主'
-
-    const menuList = [{
-      name: 'standard',
-      text: '标准路线'
-    }, {
-      name: 'compatible',
-      text: '其它模式'
-    }]
-
-    const mode = this.settings['compatibilityMode'] ? this.settings['compatibilityMode'] : 'standard'
-    menuList.forEach(item => {
-      alert.addAction(mode === item.name ? '✅' + ' ' + item.text : '❌' + ' ' + item.text)
-    })
-
-    alert.addCancelAction('取消设置')
-    const id = await alert.presentSheet()
-    if (id === -1) return
-    this.settings['compatibilityMode'] = menuList[id].name
-    this.saveSettings()
-  }
-
-  /**
    * 登出系统
    * @returns {Promise<void>}
    */
@@ -1923,11 +1753,8 @@ class Widget extends Base {
 
     const keys = [
       'userBaseInfoData',
-      'defaultVehicleData',
-      'userMineData',
       'myCarVIN',
       'authToken',
-      'userIDToken',
       'userRefreshToken',
       'storedPositionResponse',
       'findCarResponse',
@@ -2006,9 +1833,6 @@ class Widget extends Base {
     }, {
       name: 'handleAudiLogin',
       text: '登陆数据'
-    }, {
-      name: 'handleUserMineData',
-      text: '用户信息数据'
     }, {
       name: 'handleVehiclesStatus',
       text: '当前车辆状态数据'
