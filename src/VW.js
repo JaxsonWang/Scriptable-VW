@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = '1.2.8'
+const AUDI_VERSION = '1.0.1'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -23,8 +23,10 @@ const DEFAULT_DARK_BACKGROUND_COLOR_2 = '#1E1E1E'
 const AUDI_SERVER_API = {
   login: 'https://one-app-h5.faw-vw.com/prod-api/mobile/one-app/user/public/v1/login?appkey=6298289633',
   token: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/oauth2/v1/token',
-  mal1aVehiclesStatus: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/bs/vsr/v1/vehicles/${vin}/status`,
-  mal1aVehiclesPosition: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/bs/cf/v1/vehicles/${vin}/position`
+  getVIN: 'https://mal-1a.prd.cn.vwg-connect.cn/api/usermanagement/users/v1/vehicles',
+  apiBase: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/cs/vds/v1/vehicles/${vin}/homeRegion`,
+  vehiclesStatus: (url, vin) => `${url}/bs/vsr/v1/vehicles/${vin}/status`,
+  vehiclesPosition: (url, vin) => `${url}/bs/cf/v1/vehicles/${vin}/position`
 }
 
 const REQUEST_HEADER = {
@@ -32,8 +34,8 @@ const REQUEST_HEADER = {
   'Content-Type': 'application/json',
   'Did': 'VW_APP_iPhone_2025BD9B-0E98-49D1-A96F-2192F9598A52_15.1_3.15.2'
 }
-const DEFAULT_MY_CAR_PHOTO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png'
-const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
+const DEFAULT_MY_CAR_PHOTO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_default_1.png'
+const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_logo.png'
 const GLOBAL_USER_DATA = {
   size: '',
   seriesName: '',
@@ -230,7 +232,7 @@ class Widget extends Base {
     // headerStack.backgroundColor = Color.brown()
 
     const myCarStack = headerStack.addStack()
-    myCarStack.size = new Size(width - 120, headerStack.size.height)
+    myCarStack.size = new Size(width - 90, headerStack.size.height)
     // myCarStack.backgroundColor = Color.red()
     myCarStack.layoutVertically()
     const myCarText = myCarStack.addText(data.seriesName)
@@ -238,7 +240,7 @@ class Widget extends Base {
     this.setWidgetTextColor(myCarText)
 
     const logoStack = headerStack.addStack()
-    logoStack.size = new Size(120, headerStack.size.height)
+    logoStack.size = new Size(90, headerStack.size.height)
     logoStack.layoutVertically()
 
     const audiLogoStack = logoStack.addStack()
@@ -249,13 +251,14 @@ class Widget extends Base {
     // audiLogoStack.layoutVertically()
     // 显示车牌
     const plateNoStack = audiLogoStack.addStack()
+    // plateNoStack.backgroundColor = Color.blue()
     plateNoStack.size = new Size(70, logoStack.size.height)
     const plateNoText = plateNoStack.addText(this.showPlate() ? data.plateNo : ' ')
     plateNoText.font = Font.systemFont(12)
     this.setWidgetTextColor(plateNoText)
 
     const audiLogo = audiLogoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
-    audiLogo.imageSize = new Size(50, 15)
+    audiLogo.imageSize = new Size(20, 15)
     this.setWidgetImageColor(audiLogo)
     // endregion headerStack end
 
@@ -594,7 +597,7 @@ class Widget extends Base {
 
     widget.backgroundImage = await this.shadowImage(await this.getImageByUrl(DEFAULT_MY_CAR_PHOTO))
 
-    const text = widget.addText('欢迎使用 Audi-Joiner iOS 桌面组件')
+    const text = widget.addText('欢迎使用 VW-Joiner iOS 桌面组件')
     switch (this.widgetFamily) {
       case 'large':
         text.font = Font.blackSystemFont(18)
@@ -671,7 +674,7 @@ class Widget extends Base {
     // 车辆名称
     GLOBAL_USER_DATA.seriesName = this.settings['myCarName'] || '嗨！大众！'
     // 车辆功率类型
-    GLOBAL_USER_DATA.modelShortName = this.settings['myCarModelName'] || '您还没有定义车辆功率信息'
+    GLOBAL_USER_DATA.modelShortName = this.settings['myCarModelName'] || '2.0T 110kW'
     GLOBAL_USER_DATA.vin = this.settings['myCarVIN'] // 车架号
     GLOBAL_USER_DATA.plateNo = this.settings['plateNo'] // 车牌号
 
@@ -875,13 +878,13 @@ class Widget extends Base {
         // 登录成功 存储登录信息
         console.log('登陆成功')
         Keychain.set('userBaseInfoData', JSON.stringify(response.data))
-        await this.notify('登录成功', '正在从 Audi 服务器获取车辆数据，请耐心等待！')
+        await this.notify('登录成功', '正在从服务器获取车辆数据，请耐心等待！')
         // 准备交换验证密钥数据
         await this.handleAudiGetToken(isDebug)
       } else {
         // 登录异常
-        await this.notify('登录失败', response.message)
-        console.error('用户登录失败：' + response.message)
+        await this.notify('登录失败', response.errorMessage)
+        console.error('用户登录失败：' + response.errorMessage)
       }
     } else {
       // 已存在用户信息
@@ -932,13 +935,53 @@ class Widget extends Base {
         console.log('当前密钥数据获取成功：userRefreshToken')
         Keychain.set('authToken', response.access_token)
         console.log('authToken 密钥设置成功')
-        // 正式获取车辆信息
-        await this.bootstrap(isDebug)
+        await this.handleGetApiBase(isDebug)
       }
     } else {
       // 已存在的时候
-      console.log(type + ' 信息已存在，开始 bootstrap() 函数')
+      console.log('userRefreshToken 信息已存在，开始 bootstrap() 函数')
       await this.bootstrap()
+    }
+  }
+
+  /**
+   * 动态获取接口地址
+   * @param isDebug
+   * @return {Promise<void>}
+   */
+  async handleGetApiBase(isDebug = false) {
+    if (Keychain.contains('userRefreshToken')) {
+      const options = {
+        url: AUDI_SERVER_API.apiBase(Keychain.get('myCarVIN')),
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer ' + Keychain.get('authToken'),
+        }
+      }
+      const response = await this.http(options)
+      // 判断接口状态
+      if (response.error) {
+        // 接口异常
+        console.error('handleGetApiBase 接口异常' + response.error.errorCode + ' - ' + response.error.description)
+        switch (response.error.errorCode) {
+        }
+      } else {
+        // 接口获取数据成功
+        const data = response?.homeRegion?.baseUri?.content
+        if (data) {
+          Keychain.set('vehiclesBaseApi', data)
+          console.log('handleGetApiBase 获取到车辆基本访问地址')
+          // 正式获取车辆信息
+          // todo 后期支持获取车架号
+          // 获取访问接口地址
+          await this.bootstrap(isDebug)
+        } else {
+          console.error('handleGetApiBase 获取数据失败')
+        }
+      }
+    } else {
+      console.error('没有 userRefreshToken 信息，请重新登陆')
     }
   }
 
@@ -949,9 +992,9 @@ class Widget extends Base {
    * @returns {Promise<string | void>}
    */
   async handleVehiclesStatus(isDebug = false) {
-    const url = AUDI_SERVER_API.mal1aVehiclesStatus
+    const url = AUDI_SERVER_API.vehiclesStatus
     const options = {
-      url: url(Keychain.get('myCarVIN')),
+      url: url(Keychain.get('vehiclesBaseApi'), Keychain.get('myCarVIN')),
       method: 'GET',
       headers: {
         ...{
@@ -1006,10 +1049,10 @@ class Widget extends Base {
    * @returns {Promise<string>}
    */
   async handleVehiclesPosition(isDebug = false) {
-    const url = AUDI_SERVER_API.mal1aVehiclesPosition
+    const url = AUDI_SERVER_API.vehiclesPosition()
 
     const options = {
-      url: url(Keychain.get('myCarVIN')),
+      url: url(Keychain.get('vehiclesBaseApi'), Keychain.get('myCarVIN')),
       method: 'GET',
       headers: {
         ...{
@@ -1756,6 +1799,7 @@ class Widget extends Base {
       'myCarVIN',
       'authToken',
       'userRefreshToken',
+      'vehiclesBaseApi',
       'storedPositionResponse',
       'findCarResponse',
       'carPosition',
@@ -1778,9 +1822,9 @@ class Widget extends Base {
    * @returns {Promise<void>}
    */
   async actionCheckUpdate() {
-    const UPDATE_FILE = 'Audi-Joiner.js'
+    const UPDATE_FILE = 'VW-Joiner.js'
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
-    const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/version.json')
+    const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/vw-version.json')
     const response = await request.loadJSON()
     console.log(`远程版本：${response?.version}`)
     if (response?.version === AUDI_VERSION) return this.notify('无需更新', '远程版本一致，暂无更新')
@@ -1799,7 +1843,7 @@ class Widget extends Base {
     const REMOTE_RES = await REMOTE_REQ.load()
     FILE_MGR.write(FILE_MGR.joinPath(FILE_MGR.documentsDirectory(), UPDATE_FILE), REMOTE_RES)
 
-    await this.notify('Audi 桌面组件更新完毕！')
+    await this.notify('VW-Joiner 桌面组件更新完毕！')
   }
 
   /**
@@ -1807,7 +1851,7 @@ class Widget extends Base {
    * @returns {Promise<void>}
    */
   async actionDonation() {
-    Safari.open( 'https://audi.i95.me/donation.html')
+    Safari.open( 'https://joiner.i95.me/donation.html')
   }
 
   /**
@@ -1815,7 +1859,7 @@ class Widget extends Base {
    * @returns {Promise<void>}
    */
   async actionAbout() {
-    Safari.open( 'https://audi.i95.me/about.html')
+    Safari.open( 'https://joiner.i95.me/about.html')
   }
 
   /**

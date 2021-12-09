@@ -63,21 +63,26 @@
     // })
 
     // 列表刷新
-    var token = '?access_token=aa19b0893e94790f3a253e1a19e5f91d'
-    getGiteeTree('https://gitee.com/api/v5/repos/JaxsonWang/scriptable-audi/git/trees/master' + token, ['assets', 'version.json'], function(dataRoo1) {
-      getGiteeTree(dataRoo1[0].url + token, ['cars'], function(dataRoo2) {
+    var token = '?access_token=f66c1e3ec818652c822afb5e013c6f95'
+    getGiteeTree('https://gitee.com/api/v5/repos/JaxsonWang/scriptable-audi/git/trees/master' + token, ['assets', 'audi-version.json', 'vw-version.json'], function(dataRoo1) {
+      getGiteeTree(dataRoo1[0].url + token, ['audi_cars'], function(dataRoo2) {
         getGiteeTree(dataRoo2[0].url + token, null, function(dataRoo3) {
           var imageArr = []
           for (var i = 0; i < dataRoo3.length; i++) {
             imageArr.push(dataRoo3[i].path)
           }
-          renderImageList(imageArr)
+          renderAudiImageList(imageArr)
         })
       })
       getGiteeTree(dataRoo1[1].url + token, null, function(dataRoo4) {
         var base64 = dataRoo4.content
         var json = JSON.parse(window.atob(base64))
-        document.querySelector('#version').innerHTML = '当前版本号：v' + json.version
+        document.querySelector('#audi-version').innerHTML = '当前版本号：v' + json.version
+      })
+      getGiteeTree(dataRoo1[2].url + token, null, function(dataRoo5) {
+        var base64 = dataRoo5.content
+        var json = JSON.parse(window.atob(base64))
+        document.querySelector('#vw-version').innerHTML = '当前版本号：v' + json.version
       })
     })
   })
@@ -115,15 +120,15 @@ function getGiteeTree(url, name, callback) {
   })
 }
 
-function renderImageList(arr) {
+function renderAudiImageList(arr) {
   if (arr && arr.length !== 0) {
     arr.forEach(item => {
       var create = document.createElement('p')
       create.className = 'py-0'
-      create.innerHTML = item.replace('.png', '').replace('_', ' ') + '：<a href="https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/cars/'+ encodeURI(item) +'" target="_blank">点击下载</a>'
-      document.querySelector('.car-images-list').appendChild(create)
+      create.innerHTML = item.replace('.png', '').replace('_', ' ') + '：<a href="https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/audi_cars/'+ encodeURI(item) +'" target="_blank">点击下载</a>'
+      document.querySelector('.audi-car-images-list').appendChild(create)
     })
   } else {
-    document.querySelector('.car-images-list').innerHTML = '暂无数据'
+    document.querySelector('.audi-car-images-list').innerHTML = '暂无数据'
   }
 }

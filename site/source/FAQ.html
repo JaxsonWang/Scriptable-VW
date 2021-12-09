@@ -3,7 +3,7 @@
 @@include('blocks/navigation.htm', {"faq" : "active"})
 
 @@include('blocks/page-title.htm',{
-	"title"		: "Audi Joiner 疑难解答",
+	"title"		: "Joiner  小组件疑难解答",
 	"description" : "在这里将会收集一些常见的问题解答，点开问题标题即可查看详细解答"
 })
 
@@ -30,7 +30,7 @@
 						  	</div>
 						    <div id="gstAccordion1" class="collapse show accordion-block">
 						      <p>
-						        目前 Scriptable 应用是免费的，作者后续会添加简体中文支持，不过这也没关系，因为用上 Audi Joiner 小组件接触到 Scriptable 核心内容很少，无需担心软件带来心智负担的问题。
+						        目前 Scriptable 应用是免费的，作者后续会添加简体中文支持，不过这也没关系，因为用上 Joiner 小组件接触到 Scriptable 核心内容很少，无需担心软件带来心智负担的问题。
 						      </p>
 						    </div>
 						  </div>
@@ -54,19 +54,19 @@
 					<div class="faq-item">
 						<div class="faq-item-title">
 							<h2>
-								Audi Joiner 小组件
+								Joiner 小组件
 							</h2>
 						</div>
 						<div id="accountAccordion" data-children=".item">
 						  <div class="item">
 						  	<div class="item-link">
 							    <a data-toggle="collapse" data-parent="#accountAccordion" href="#accountAccordion1">
-                    Audi Joiner 小组件是否存在安全性问题？
+                    Joiner 小组件是否存在安全性问题？
 							    </a>
 						  	</div>
 						    <div id="accountAccordion1" class="collapse accordion-block">
 						      <p>
-						        目前 Audi Joiner 小组件代码社区开源，没有后门也没有广告，安全透明，并且编译的代码没有混淆，欢迎大家来审查代码！
+						        目前 Joiner 小组件代码社区开源，没有后门也没有广告，安全透明，并且编译的代码没有混淆，欢迎大家来审查代码！
 						      </p>
 						    </div>
 						  </div>
@@ -117,7 +117,7 @@
                   <p class="pb-0">
                     点击访问：<a href="https://www.aliyundrive.com/s/u3ssBhGtqUK" target="_blank">https://www.aliyundrive.com/s/u3ssBhGtqUK</a>
                   </p>
-                  <div class="car-images-list"></div>
+                  <div class="audi-car-images-list"></div>
                   <p class="pt-0">
                     全透明图片，用于隐藏车辆图片：<a href="https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/%E5%85%A8%E9%80%8F%E6%98%8E%E5%9B%BE.png" target="_blank">点击下载</a>
                   </p>
@@ -140,7 +140,7 @@
                 </div>
                 <div id="siriContent1" class="collapse accordion-block">
                   <p>
-                    目前只有 「Audi Joiner v1.3.0」以上版本包括此版本支持和系统的 Siri 交互，请到脚本的弹窗脚本进行检查版本。
+                    目前「VW Joiner v1.0.0」第一版本支持，而「Audi Joiner v1.3.0」以上版本包括此版本支持和系统的 Siri 交互，请到脚本的弹窗脚本进行检查版本。
                   </p>
                   <p>
                     然后进行在下列资源列表下载快捷指令导入就可以使用了。
@@ -150,19 +150,19 @@
               <div class="item">
                 <div class="item-link">
                   <a data-toggle="collapse" data-parent="#accountAccordion" href="#siriContent2">
-                    如果用「Audi Joiner」和「Siri」进行交互需要注意什么？
+                    如果用「Joiner」小组件和「Siri」进行交互需要注意什么？
                   </a>
                 </div>
                 <div id="siriContent2" class="collapse accordion-block">
                   <p>
-                    除了版本限制以外，还要保证「Audi Joiner」的脚本名称是不允许更改的，否则快捷指令无法使用。目前脚本名称叫「Audi-Joiner.js」
+                    除了版本限制以外，还要保证「Audi Joiner」和「VW Joiner」的脚本名称是不允许更改的，否则快捷指令无法使用。目前奥迪脚本名称叫「Audi-Joiner.js」大众的叫「VW-Joiner.js」
                   </p>
                 </div>
               </div>
               <div class="item">
                 <div class="item-link">
                   <a data-toggle="collapse" data-parent="#accountAccordion" href="#siriContent4">
-                    如果我想根据「Audi Joiner」自定义新的快捷指令，怎么设计？
+                    如果我想根据「Joiner」自定义新的快捷指令，怎么设计？
                   </a>
                 </div>
                 <div id="siriContent4" class="collapse accordion-block">
@@ -187,7 +187,7 @@
   latitude: '', // 车辆经度
   status: true, // 车辆锁车状态 布尔值 true = 已锁车 false = 未锁车
   doorAndWindow: '', // 车窗状态 布尔值 true = 车门车窗已关闭 false = 车门车窗没有关闭
-  myOne: '世间美好，与您环环相扣' // 一言
+  myOne: 'xxxx' // 一言
 }
                 </pre>
                 </div>
@@ -200,10 +200,16 @@
                 </div>
                 <div id="siriContent3" class="collapse accordion-block">
                   <p class="pb-0">
-                    「嘿 Siri，我的车在哪里」：<a href="https://www.icloud.com/shortcuts/a4f336ba15794d0a9baa8d8afef1916d" target="_blank">点击打开</a>
+                    奥迪专属：「嘿 Siri，我的车在哪里」：<a href="https://www.icloud.com/shortcuts/a4f336ba15794d0a9baa8d8afef1916d" target="_blank">点击打开</a>
                   </p>
                   <p class="pt-0">
-                    「嘿 Siri，我的车状态如何」：<a href="https://www.icloud.com/shortcuts/c3f355ec2fdd4c8584ce67218fb19c04" target="_blank">点击打开</a>
+                    奥迪专属：「嘿 Siri，我的车状态如何」：<a href="https://www.icloud.com/shortcuts/c3f355ec2fdd4c8584ce67218fb19c04" target="_blank">点击打开</a>
+                  </p>
+                  <p class="pb-0">
+                    大众专属：「嘿 Siri，我的车在哪」：<a href="https://www.icloud.com/shortcuts/d28c31565e76415abf9efba1733b3500" target="_blank">点击打开</a>
+                  </p>
+                  <p class="pt-0">
+                    大众专属：「嘿 Siri，我的车状态」：<a href="https://www.icloud.com/shortcuts/338b2296699642128c027e4bb189e3f8" target="_blank">点击打开</a>
                   </p>
                 </div>
               </div>
@@ -226,8 +232,12 @@
                   <p class="text-center">
                     <img src="https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/groups/Me.JPG" class="donation-image" alt="png" />
                   </p>
-                  或者加群主，拉群里交流
-                  群主微信号：<span>JaxsonWangChina</span>
+                  <p class="text-center">
+                    或者加群主，拉群里交流（请注意说明车型奥迪/大众）
+                  </p>
+                  <p class="text-center">
+                    群主微信号：<span>JaxsonWangChina</span>
+                  </p>
                 </div>
               </div>
             </div>

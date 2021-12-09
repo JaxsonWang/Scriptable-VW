@@ -10,14 +10,15 @@
  const fs = require('fs')
  const path = require('path')
 
-if (process.argv.length !== 3) {
-  console.log('[!] 用法：node pack src/xxx.js')
+if (process.argv.length !== 4) {
+  console.log('[!] 用法：node pack src/xxx.js xxx')
   process.exit(0)
 }
 
 const SAVE_PATH = path.join(__dirname, 'dist')
 const file_name = process.argv[2]
-const out_name = file_name.replace('src', 'dist').replace('Audi.js', 'Audi-Joiner.js')
+const out_name = `dist/${process.argv[3]}.js`
+console.log(out_name)
 
 // 创建目录
 if (!fs.existsSync(SAVE_PATH)) {

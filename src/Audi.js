@@ -1953,7 +1953,7 @@ class Widget extends Base {
   async actionCheckUpdate() {
     const UPDATE_FILE = 'Audi-Joiner.js'
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
-    const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/version.json')
+    const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/audi-version.json')
     const response = await request.loadJSON()
     console.log(`远程版本：${response?.version}`)
     if (response?.version === AUDI_VERSION) return this.notify('无需更新', '远程版本一致，暂无更新')
