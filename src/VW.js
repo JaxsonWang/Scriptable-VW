@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = '1.0.1'
+const AUDI_VERSION = '1.0.2'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -23,7 +23,7 @@ const DEFAULT_DARK_BACKGROUND_COLOR_2 = '#1E1E1E'
 const AUDI_SERVER_API = {
   login: 'https://one-app-h5.faw-vw.com/prod-api/mobile/one-app/user/public/v1/login?appkey=6298289633',
   token: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/oauth2/v1/token',
-  getVIN: 'https://mal-1a.prd.cn.vwg-connect.cn/api/usermanagement/users/v1/vehicles',
+  vehiclesVIN: 'https://mal-1a.prd.cn.vwg-connect.cn/api/usermanagement/users/v1/vehicles',
   apiBase: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/cs/vds/v1/vehicles/${vin}/homeRegion`,
   vehiclesStatus: (url, vin) => `${url}/bs/vsr/v1/vehicles/${vin}/status`,
   vehiclesPosition: (url, vin) => `${url}/bs/cf/v1/vehicles/${vin}/position`
@@ -55,7 +55,6 @@ const GLOBAL_USER_DATA = {
   doorAndWindow: '', // 门窗状态
   myOne: '与你一路同行'
 }
-const AUDI_AMAP_KEY = 'c078fb16379c25bc0aad8633d82cf1dd'
 
 const DEVICE_SIZE  = {
   '428x926': {
@@ -675,25 +674,29 @@ class Widget extends Base {
     GLOBAL_USER_DATA.seriesName = this.settings['myCarName'] || '嗨！大众！'
     // 车辆功率类型
     GLOBAL_USER_DATA.modelShortName = this.settings['myCarModelName'] || '2.0T 110kW'
-    GLOBAL_USER_DATA.vin = this.settings['myCarVIN'] // 车架号
+    GLOBAL_USER_DATA.vin = Keychain.get('myCarVIN') // 车架号
     GLOBAL_USER_DATA.plateNo = this.settings['plateNo'] // 车牌号
 
     // 是否开启位置
     if (this.showLocation()) {
-      try {
-        const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition(isDebug))
-        const getVehiclesAddress = await this.handleGetCarAddress(isDebug)
-        // simple: '暂无位置信息',
-        //   complete: '暂无位置信息'
-        if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = parseInt(getVehiclesPosition.longitude, 10) / 1000000 // 车辆经度
-        if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = parseInt(getVehiclesPosition.latitude, 10) / 1000000// 车辆纬度
-        if (getVehiclesAddress) GLOBAL_USER_DATA.carSimpleLocation = getVehiclesAddress.simple // 简略地理位置
-        if (getVehiclesAddress) GLOBAL_USER_DATA.carCompleteLocation = getVehiclesAddress.complete // 详细地理位置
-      } catch (error) {
-        GLOBAL_USER_DATA.longitude = -1 // 车辆经度
-        GLOBAL_USER_DATA.latitude = -1 // 车辆纬度
-        GLOBAL_USER_DATA.carSimpleLocation = '暂无位置信息' // 详细地理位置
-        GLOBAL_USER_DATA.carCompleteLocation = '暂无位置信息' // 详细地理位置
+      if (this.settings['aMapKey']) {
+        try {
+          const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition(isDebug))
+          const getVehiclesAddress = await this.handleGetCarAddress(isDebug)
+          // simple: '暂无位置信息',
+          //   complete: '暂无位置信息'
+          if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = parseInt(getVehiclesPosition.longitude, 10) / 1000000 // 车辆经度
+          if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = parseInt(getVehiclesPosition.latitude, 10) / 1000000// 车辆纬度
+          if (getVehiclesAddress) GLOBAL_USER_DATA.carSimpleLocation = getVehiclesAddress.simple // 简略地理位置
+          if (getVehiclesAddress) GLOBAL_USER_DATA.carCompleteLocation = getVehiclesAddress.complete // 详细地理位置
+        } catch (error) {
+          GLOBAL_USER_DATA.longitude = -1 // 车辆经度
+          GLOBAL_USER_DATA.latitude = -1 // 车辆纬度
+          GLOBAL_USER_DATA.carSimpleLocation = '暂无位置信息' // 详细地理位置
+          GLOBAL_USER_DATA.carCompleteLocation = '暂无位置信息' // 详细地理位置
+        }
+      } else {
+        console.log('没有输入高德 key 无法获取车辆位置信息')
       }
     }
 
@@ -935,12 +938,46 @@ class Widget extends Base {
         console.log('当前密钥数据获取成功：userRefreshToken')
         Keychain.set('authToken', response.access_token)
         console.log('authToken 密钥设置成功')
-        await this.handleGetApiBase(isDebug)
+        await this.handleVehiclesVIN(isDebug)
       }
     } else {
-      // 已存在的时候
-      console.log('userRefreshToken 信息已存在，开始 bootstrap() 函数')
-      await this.bootstrap()
+      if (isDebug) console.log('检测本地缓存已有 Token 数据:')
+      if (isDebug) console.log(Keychain.get('userRefreshToken'))
+      console.log('userRefreshToken 信息已存在，开始 handleVehiclesVIN() 函数')
+      await this.handleVehiclesVIN(isDebug)
+    }
+  }
+
+  /**
+   * 获取车辆车架号
+   * @return {Promise<void>}
+   */
+  async handleVehiclesVIN(isDebug = false) {
+    if (isDebug || !Keychain.contains('myCarVIN')) {
+      const options = {
+        url: AUDI_SERVER_API.vehiclesVIN,
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer ' + Keychain.get('authToken'),
+        }
+      }
+      const response = await this.http(options)
+      // 判断接口状态
+      if (response?.userVehicles?.vehicle) {
+        const data = response?.userVehicles?.vehicle[0]
+        Keychain.set('myCarVIN', data)
+        console.log('handleVehiclesVIN 获取到车辆车架号')
+        // 获取基础链接
+        await this.handleGetApiBase(isDebug)
+      } else {
+        console.error('handleVehiclesVIN 获取数据失败')
+      }
+    } else {
+      if (isDebug) console.log('检测本地缓存已有车架号数据:')
+      if (isDebug) console.log(Keychain.get('handleVehiclesVIN'))
+      console.log('handleVehiclesVIN 信息已存在，开始 handleGetApiBase() 函数')
+      await this.handleGetApiBase(isDebug)
     }
   }
 
@@ -950,7 +987,7 @@ class Widget extends Base {
    * @return {Promise<void>}
    */
   async handleGetApiBase(isDebug = false) {
-    if (Keychain.contains('userRefreshToken')) {
+    if (isDebug || !Keychain.contains('vehiclesBaseApi')) {
       const options = {
         url: AUDI_SERVER_API.apiBase(Keychain.get('myCarVIN')),
         method: 'GET',
@@ -972,16 +1009,17 @@ class Widget extends Base {
         if (data) {
           Keychain.set('vehiclesBaseApi', data)
           console.log('handleGetApiBase 获取到车辆基本访问地址')
-          // 正式获取车辆信息
-          // todo 后期支持获取车架号
-          // 获取访问接口地址
+          // 获取车辆信息
           await this.bootstrap(isDebug)
         } else {
           console.error('handleGetApiBase 获取数据失败')
         }
       }
     } else {
-      console.error('没有 userRefreshToken 信息，请重新登陆')
+      if (isDebug) console.log('检测本地缓存已有 vehiclesBaseApi 数据:')
+      if (isDebug) console.log(Keychain.get('vehiclesBaseApi'))
+      console.log('handleVehiclesVIN 信息已存在，开始 bootstrap() 函数')
+      await this.bootstrap(isDebug)
     }
   }
 
@@ -1023,7 +1061,7 @@ class Widget extends Base {
           await this.notify('unauthorized 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽大众应用查看！')
           break
         case 'mbbc.rolesandrights.unknownService':
-          await this.notify('unknownService 错误', '请到菜单「路线配置」更换对应车型路线！')
+          await this.notify('unknownService 错误', '请联系开发者！')
           break
         case 'mbbc.rolesandrights.unauthorizedUserDisabled':
           // todo 错误
@@ -1049,7 +1087,7 @@ class Widget extends Base {
    * @returns {Promise<string>}
    */
   async handleVehiclesPosition(isDebug = false) {
-    const url = AUDI_SERVER_API.vehiclesPosition()
+    const url = AUDI_SERVER_API.vehiclesPosition
 
     const options = {
       url: url(Keychain.get('vehiclesBaseApi'), Keychain.get('myCarVIN')),
@@ -1116,7 +1154,17 @@ class Widget extends Base {
    * @returns {Promise<{simple: string, complete: string}>}
    */
   async handleGetCarAddress(isDebug = false) {
-    if (!Keychain.contains('storedPositionResponse') && !Keychain.contains('carPosition')) {
+    if (!this.settings['aMapKey']) {
+      await this.notify('获取车辆位置失败', '请输入高德 key 才能获取车辆位置信息')
+      return {
+        simple: '暂无位置信息',
+        complete: '暂无位置信息'
+      }
+    }
+    if (
+      !Keychain.contains('storedPositionResponse') &&
+      !Keychain.contains('carPosition')
+    ) {
       await console.error('获取车辆经纬度失败，请退出登录再登录重试！')
       return {
         simple: '暂无位置信息',
@@ -1131,7 +1179,7 @@ class Widget extends Base {
     // 直接返回缓存数据
     if (longitude < 0 || latitude < 0) return { simple: '暂无位置信息', complete: '暂无位置信息' }
 
-    const aMapKey = this.settings['aMapKey'] ? this.settings['aMapKey'] : AUDI_AMAP_KEY
+    const aMapKey = this.settings['aMapKey']
     const options = {
       url: `https://restapi.amap.com/v3/geocode/regeo?key=${aMapKey}&location=${longitude},${latitude}&radius=1000&extensions=base&batch=false&roadlevel=0`,
       method: 'GET'
@@ -1196,7 +1244,6 @@ class Widget extends Base {
     alert.message = '登录一汽大众账号展示车辆数据'
     alert.addTextField('一汽大众账号', this.settings['username'])
     alert.addSecureTextField('一汽大众密码', this.settings['password'])
-    alert.addTextField('车架号', this.settings['myCarVIN'])
     alert.addTextField('车牌号', this.settings['plateNo'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
@@ -1205,11 +1252,8 @@ class Widget extends Base {
     if (id === -1) return
     this.settings['username'] = alert.textFieldValue(0)
     this.settings['password'] = alert.textFieldValue(1)
-    this.settings['myCarVIN'] = alert.textFieldValue(2)
-    this.settings['plateNo'] = alert.textFieldValue(3)
+    this.settings['plateNo'] = alert.textFieldValue(2)
     this.saveSettings()
-
-    Keychain.set('myCarVIN', alert.textFieldValue(2))
 
     console.log('开始进行用户登录')
     await this.handleAudiLogin()
@@ -1715,17 +1759,13 @@ class Widget extends Base {
   async actionPreferenceSettings5() {
     const alert = new Alert()
     alert.title = '高德地图密钥'
-    alert.message = '请输入组件所需要的高德地图 key 用于车辆逆地理编码以及地图资源\n\r获取途径可以在「关于小组件」菜单里加微信群进行咨询了解'
+    alert.message = '请输入组件所需要的高德地图 key 用于车辆逆地理编码'
     alert.addTextField('key 密钥', this.settings['aMapKey'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
-    if (id === -1) {
-      this.settings['aMapKey'] = AUDI_AMAP_KEY
-      this.saveSettings()
-      return await this.actionPreferenceSettings()
-    }
+    if (id === -1) return await this.actionPreferenceSettings()
     this.settings['aMapKey'] = alert.textFieldValue(0)
     this.saveSettings()
 

@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = '1.3.0'
+const AUDI_VERSION = '1.3.1'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -24,11 +24,10 @@ const AUDI_SERVER_API = {
   login: 'https://audi2c.faw-vw.com/capi/v1/user/login',
   token: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/oauth2/v1/token',
   mine: 'https://audi2c.faw-vw.com/capi/v1/user/mine',
-  mal1aVehiclesStatus: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/bs/vsr/v1/vehicles/${vin}/status`,
-  mal1aVehiclesPosition: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/bs/cf/v1/vehicles/${vin}/position`,
-  mal3aVehiclesStatus: vin => `https://mal-3a.prd.cn.dp.vwg-connect.cn/api/bs/vsr/v1/vehicles/${vin}/status`,
-  mal3aVehiclesPosition: vin => `https://mal-3a.prd.cn.dp.vwg-connect.cn/api/bs/cf/v1/vehicles/${vin}/position`,
-  vehicleServer: (appKey, nonce, sign, signt) => `https://audioneapp.faw-vw.com:443/v2/audi-vehicle-server/public/vehicleServer/queryDefaultVehicleDetails?appkey=${appKey}&nonce=${nonce}&sign=${sign}&signt=${signt}`
+  apiBase: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/cs/vds/v1/vehicles/${vin}/homeRegion`,
+  vehiclesStatus: (url, vin) => `${url}/bs/vsr/v1/vehicles/${vin}/status`,
+  vehiclesPosition: (url, vin) => `${url}/bs/cf/v1/vehicles/${vin}/position`,
+  vehicleServer: (appKey, nonce, sign, signt) => `https://audioneapp.faw-vw.com/v2/audi-vehicle-server/public/vehicleServer/queryDefaultVehicleDetails?appkey=${appKey}&nonce=${nonce}&sign=${sign}&signt=${signt}`
 }
 const SIGN_SERVER_API = {
   sign: 'https://api.zhous.cloud/audiServer/signature/getSignature'
@@ -60,7 +59,6 @@ const GLOBAL_USER_DATA = {
   doorAndWindow: '', // 门窗状态
   myOne: '世间美好，与您环环相扣'
 }
-const AUDI_AMAP_KEY = 'c078fb16379c25bc0aad8633d82cf1dd'
 
 const DEVICE_SIZE  = {
   '428x926': {
@@ -115,7 +113,6 @@ class Widget extends Base {
     if (config.runsInApp) {
       if (!Keychain.contains('authToken')) this.registerAction('账户登录', this.actionStatementSettings)
       if (Keychain.contains('authToken')) this.registerAction('偏好配置', this.actionPreferenceSettings)
-      this.registerAction('兼容设置', this.actionCompatible)
       this.registerAction('重置组件', this.actionLogOut)
       if (Keychain.contains('authToken')) this.registerAction('重载数据', this.actionLogAction)
       this.registerAction('检查更新', this.actionCheckUpdate)
@@ -690,20 +687,24 @@ class Widget extends Base {
 
     // 是否开启位置
     if (this.showLocation()) {
-      try {
-        const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition(isDebug))
-        const getVehiclesAddress = await this.handleGetCarAddress(isDebug)
-        // simple: '暂无位置信息',
-        //   complete: '暂无位置信息'
-        if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = parseInt(getVehiclesPosition.longitude, 10) / 1000000 // 车辆经度
-        if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = parseInt(getVehiclesPosition.latitude, 10) / 1000000// 车辆纬度
-        if (getVehiclesAddress) GLOBAL_USER_DATA.carSimpleLocation = getVehiclesAddress.simple // 简略地理位置
-        if (getVehiclesAddress) GLOBAL_USER_DATA.carCompleteLocation = getVehiclesAddress.complete // 详细地理位置
-      } catch (error) {
-        GLOBAL_USER_DATA.longitude = -1 // 车辆经度
-        GLOBAL_USER_DATA.latitude = -1 // 车辆纬度
-        GLOBAL_USER_DATA.carSimpleLocation = '暂无位置信息' // 详细地理位置
-        GLOBAL_USER_DATA.carCompleteLocation = '暂无位置信息' // 详细地理位置
+      if (this.settings['aMapKey']) {
+        try {
+          const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition(isDebug))
+          const getVehiclesAddress = await this.handleGetCarAddress(isDebug)
+          // simple: '暂无位置信息',
+          // complete: '暂无位置信息'
+          if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = parseInt(getVehiclesPosition.longitude, 10) / 1000000 // 车辆经度
+          if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = parseInt(getVehiclesPosition.latitude, 10) / 1000000// 车辆纬度
+          if (getVehiclesAddress) GLOBAL_USER_DATA.carSimpleLocation = getVehiclesAddress.simple // 简略地理位置
+          if (getVehiclesAddress) GLOBAL_USER_DATA.carCompleteLocation = getVehiclesAddress.complete // 详细地理位置
+        } catch (error) {
+          GLOBAL_USER_DATA.longitude = -1 // 车辆经度
+          GLOBAL_USER_DATA.latitude = -1 // 车辆纬度
+          GLOBAL_USER_DATA.carSimpleLocation = '暂无位置信息' // 详细地理位置
+          GLOBAL_USER_DATA.carCompleteLocation = '暂无位置信息' // 详细地理位置
+        }
+      } else {
+        console.log('没有输入高德 key 无法获取车辆位置信息')
       }
     }
 
@@ -1062,13 +1063,55 @@ class Widget extends Base {
           Keychain.set('authToken', response.access_token)
           console.log('authToken 密钥设置成功')
           // 正式获取车辆信息
-          await this.bootstrap(isDebug)
+          await this.handleGetApiBase(isDebug)
         }
       }
     } else {
       // 已存在的时候
-      console.log(type + ' 信息已存在，开始 bootstrap() 函数')
-      if (type === 'userRefreshToken') await this.bootstrap()
+      console.log(type + ' 信息已存在，开始 handleGetApiBase() 函数')
+      if (type === 'userRefreshToken') await this.handleGetApiBase()
+    }
+  }
+
+  /**
+   * 动态获取接口地址
+   * @param isDebug
+   * @return {Promise<void>}
+   */
+  async handleGetApiBase(isDebug = false) {
+    if (isDebug || !Keychain.contains('vehiclesBaseApi')) {
+      const options = {
+        url: AUDI_SERVER_API.apiBase(Keychain.get('myCarVIN')),
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Bearer ' + Keychain.get('authToken'),
+        }
+      }
+      const response = await this.http(options)
+      // 判断接口状态
+      if (response.error) {
+        // 接口异常
+        console.error('handleGetApiBase 接口异常' + response.error.errorCode + ' - ' + response.error.description)
+        switch (response.error.errorCode) {
+        }
+      } else {
+        // 接口获取数据成功
+        const data = response?.homeRegion?.baseUri?.content
+        if (data) {
+          Keychain.set('vehiclesBaseApi', data)
+          console.log('handleGetApiBase 获取到车辆基本访问地址')
+          // 获取车辆信息
+          await this.bootstrap(isDebug)
+        } else {
+          console.error('handleGetApiBase 获取数据失败')
+        }
+      }
+    } else {
+      if (isDebug) console.log('检测本地缓存已有 vehiclesBaseApi 数据:')
+      if (isDebug) console.log(Keychain.get('vehiclesBaseApi'))
+      console.log('handleVehiclesVIN 信息已存在，开始 bootstrap() 函数')
+      await this.bootstrap(isDebug)
     }
   }
 
@@ -1079,18 +1122,10 @@ class Widget extends Base {
    * @returns {Promise<string | void>}
    */
   async handleVehiclesStatus(isDebug = false) {
-    let url = AUDI_SERVER_API.mal1aVehiclesStatus
-    switch (this.settings['compatibilityMode']) {
-      case 'standard':
-        url = AUDI_SERVER_API.mal1aVehiclesStatus
-        break
-      case 'compatible':
-        url = AUDI_SERVER_API.mal3aVehiclesStatus
-        break
-    }
+    const url = AUDI_SERVER_API.vehiclesStatus
 
     const options = {
-      url: url(Keychain.get('myCarVIN')),
+      url: url(Keychain.get('vehiclesBaseApi'), Keychain.get('myCarVIN')),
       method: 'GET',
       headers: {
         ...{
@@ -1119,7 +1154,7 @@ class Widget extends Base {
           await this.notify('unauthorized 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽奥迪应用查看！')
           break
         case 'mbbc.rolesandrights.unknownService':
-          await this.notify('unknownService 错误', '请到菜单「路线配置」更换对应车型路线！')
+          await this.notify('unknownService 错误', '请联系开发者！')
           break
         case 'mbbc.rolesandrights.unauthorizedUserDisabled':
           // todo 错误
@@ -1145,18 +1180,10 @@ class Widget extends Base {
    * @returns {Promise<string>}
    */
   async handleVehiclesPosition(isDebug = false) {
-    let url = AUDI_SERVER_API.mal1aVehiclesPosition
-    switch (this.settings['compatibilityMode']) {
-      case 'standard':
-        url = AUDI_SERVER_API.mal1aVehiclesPosition
-        break
-      case 'compatible':
-        url = AUDI_SERVER_API.mal3aVehiclesPosition
-        break
-    }
+    const url = AUDI_SERVER_API.vehiclesPosition
 
     const options = {
-      url: url(Keychain.get('myCarVIN')),
+      url: url(Keychain.get('vehiclesBaseApi'), Keychain.get('myCarVIN')),
       method: 'GET',
       headers: {
         ...{
@@ -1220,6 +1247,13 @@ class Widget extends Base {
    * @returns {Promise<{simple: string, complete: string}>}
    */
   async handleGetCarAddress(isDebug = false) {
+    if (!this.settings['aMapKey']) {
+      await this.notify('获取车辆位置失败', '请输入高德 key 才能获取车辆位置信息')
+      return {
+        simple: '暂无位置信息',
+        complete: '暂无位置信息'
+      }
+    }
     if (!Keychain.contains('storedPositionResponse') && !Keychain.contains('carPosition')) {
       await console.error('获取车辆经纬度失败，请退出登录再登录重试！')
       return {
@@ -1235,7 +1269,7 @@ class Widget extends Base {
     // 直接返回缓存数据
     if (longitude < 0 || latitude < 0) return { simple: '暂无位置信息', complete: '暂无位置信息' }
 
-    const aMapKey = this.settings['aMapKey'] ? this.settings['aMapKey'] : AUDI_AMAP_KEY
+    const aMapKey = this.settings['aMapKey']
     const options = {
       url: `https://restapi.amap.com/v3/geocode/regeo?key=${aMapKey}&location=${longitude},${latitude}&radius=1000&extensions=base&batch=false&roadlevel=0`,
       method: 'GET'
@@ -1621,9 +1655,6 @@ class Widget extends Base {
     try {
       const img = await Photos.fromLibrary()
       const height = img.size.height
-      console.log('壁纸图片属性：')
-      console.log(img)
-      console.log(height)
       const phone = this.phoneSizes()[height]
       if (!phone) {
         message = '您选择的照片好像不是正确的截图，或者您的机型暂时不支持。'
@@ -1812,17 +1843,13 @@ class Widget extends Base {
   async actionPreferenceSettings5() {
     const alert = new Alert()
     alert.title = '高德地图密钥'
-    alert.message = '请输入组件所需要的高德地图 key 用于车辆逆地理编码以及地图资源\n\r获取途径可以在「关于小组件」菜单里加微信群进行咨询了解'
+    alert.message = '请输入组件所需要的高德地图 key 用于车辆逆地理编码以及地图资源'
     alert.addTextField('key 密钥', this.settings['aMapKey'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
-    if (id === -1) {
-      this.settings['aMapKey'] = AUDI_AMAP_KEY
-      this.saveSettings()
-      return await this.actionPreferenceSettings()
-    }
+    if (id === -1) return await this.actionPreferenceSettings()
     this.settings['aMapKey'] = alert.textFieldValue(0)
     this.saveSettings()
 
@@ -1875,36 +1902,6 @@ class Widget extends Base {
     this.settings['showPlate'] = true
     this.saveSettings()
     return await this.actionPreferenceSettings()
-  }
-
-  /**
-   * 兼容配置
-   * @returns {Promise<void>}
-   */
-  async actionCompatible() {
-    const alert = new Alert()
-    alert.title = '路线配置'
-    alert.message = '标准路线：支持绝大部分车型\n' +
-      '其它模式：A3、部分A6车型、Q3、Q7车主'
-
-    const menuList = [{
-      name: 'standard',
-      text: '标准路线'
-    }, {
-      name: 'compatible',
-      text: '其它模式'
-    }]
-
-    const mode = this.settings['compatibilityMode'] ? this.settings['compatibilityMode'] : 'standard'
-    menuList.forEach(item => {
-      alert.addAction(mode === item.name ? '✅' + ' ' + item.text : '❌' + ' ' + item.text)
-    })
-
-    alert.addCancelAction('取消设置')
-    const id = await alert.presentSheet()
-    if (id === -1) return
-    this.settings['compatibilityMode'] = menuList[id].name
-    this.saveSettings()
   }
 
   /**
