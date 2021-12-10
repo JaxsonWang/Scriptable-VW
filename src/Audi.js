@@ -107,6 +107,7 @@ class Widget extends Base {
    */
   constructor(arg) {
     super(arg)
+    this.styleType = arg
     this.name = 'Audi 挂件'
     this.desc = 'Audi 车辆桌面组件展示'
 
@@ -137,7 +138,7 @@ class Widget extends Base {
             return await this.renderLarge(data)
           case 'medium':
             data.size = size.medium
-            return await this.renderMedium(data)
+            return await this.renderMediumStyleType(data)
           default:
             data.size = size.small
             return await this.renderSmall(data)
@@ -148,6 +149,20 @@ class Widget extends Base {
       }
     } else {
       return await this.renderEmpty()
+    }
+  }
+
+  /**
+   * 渲染类型
+   * @return {Promise<ListWidget>}
+   */
+  async renderMediumStyleType(data) {
+    switch (this.styleType) {
+      case '简约风格1':
+        return await this.renderMediumSimpleStyle(data)
+      default:
+        // return await this.renderMedium(data)
+        return await this.renderMediumSimpleStyle(data)
     }
   }
 
@@ -640,6 +655,91 @@ class Widget extends Base {
     }
     text.textColor = Color.red()
     text.centerAlignText()
+
+    return widget
+  }
+
+  /**
+   * 中组件固定模板 - 简约风格
+   * @param data
+   * @return {Promise<ListWidget>}
+   */
+  async renderMediumSimpleStyle(data) {
+    const widget = new ListWidget()
+
+    widget.backgroundImage = await this.getImageByUrl('https://joiner.i95.me/1/scriptable_style_type1_background.png')
+
+    const width = data?.size?.width
+    const height = data?.size?.height
+
+    const containerStack = widget.addStack()
+    containerStack.size = new Size(width, height)
+    // containerStack.backgroundColor = Color.gray()
+
+    // region AreaLeftStack
+    const areaLeftStack = containerStack.addStack()
+    areaLeftStack.size = new Size(containerStack.size.width - containerStack.size.width / 2, containerStack.size.height)
+    // areaLeftStack.backgroundColor = Color.blue()
+    areaLeftStack.layoutVertically()
+
+    // region areaLeftTopStack
+    const areaLeftTopStack = areaLeftStack.addStack()
+    areaLeftTopStack.size = new Size(areaLeftStack.size.width, areaLeftStack.size.height - areaLeftStack.size.height / 2.5)
+    areaLeftTopStack.backgroundColor = new Color('#EB5D68', 1)
+    areaLeftTopStack.topAlignContent()
+    areaLeftTopStack.layoutVertically()
+
+    const areaLeftTopStackHeight = areaLeftStack.size.height
+    // logo
+    const carLogoStack = areaLeftTopStack.addStack()
+    carLogoStack.size = new Size(areaLeftTopStack.size.width, 25)
+    carLogoStack.backgroundColor = Color.blue()
+    const carLogo = carLogoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
+    carLogo.imageSize = new Size(carLogoStack.size.width, carLogoStack.size.height)
+    carLogo.leftAlignImage()
+    // 车辆名称
+    const myCarStack = areaLeftTopStack.addStack()
+    myCarStack.size = new Size(areaLeftTopStack.size.width, 30)
+    myCarStack.backgroundColor = Color.cyan()
+    myCarStack.topAlignContent()
+    const myCarText = myCarStack.addText(data.seriesName)
+    myCarText.font = Font.systemFont(28)
+    // endregion
+
+    // region areaLeftBottomStack
+    const areaLeftBottomStack = areaLeftStack.addStack()
+    areaLeftBottomStack.size = new Size(areaLeftStack.size.width, areaLeftStack.size.height / 2.5)
+    // areaLeftBottomStack.backgroundColor = new Color('#F9DE06', 0.1)
+    // endregion
+
+    // endregion
+
+    // region AreaRightStack
+    const areaRightStack = containerStack.addStack()
+    areaRightStack.size = new Size(containerStack.size.width / 2, containerStack.size.height)
+    // areaRightStack.backgroundColor = Color.red()
+    areaRightStack.layoutVertically()
+
+    // region areaRightTopStack
+    const areaRightTopStack = areaRightStack.addStack()
+    areaRightTopStack.size = new Size(areaRightStack.size.width, areaRightStack.size.height - areaRightStack.size.height / 3.5)
+    // areaRightTopStack.backgroundColor = new Color('#EB5D68', 1)
+    areaRightTopStack.bottomAlignContent()
+    // 车辆图片
+    const carImage = areaRightTopStack.addImage(await this.getMyCarPhoto())
+    carImage.imageSize = new Size(areaRightTopStack.size.width, areaRightTopStack.size.height / 1.8)
+    // carImage.borderWidth = 1
+    // carImage.borderColor = Color.blue()
+
+    // endregion
+
+    // region areaRightBottomStack
+    const areaRightBottomStack = areaRightStack.addStack()
+    areaRightBottomStack.size = new Size(areaRightStack.size.width, areaRightStack.size.height / 3.5)
+    // areaRightBottomStack.backgroundColor = new Color('#F9DE06', 1)
+    // endregion
+
+    // endregion
 
     return widget
   }

@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = '1.0.2'
+const AUDI_VERSION = '1.0.1'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -55,6 +55,7 @@ const GLOBAL_USER_DATA = {
   doorAndWindow: '', // 门窗状态
   myOne: '与你一路同行'
 }
+const AUDI_AMAP_KEY = 'c078fb16379c25bc0aad8633d82cf1dd'
 
 const DEVICE_SIZE  = {
   '428x926': {
@@ -123,6 +124,7 @@ class Widget extends Base {
    */
   async render() {
     const data = await this.getData()
+    console.log(data)
     const screenSize = Device.screenSize()
     const size = DEVICE_SIZE[`${screenSize.width}x${screenSize.height}`] || DEVICE_SIZE['428x926']
     if (data) {
@@ -679,24 +681,20 @@ class Widget extends Base {
 
     // 是否开启位置
     if (this.showLocation()) {
-      if (this.settings['aMapKey']) {
-        try {
-          const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition(isDebug))
-          const getVehiclesAddress = await this.handleGetCarAddress(isDebug)
-          // simple: '暂无位置信息',
-          //   complete: '暂无位置信息'
-          if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = parseInt(getVehiclesPosition.longitude, 10) / 1000000 // 车辆经度
-          if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = parseInt(getVehiclesPosition.latitude, 10) / 1000000// 车辆纬度
-          if (getVehiclesAddress) GLOBAL_USER_DATA.carSimpleLocation = getVehiclesAddress.simple // 简略地理位置
-          if (getVehiclesAddress) GLOBAL_USER_DATA.carCompleteLocation = getVehiclesAddress.complete // 详细地理位置
-        } catch (error) {
-          GLOBAL_USER_DATA.longitude = -1 // 车辆经度
-          GLOBAL_USER_DATA.latitude = -1 // 车辆纬度
-          GLOBAL_USER_DATA.carSimpleLocation = '暂无位置信息' // 详细地理位置
-          GLOBAL_USER_DATA.carCompleteLocation = '暂无位置信息' // 详细地理位置
-        }
-      } else {
-        console.log('没有输入高德 key 无法获取车辆位置信息')
+      try {
+        const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition(isDebug))
+        const getVehiclesAddress = await this.handleGetCarAddress(isDebug)
+        // simple: '暂无位置信息',
+        //   complete: '暂无位置信息'
+        if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = parseInt(getVehiclesPosition.longitude, 10) / 1000000 // 车辆经度
+        if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = parseInt(getVehiclesPosition.latitude, 10) / 1000000// 车辆纬度
+        if (getVehiclesAddress) GLOBAL_USER_DATA.carSimpleLocation = getVehiclesAddress.simple // 简略地理位置
+        if (getVehiclesAddress) GLOBAL_USER_DATA.carCompleteLocation = getVehiclesAddress.complete // 详细地理位置
+      } catch (error) {
+        GLOBAL_USER_DATA.longitude = -1 // 车辆经度
+        GLOBAL_USER_DATA.latitude = -1 // 车辆纬度
+        GLOBAL_USER_DATA.carSimpleLocation = '暂无位置信息' // 详细地理位置
+        GLOBAL_USER_DATA.carCompleteLocation = '暂无位置信息' // 详细地理位置
       }
     }
 
@@ -1009,7 +1007,7 @@ class Widget extends Base {
         if (data) {
           Keychain.set('vehiclesBaseApi', data)
           console.log('handleGetApiBase 获取到车辆基本访问地址')
-          // 获取车辆信息
+          // 获取车架号
           await this.bootstrap(isDebug)
         } else {
           console.error('handleGetApiBase 获取数据失败')
@@ -1061,7 +1059,7 @@ class Widget extends Base {
           await this.notify('unauthorized 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽大众应用查看！')
           break
         case 'mbbc.rolesandrights.unknownService':
-          await this.notify('unknownService 错误', '请联系开发者！')
+          await this.notify('unknownService 错误', '请到菜单「路线配置」更换对应车型路线！')
           break
         case 'mbbc.rolesandrights.unauthorizedUserDisabled':
           // todo 错误
@@ -1154,17 +1152,7 @@ class Widget extends Base {
    * @returns {Promise<{simple: string, complete: string}>}
    */
   async handleGetCarAddress(isDebug = false) {
-    if (!this.settings['aMapKey']) {
-      await this.notify('获取车辆位置失败', '请输入高德 key 才能获取车辆位置信息')
-      return {
-        simple: '暂无位置信息',
-        complete: '暂无位置信息'
-      }
-    }
-    if (
-      !Keychain.contains('storedPositionResponse') &&
-      !Keychain.contains('carPosition')
-    ) {
+    if (!Keychain.contains('storedPositionResponse') && !Keychain.contains('carPosition')) {
       await console.error('获取车辆经纬度失败，请退出登录再登录重试！')
       return {
         simple: '暂无位置信息',
@@ -1179,7 +1167,7 @@ class Widget extends Base {
     // 直接返回缓存数据
     if (longitude < 0 || latitude < 0) return { simple: '暂无位置信息', complete: '暂无位置信息' }
 
-    const aMapKey = this.settings['aMapKey']
+    const aMapKey = this.settings['aMapKey'] ? this.settings['aMapKey'] : AUDI_AMAP_KEY
     const options = {
       url: `https://restapi.amap.com/v3/geocode/regeo?key=${aMapKey}&location=${longitude},${latitude}&radius=1000&extensions=base&batch=false&roadlevel=0`,
       method: 'GET'
@@ -1759,13 +1747,17 @@ class Widget extends Base {
   async actionPreferenceSettings5() {
     const alert = new Alert()
     alert.title = '高德地图密钥'
-    alert.message = '请输入组件所需要的高德地图 key 用于车辆逆地理编码'
+    alert.message = '请输入组件所需要的高德地图 key 用于车辆逆地理编码以及地图资源\n\r获取途径可以在「关于小组件」菜单里加微信群进行咨询了解'
     alert.addTextField('key 密钥', this.settings['aMapKey'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
-    if (id === -1) return await this.actionPreferenceSettings()
+    if (id === -1) {
+      this.settings['aMapKey'] = AUDI_AMAP_KEY
+      this.saveSettings()
+      return await this.actionPreferenceSettings()
+    }
     this.settings['aMapKey'] = alert.textFieldValue(0)
     this.saveSettings()
 
