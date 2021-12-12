@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = '1.3.1'
+const AUDI_VERSION = '1.3.1.beta2'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -157,12 +157,11 @@ class Widget extends Base {
    * @return {Promise<ListWidget>}
    */
   async renderMediumStyleType(data) {
-    switch (this.styleType) {
-      case '简约风格1':
-        return await this.renderMediumSimpleStyle(data)
-      default:
-        // return await this.renderMedium(data)
-        return await this.renderMediumSimpleStyle(data)
+    if (this.styleType.indexOf('简约风格') !== -1) {
+      return await this.renderMediumSimpleStyle(data)
+    } else {
+      return await this.renderMedium(data)
+      // return await this.renderMediumSimpleStyle(data)
     }
   }
 
@@ -665,11 +664,15 @@ class Widget extends Base {
    * @return {Promise<ListWidget>}
    */
   async renderMediumSimpleStyle(data) {
+    const params = this.params2obj(this.styleType)
+    const isEn = params?.lang?.toLocaleLowerCase() === 'english'
+    // const isEn = true
+
     const widget = new ListWidget()
 
-    widget.backgroundImage = await this.getImageByUrl('https://joiner.i95.me/1/scriptable_style_type1_background.png')
+    widget.backgroundImage = await this.getImageByUrl(this.template1IconsPath('scriptable_style_type1_background'))
 
-    const width = data?.size?.width
+    const width = data?.size?.width - 36
     const height = data?.size?.height
 
     const containerStack = widget.addStack()
@@ -685,33 +688,118 @@ class Widget extends Base {
     // region areaLeftTopStack
     const areaLeftTopStack = areaLeftStack.addStack()
     areaLeftTopStack.size = new Size(areaLeftStack.size.width, areaLeftStack.size.height - areaLeftStack.size.height / 2.5)
-    areaLeftTopStack.backgroundColor = new Color('#EB5D68', 1)
-    areaLeftTopStack.topAlignContent()
+    // areaLeftTopStack.backgroundColor = new Color('#EB5D68', 1)
     areaLeftTopStack.layoutVertically()
 
     const areaLeftTopStackHeight = areaLeftStack.size.height
     // logo
     const carLogoStack = areaLeftTopStack.addStack()
     carLogoStack.size = new Size(areaLeftTopStack.size.width, 25)
-    carLogoStack.backgroundColor = Color.blue()
+    // carLogoStack.backgroundColor = Color.blue()
+    carLogoStack.topAlignContent()
+    carLogoStack.layoutVertically()
     const carLogo = carLogoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
-    carLogo.imageSize = new Size(carLogoStack.size.width, carLogoStack.size.height)
-    carLogo.leftAlignImage()
+    carLogo.tintColor = new Color('#838383', 1)
+    carLogo.imageSize = new Size(60, carLogoStack.size.height)
+
+    areaLeftTopStack.addSpacer(5)
+
     // 车辆名称
     const myCarStack = areaLeftTopStack.addStack()
     myCarStack.size = new Size(areaLeftTopStack.size.width, 30)
-    myCarStack.backgroundColor = Color.cyan()
     myCarStack.topAlignContent()
-    const myCarText = myCarStack.addText(data.seriesName)
-    myCarText.font = Font.systemFont(28)
+    myCarStack.layoutVertically()
+
+    const myCarNameStack = myCarStack.addStack()
+
+    const myCarText = myCarNameStack.addText(params.seriesName || data.seriesName)
+    myCarText.font = isEn ? new Font('Futura-Medium', 22) : new Font('PingFangSC-Medium', 22)
+    myCarText.textColor = Color.white()
+
+    myCarNameStack.addSpacer(5)
+
+    // 警示警告
+    const warnStack = myCarNameStack.addStack()
+    // warnStack.setPadding(10, 0, 0, 0)
+    warnStack.size = new Size(14, 14)
+    warnStack.backgroundColor = Color.red()
+    warnStack.cornerRadius = 50
+    const warnText = warnStack.addText('!')
+    warnText.font = Font.systemFont(12)
+    warnText.textColor = Color.white()
+
+    // areaLeftTopStack.addSpacer(1)
+
+    // 更新日期
+    const metaInfoStack = areaLeftTopStack.addStack()
+    // metaInfoStack.backgroundColor = Color.gray()
+    metaInfoStack.size = new Size(areaLeftTopStack.size.width, 14)
+    metaInfoStack.topAlignContent()
+    metaInfoStack.layoutVertically()
+
+    const updateMetaInfoStack = metaInfoStack.addStack()
+    // 图标显示
+    const updateIconStack = updateMetaInfoStack.addStack()
+    const updateIcon = updateIconStack.addImage(await this.getImageByUrl(this.template1IconsPath('updateTime')))
+    updateIcon.imageSize = new Size(16, 16)
+    updateIcon.tintColor = new Color('#eeeeee', 0.5)
+
+    updateMetaInfoStack.addSpacer(2)
+
+    // 格式化时间
+    const formatter = new DateFormatter()
+    formatter.dateFormat = 'YYYY-MM-dd HH:mm'
+    const updateDate = new Date(data.updateDate)
+    const updateDateString = formatter.string(updateDate)
+
+    const updateDateText = updateMetaInfoStack.addText(updateDateString)
+    updateDateText.font = isEn ? new Font('AppleSDGothicNeo-Regular', 12) : new Font('PingFangSC-Medium', 12)
+    updateDateText.textColor = new Color('#eeeeee', 0.5)
+    updateDateText.textOpacity = 0.75
     // endregion
 
     // region areaLeftBottomStack
     const areaLeftBottomStack = areaLeftStack.addStack()
     areaLeftBottomStack.size = new Size(areaLeftStack.size.width, areaLeftStack.size.height / 2.5)
     // areaLeftBottomStack.backgroundColor = new Color('#F9DE06', 0.1)
-    // endregion
+    areaLeftBottomStack.layoutVertically()
+    // 续航信息
+    const rangeStack = areaLeftBottomStack.addStack()
+    // rangeStack.backgroundColor = Color.red()
+    rangeStack.size = new Size(areaLeftBottomStack.size.width, 18)
+    rangeStack.topAlignContent()
+    rangeStack.layoutVertically()
+    const rangeMetaInfoStack = rangeStack.addStack()
+    // 图标显示
+    const rangeIconStack = rangeMetaInfoStack.addStack()
+    const rangeIcon = rangeIconStack.addImage(await this.getImageByUrl(this.template1IconsPath('pointer')))
+    rangeIcon.imageSize = new Size(18, 18)
+    rangeIcon.tintColor = new Color('#eeeeee', 0.5)
+    rangeMetaInfoStack.addSpacer(5)
+    const rangeText = rangeMetaInfoStack.addText(`${isEn ? 'Range' : '续航'}: ${data.endurance} km`)
+    rangeText.font = isEn ? new Font('AppleSDGothicNeo-Regular', 14) : new Font('PingFangSC-Medium', 14)
+    rangeText.textColor = new Color('#eeeeee', 0.5)
+    rangeText.textOpacity = 0.75
 
+    areaLeftBottomStack.addSpacer(5)
+    // 燃料信息
+    const fuelStack = areaLeftBottomStack.addStack()
+    // fuelStack.backgroundColor = Color.blue()
+    fuelStack.size = new Size(areaLeftBottomStack.size.width, 18)
+    fuelStack.topAlignContent()
+    fuelStack.layoutVertically()
+    const fuelMetaInfoStack = fuelStack.addStack()
+    // 图标显示
+    const fuelIconStack = fuelMetaInfoStack.addStack()
+    const fuelIcon = fuelIconStack.addImage(await this.getImageByUrl(this.template1IconsPath('dashboard_1')))
+    fuelIcon.imageSize = new Size(18, 18)
+    fuelIcon.tintColor = new Color('#eeeeee', 0.5)
+    fuelMetaInfoStack.addSpacer(5)
+    const fuelText = fuelMetaInfoStack.addText(`${isEn ? 'Fuel level' : '燃料'}: ${data.fuelLevel}%`)
+    fuelText.font = isEn ? new Font('AppleSDGothicNeo-Regular', 14) : new Font('PingFangSC-Medium', 14)
+    fuelText.textColor = new Color('#eeeeee', 0.5)
+    fuelText.textOpacity = 0.75
+    // endregion
     // endregion
 
     // region AreaRightStack
@@ -733,14 +821,35 @@ class Widget extends Base {
 
     // endregion
 
+    areaRightStack.addSpacer(10)
+
     // region areaRightBottomStack
     const areaRightBottomStack = areaRightStack.addStack()
     areaRightBottomStack.size = new Size(areaRightStack.size.width, areaRightStack.size.height / 3.5)
     // areaRightBottomStack.backgroundColor = new Color('#F9DE06', 1)
-    // endregion
 
-    // endregion
+    const statusStack = areaRightBottomStack.addStack()
+    statusStack.backgroundColor = new Color('#ffffff', 0.25)
+    statusStack.borderColor = data.status ? new Color('#ffffff', 0.5) : new Color('#FF9900', 0.5)
+    statusStack.borderWidth = 2
+    statusStack.cornerRadius = 5
+    statusStack.setPadding(6, 15, 4, 15)
+    statusStack.centerAlignContent()
 
+    // 锁车解锁图标
+    const statusIconStack = statusStack.addStack()
+    // statusIconStack.backgroundColor = Color.orange()
+    const statusIcon = statusIconStack.addImage(await this.getImageByUrl(this.template1IconsPath('lock')))
+    statusIcon.imageSize = new Size(18, 18)
+    statusIcon.tintColor = data.status ? new Color('#ffffff', 0.5) : new Color('#FF9900', 0.5)
+    statusStack.addSpacer(5)
+    const statusTextStack = statusStack.addStack()
+    // statusTextStack.backgroundColor = Color.cyan()
+    const statusText = statusTextStack.addText(data.status ? isEn ? 'Car locked' : '已锁车' : isEn ? 'Car unlocked' : '未锁车')
+    statusText.font = isEn ? new Font('AppleSDGothicNeo-Regular', 14) : new Font('PingFangSC-Medium', 14)
+    statusText.textColor = data.status ? new Color('#ffffff', 0.5) : new Color('#FF9900', 0.5)
+    // endregion
+    // endregion
     return widget
   }
 
@@ -2396,6 +2505,28 @@ class Widget extends Base {
    */
   filePath(fileName) {
     return Files.joinPath(Files.documentsDirectory(), fileName)
+  }
+
+  /**
+   * 固定模板 - 简约风格图片路径
+   * @param name
+   * @return {string}
+   */
+  template1IconsPath(name) {
+    return 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/template1_icons/' + name + '.png'
+  }
+
+  /**
+   * 字符串转对象
+   */
+  params2obj(params) {
+    const obj = {}
+    let parr = params.split('&')
+    for(let i of parr) {
+      let arr = i.split('=')
+      obj[arr[0]] = arr[1]
+    }
+    return obj
   }
 }
 

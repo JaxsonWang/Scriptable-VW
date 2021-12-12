@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = '1.0.1'
+const AUDI_VERSION = '1.0.2'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -124,7 +124,6 @@ class Widget extends Base {
    */
   async render() {
     const data = await this.getData()
-    console.log(data)
     const screenSize = Device.screenSize()
     const size = DEVICE_SIZE[`${screenSize.width}x${screenSize.height}`] || DEVICE_SIZE['428x926']
     if (data) {
@@ -314,6 +313,8 @@ class Widget extends Base {
     // updateStack.backgroundColor = Color.gray()
     updateStack.layoutVertically()
     // 格式化时间
+    console.log(this.showLocation())
+    console.log(this.settings['showLocation'])
     const formatter = new DateFormatter()
     formatter.dateFormat = this.showLocation() && data.carSimpleLocation !== '暂无位置信息' ? 'MM-dd HH:mm' : 'MM月dd日 HH:mm'
     const updateDate = new Date(data.updateDate)

@@ -63,7 +63,7 @@
     // })
 
     // 列表刷新
-    var token = '?access_token=f66c1e3ec818652c822afb5e013c6f95'
+    var token = '?access_token=2e5dab8d64977e068397ac68f8766780'
     getGiteeTree('https://gitee.com/api/v5/repos/JaxsonWang/scriptable-audi/git/trees/master' + token, ['assets', 'audi-version.json', 'vw-version.json'], function(dataRoo1) {
       getGiteeTree(dataRoo1[0].url + token, ['audi_cars'], function(dataRoo2) {
         getGiteeTree(dataRoo2[0].url + token, null, function(dataRoo3) {
