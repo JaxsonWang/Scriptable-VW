@@ -8,7 +8,7 @@
 // iOS 桌面组件脚本
 // 开发说明：请从 Widget 类开始编写，注释请勿修改
 //
-
+// FVW 一汽大众
 // 添加require，是为了vscode中可以正确引入包，以获得自动补全等功能
 if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
