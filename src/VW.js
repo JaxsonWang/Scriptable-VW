@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = '1.0.2'
+const AUDI_VERSION = '1.0.3'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -24,6 +24,8 @@ const AUDI_SERVER_API = {
   login: 'https://one-app-h5.faw-vw.com/prod-api/mobile/one-app/user/public/v1/login?appkey=6298289633',
   token: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/oauth2/v1/token',
   vehiclesVIN: 'https://mal-1a.prd.cn.vwg-connect.cn/api/usermanagement/users/v1/vehicles',
+  vehiclesTripInfo: 'https://service-81jfxgzn-1256532032.bj.apigw.tencentcs.com/prepub/one-app-common/iov-api-gateway-v1/one/iov-gw/general/public/v1/iov/id_car_report/get_trip_info_by_time',
+  vehiclesCharge: vin => `https://mobile-cs.mosc.faw-vw.com/tm/mos/charging/public/getChargingStatus?vin=${vin}`,
   apiBase: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/cs/vds/v1/vehicles/${vin}/homeRegion`,
   vehiclesStatus: (url, vin) => `${url}/bs/vsr/v1/vehicles/${vin}/status`,
   vehiclesPosition: (url, vin) => `${url}/bs/cf/v1/vehicles/${vin}/position`
@@ -55,7 +57,6 @@ const GLOBAL_USER_DATA = {
   doorAndWindow: '', // 门窗状态
   myOne: '与你一路同行'
 }
-const AUDI_AMAP_KEY = 'c078fb16379c25bc0aad8633d82cf1dd'
 
 const DEVICE_SIZE  = {
   '428x926': {
@@ -312,26 +313,41 @@ class Widget extends Base {
     const updateStack = leftStack.addStack()
     // updateStack.backgroundColor = Color.gray()
     updateStack.layoutVertically()
-    // 格式化时间
-    console.log(this.showLocation())
-    console.log(this.settings['showLocation'])
-    const formatter = new DateFormatter()
-    formatter.dateFormat = this.showLocation() && data.carSimpleLocation !== '暂无位置信息' ? 'MM-dd HH:mm' : 'MM月dd日 HH:mm'
-    const updateDate = new Date(data.updateDate)
-    const updateDateString = formatter.string(updateDate)
-    const updateTimeText =
-      this.showLocation() && data.carSimpleLocation !== '暂无位置信息'
-        ? updateStack.addText(updateDateString + ' ' + (data.status ? '已锁车' : '未锁车'))
-        : updateStack.addText('当前状态: ' + (data.status ? '已锁车' : '未锁车'))
-    updateTimeText.textOpacity = 0.75
-    updateTimeText.font = Font.systemFont(12)
-    data.status ? this.setWidgetTextColor(updateTimeText) : updateTimeText.textColor = new Color('#FF9900', 1)
-    if (!(this.showLocation() && data.carSimpleLocation !== '暂无位置信息')) {
-      // updateStack.addSpacer(5)
-      const updateTimeText = updateStack.addText('更新日期: ' + updateDateString)
+    if (this.settings['carType'] === 'gasoline') {
+      // 格式化时间
+      const formatter = new DateFormatter()
+      formatter.dateFormat = this.showLocation() && data.carSimpleLocation !== '暂无位置信息' ? 'MM-dd HH:mm' : 'MM月dd日 HH:mm'
+      const updateDate = new Date(data.updateDate)
+      const updateDateString = formatter.string(updateDate)
+      const updateTimeText =
+        this.showLocation() && data.carSimpleLocation !== '暂无位置信息'
+          ? updateStack.addText(updateDateString + ' ' + (data.status ? '已锁车' : '未锁车'))
+          : updateStack.addText('当前状态: ' + (data.status ? '已锁车' : '未锁车'))
       updateTimeText.textOpacity = 0.75
       updateTimeText.font = Font.systemFont(12)
-      this.setWidgetTextColor(updateTimeText)
+      data.status ? this.setWidgetTextColor(updateTimeText) : updateTimeText.textColor = new Color('#FF9900', 1)
+      if (!(this.showLocation() && data.carSimpleLocation !== '暂无位置信息')) {
+        // updateStack.addSpacer(5)
+        const updateTimeText = updateStack.addText('更新日期: ' + updateDateString)
+        updateTimeText.textOpacity = 0.75
+        updateTimeText.font = Font.systemFont(12)
+        this.setWidgetTextColor(updateTimeText)
+      }
+    } else {
+      // 格式化时间
+      const formatter = new DateFormatter()
+      formatter.dateFormat = 'YYYY年MM月dd日 HH:mm'
+      const updateDate = new Date(data.updateDate)
+      const updateDateString = formatter.string(updateDate)
+      const updateTime = updateStack.addText('更新日期: ')
+      updateTime.textOpacity = 0.75
+      updateTime.font = Font.systemFont(12)
+      this.setWidgetTextColor(updateTime)
+
+      const updateText = updateStack.addText(updateDateString)
+      updateText.textOpacity = 0.75
+      updateText.font = Font.systemFont(12)
+      this.setWidgetTextColor(updateText)
     }
 
     // 根据选项是否开启位置显示
@@ -362,15 +378,17 @@ class Widget extends Base {
     const carPhotoImage = carPhotoStack.addImage(await this.getMyCarPhoto())
     carPhotoImage.imageSize = new Size(rightStack.size.width, carPhotoStack.size.height)
 
-    // 车辆状态
-    const carStatusStack = rightStack.addStack()
-    carStatusStack.size = new Size(rightStack.size.width, 14)
-    // carStatusStack.backgroundColor = Color.gray()
+    if (this.settings['carType'] === 'gasoline') {
+      // 车辆状态
+      const carStatusStack = rightStack.addStack()
+      carStatusStack.size = new Size(rightStack.size.width, 14)
+      // carStatusStack.backgroundColor = Color.gray()
 
-    const doorAndWindowStatus = data.doorAndWindow ? '车门车窗已关闭' : '请检查车门车窗是否已关闭'
-    const carStatusText = carStatusStack.addText(doorAndWindowStatus)
-    carStatusText.font = Font.systemFont(12)
-    data.doorAndWindow ? this.setWidgetTextColor(carStatusText) : carStatusText.textColor = new Color('#FF9900', 1)
+      const doorAndWindowStatus = data.doorAndWindow ? '车门车窗已关闭' : '请检查车门车窗是否已关闭'
+      const carStatusText = carStatusStack.addText(doorAndWindowStatus)
+      carStatusText.font = Font.systemFont(12)
+      data.doorAndWindow ? this.setWidgetTextColor(carStatusText) : carStatusText.textColor = new Color('#FF9900', 1)
+    }
     // endregion
 
     // 祝语 height = 14
@@ -493,7 +511,7 @@ class Widget extends Base {
     fuelText.textOpacity = 0.75
     this.setWidgetTextColor(fuelText)
 
-    if (data.oilLevel) {
+    if (data.oilLevel && data.oilLevel !== '0.0') {
 
       carInfoStack.addSpacer(5)
 
@@ -510,38 +528,70 @@ class Widget extends Base {
     travelText.textOpacity = 0.75
     this.setWidgetTextColor(travelText)
 
+    if (this.settings['carType'] === 'electricity') {
+      const travelText1 = carInfoStack.addText(`单次最长行驶: ${data.highestOdo} km`)
+      travelText1.font = Font.systemFont(14)
+      travelText1.textOpacity = 0.75
+      this.setWidgetTextColor(travelText1)
+      const travelText2 = carInfoStack.addText(`单次最久行驶: ${data.highestTime} min`)
+      travelText2.font = Font.systemFont(14)
+      travelText2.textOpacity = 0.75
+      this.setWidgetTextColor(travelText2)
+    }
+
     carInfoStack.addSpacer(5)
 
     // 更新时间
     const updateTimeStack = carInfoStack.addStack()
+    updateTimeStack.layoutVertically()
     // updateTimeStack.backgroundColor = Color.red()
     // updateTimeStack.backgroundColor = new Color('#ffffff', 0.25)
     // updateTimeStack.setPadding(2, 3, 2, 3)
     // updateTimeStack.cornerRadius = 5
-    // 格式化时间
-    const formatter = new DateFormatter()
-    formatter.dateFormat = 'yyyy-MM-dd HH:mm'
-    const updateDate = new Date(data.updateDate)
-    const updateDateString = formatter.string(updateDate)
-    const metaText5 = updateTimeStack.addText(updateDateString + ' ' + (data.status ? '已锁车' : '未锁车'))
-    metaText5.textOpacity = 0.75
-    metaText5.font = Font.systemFont(12)
-    data.status ? this.setWidgetTextColor(metaText5) : metaText5.textColor = new Color('#FF9900', 1)
+
+    if (this.settings['carType'] === 'gasoline') {
+      // 格式化时间
+      const formatter = new DateFormatter()
+      formatter.dateFormat = 'yyyy-MM-dd HH:mm'
+      const updateDate = new Date(data.updateDate)
+      const updateDateString = formatter.string(updateDate)
+      const metaText5 = updateTimeStack.addText(updateDateString + ' ' + (data.status ? '已锁车' : '未锁车'))
+      metaText5.textOpacity = 0.75
+      metaText5.font = Font.systemFont(12)
+      data.status ? this.setWidgetTextColor(metaText5) : metaText5.textColor = new Color('#FF9900', 1)
+    } else {
+      // 格式化时间
+      const formatter = new DateFormatter()
+      formatter.dateFormat = 'YYYY年MM月dd日 HH:mm'
+      const updateDate = new Date(data.updateDate)
+      const updateDateString = formatter.string(updateDate)
+      const updateTime = updateTimeStack.addText('更新日期: ')
+      updateTime.textOpacity = 0.75
+      updateTime.font = Font.systemFont(12)
+      this.setWidgetTextColor(updateTime)
+
+      const updateText = updateTimeStack.addText(updateDateString)
+      updateText.textOpacity = 0.75
+      updateText.font = Font.systemFont(12)
+      this.setWidgetTextColor(updateText)
+    }
 
     carInfoStack.addSpacer(5)
 
-    // 车辆状态
-    const statusStack = carInfoStack.addStack()
-    // statusStack.backgroundColor = Color.orange()
-    statusStack.size = widgetSize(statusStack.size.height)
-    statusStack.topAlignContent()
-    statusStack.layoutVertically()
-    const doorAndWindowStatus = data.doorAndWindow ? '车门车窗已关闭' : '请检查车门车窗是否已关闭'
-    const statusText = statusStack.addText(doorAndWindowStatus)
-    statusText.font = Font.systemFont(12)
-    data.doorAndWindow ? this.setWidgetTextColor(statusText) : statusText.textColor = new Color('#FF9900', 1)
+    if (this.settings['carType'] === 'gasoline') {
+      // 车辆状态
+      const statusStack = carInfoStack.addStack()
+      // statusStack.backgroundColor = Color.orange()
+      statusStack.size = widgetSize(statusStack.size.height)
+      statusStack.topAlignContent()
+      statusStack.layoutVertically()
+      const doorAndWindowStatus = data.doorAndWindow ? '车门车窗已关闭' : '请检查车门车窗是否已关闭'
+      const statusText = statusStack.addText(doorAndWindowStatus)
+      statusText.font = Font.systemFont(12)
+      data.doorAndWindow ? this.setWidgetTextColor(statusText) : statusText.textColor = new Color('#FF9900', 1)
 
-    carInfoStack.addSpacer(5)
+      carInfoStack.addSpacer(5)
+    }
 
     // 地理位置
     if (this.showLocation() && data.carCompleteLocation !== '暂无位置信息') {
@@ -676,71 +726,105 @@ class Widget extends Base {
     // 车辆名称
     GLOBAL_USER_DATA.seriesName = this.settings['myCarName'] || '嗨！大众！'
     // 车辆功率类型
-    GLOBAL_USER_DATA.modelShortName = this.settings['myCarModelName'] || '2.0T 110kW'
+    GLOBAL_USER_DATA.modelShortName = this.settings['myCarModelName'] || 'car model'
     GLOBAL_USER_DATA.vin = Keychain.get('myCarVIN') // 车架号
     GLOBAL_USER_DATA.plateNo = this.settings['plateNo'] // 车牌号
 
-    // 是否开启位置
-    if (this.showLocation()) {
-      try {
-        const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition(isDebug))
-        const getVehiclesAddress = await this.handleGetCarAddress(isDebug)
-        // simple: '暂无位置信息',
-        //   complete: '暂无位置信息'
-        if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = parseInt(getVehiclesPosition.longitude, 10) / 1000000 // 车辆经度
-        if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = parseInt(getVehiclesPosition.latitude, 10) / 1000000// 车辆纬度
-        if (getVehiclesAddress) GLOBAL_USER_DATA.carSimpleLocation = getVehiclesAddress.simple // 简略地理位置
-        if (getVehiclesAddress) GLOBAL_USER_DATA.carCompleteLocation = getVehiclesAddress.complete // 详细地理位置
-      } catch (error) {
-        GLOBAL_USER_DATA.longitude = -1 // 车辆经度
-        GLOBAL_USER_DATA.latitude = -1 // 车辆纬度
-        GLOBAL_USER_DATA.carSimpleLocation = '暂无位置信息' // 详细地理位置
-        GLOBAL_USER_DATA.carCompleteLocation = '暂无位置信息' // 详细地理位置
+    if (this.settings['carType'] === 'gasoline') {
+      // 是否开启位置
+      if (this.showLocation()) {
+        if (this.settings['aMapKey']) {
+          try {
+            const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition(isDebug))
+            const getVehiclesAddress = await this.handleGetCarAddress(isDebug)
+            // simple: '暂无位置信息',
+            // complete: '暂无位置信息'
+            if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = parseInt(getVehiclesPosition.longitude, 10) / 1000000 // 车辆经度
+            if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = parseInt(getVehiclesPosition.latitude, 10) / 1000000// 车辆纬度
+            if (getVehiclesAddress) GLOBAL_USER_DATA.carSimpleLocation = getVehiclesAddress.simple // 简略地理位置
+            if (getVehiclesAddress) GLOBAL_USER_DATA.carCompleteLocation = getVehiclesAddress.complete // 详细地理位置
+          } catch (error) {
+            GLOBAL_USER_DATA.longitude = -1 // 车辆经度
+            GLOBAL_USER_DATA.latitude = -1 // 车辆纬度
+            GLOBAL_USER_DATA.carSimpleLocation = '暂无位置信息' // 详细地理位置
+            GLOBAL_USER_DATA.carCompleteLocation = '暂无位置信息' // 详细地理位置
+          }
+        } else {
+          console.log('没有输入高德 key 无法获取车辆位置信息')
+        }
       }
-    }
 
-    try {
-      const getVehiclesStatus = await this.handleVehiclesStatus()
-      const getVehicleResponseData = getVehiclesStatus?.StoredVehicleDataResponse?.vehicleData?.data
-      const getVehiclesStatusArr = getVehicleResponseData ? getVehicleResponseData : []
-      const getCarStatusArr = getVehiclesStatusArr.find(i => i.id === '0x0301FFFFFF')?.field
-      // 燃料续航
-      // 0x0301030005 奥迪
-      // 0x0301030006 大众
-      const enduranceVal = getCarStatusArr.find(i => i.id === '0x0301030006')?.value // 燃料总行程
+      try {
+        const getVehiclesStatus = await this.handleVehiclesStatus()
+        const getVehicleResponseData = getVehiclesStatus?.StoredVehicleDataResponse?.vehicleData?.data
+        const getVehiclesStatusArr = getVehicleResponseData ? getVehicleResponseData : []
+        const getCarStatusArr = getVehiclesStatusArr.find(i => i.id === '0x0301FFFFFF')?.field
+        // 燃料续航
+        // 0x0301030005 奥迪
+        // 0x0301030006 大众
+        const enduranceVal = getCarStatusArr.find(i => i.id === '0x0301030006')?.value // 燃料总行程
 
-      // 获取机油
-      const oilArr = getVehiclesStatusArr.find(i => i.id === '0x0204FFFFFF')?.field
-      const oilLevelVal = oilArr ? oilArr.find(i => i.id === '0x0204040003')?.value : undefined
-      // 机油信息
-      if (oilLevelVal) GLOBAL_USER_DATA.oilLevel = oilLevelVal
+        // 获取机油
+        const oilArr = getVehiclesStatusArr.find(i => i.id === '0x0204FFFFFF')?.field
+        const oilLevelVal = oilArr ? oilArr.find(i => i.id === '0x0204040003')?.value : undefined
+        // 机油信息
+        if (oilLevelVal) GLOBAL_USER_DATA.oilLevel = oilLevelVal
 
-      // 判断电车
-      // 0x0301030002 = 电池
-      // 0x030103000A = 燃料
-      const fuelLevelVal = getCarStatusArr.find(i => i.id === '0x0301030002')?.value ? getCarStatusArr.find(i => i.id === '0x0301030002')?.value : getCarStatusArr.find(i => i.id === '0x030103000A')?.value
-      const mileageVal = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.value // 总里程
-      // 更新时间
-      const updateDate = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.tsCarSentUtc
+        // 判断电车
+        // 0x0301030002 = 电池
+        // 0x030103000A = 燃料
+        const fuelLevelVal = getCarStatusArr.find(i => i.id === '0x0301030002')?.value ? getCarStatusArr.find(i => i.id === '0x0301030002')?.value : getCarStatusArr.find(i => i.id === '0x030103000A')?.value
+        const mileageVal = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.value // 总里程
+        // 更新时间
+        const updateDate = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.tsCarSentUtc
 
-      // 检查门锁 车门 车窗等状态
-      const isLocked = await this.getCarIsLocked(getCarStatusArr)
-      const doorStatusArr = await this.getCarDoorStatus(getCarStatusArr)
-      const windowStatusArr = await this.getCarWindowStatus(getCarStatusArr)
-      const equipmentStatusArr = [...doorStatusArr, ...windowStatusArr].map(i => i.name)
-      // NEDC 续航 单位 km
-      if (enduranceVal) GLOBAL_USER_DATA.endurance = enduranceVal
-      // 燃料 单位百分比
-      if (fuelLevelVal) GLOBAL_USER_DATA.fuelLevel = fuelLevelVal
-      // 总里程
-      if (mileageVal) GLOBAL_USER_DATA.mileage = mileageVal
-      if (updateDate) GLOBAL_USER_DATA.updateDate = updateDate
-      // 车辆状态 true = 已锁车
-      GLOBAL_USER_DATA.status = isLocked
-      // true 车窗已关闭 | false 请检查车窗是否关闭
-      if (equipmentStatusArr) GLOBAL_USER_DATA.doorAndWindow = equipmentStatusArr.length === 0
-    } catch (error) {
-      return error
+        // 检查门锁 车门 车窗等状态
+        const isLocked = await this.getCarIsLocked(getCarStatusArr)
+        const doorStatusArr = await this.getCarDoorStatus(getCarStatusArr)
+        const windowStatusArr = await this.getCarWindowStatus(getCarStatusArr)
+        const equipmentStatusArr = [...doorStatusArr, ...windowStatusArr].map(i => i.name)
+        // NEDC 续航 单位 km
+        if (enduranceVal) GLOBAL_USER_DATA.endurance = enduranceVal
+        // 燃料 单位百分比
+        if (fuelLevelVal) GLOBAL_USER_DATA.fuelLevel = fuelLevelVal
+        // 总里程
+        if (mileageVal) GLOBAL_USER_DATA.mileage = mileageVal
+        if (updateDate) GLOBAL_USER_DATA.updateDate = updateDate
+        // 车辆状态 true = 已锁车
+        GLOBAL_USER_DATA.status = isLocked
+        // true 车窗已关闭 | false 请检查车窗是否关闭
+        if (equipmentStatusArr) GLOBAL_USER_DATA.doorAndWindow = equipmentStatusArr.length === 0
+      } catch (error) {
+        return error
+      }
+    } else {
+      // 电车数据
+      try {
+        const getVehiclesStatus = await this.handleGetCarChargingStatus()
+        const getVehiclesTripInfo = await this.handleGetCarTripInfo()
+
+        const enduranceVal = getVehiclesStatus?.batteryStatus?.rechargeMileage
+        const fuelLevelVal = getVehiclesStatus?.batteryStatus?.batteryPercentage
+        // 更新时间
+        const updateDate = getVehiclesStatus?.batteryStatus?.carCapturedTimestamp
+
+        const mileageVal = getVehiclesTripInfo?.tripStatsVo?.currOdo // 总里程
+        const highestOdo = getVehiclesTripInfo?.tripStatsVo?.highestOdo // 单次最长行驶
+        const highestTime = getVehiclesTripInfo?.tripStatsVo?.highestTime // 单次最久行驶
+
+        // NEDC 续航 单位 km
+        if (enduranceVal) GLOBAL_USER_DATA.endurance = enduranceVal
+        // 燃料 单位百分比
+        if (fuelLevelVal) GLOBAL_USER_DATA.fuelLevel = fuelLevelVal
+
+        if (updateDate) GLOBAL_USER_DATA.updateDate = updateDate
+
+        if (mileageVal) GLOBAL_USER_DATA.mileage = mileageVal
+        if (highestOdo) GLOBAL_USER_DATA.highestOdo = highestOdo
+        if (highestTime) GLOBAL_USER_DATA.highestTime = Math.ceil(highestTime / 60)
+      } catch (error) {
+
+      }
     }
 
     if (this.settings['myOne']) GLOBAL_USER_DATA.myOne = this.settings['myOne'] // 一言
@@ -937,13 +1021,29 @@ class Widget extends Base {
         console.log('当前密钥数据获取成功：userRefreshToken')
         Keychain.set('authToken', response.access_token)
         console.log('authToken 密钥设置成功')
-        await this.handleVehiclesVIN(isDebug)
+        // 判断车辆类型
+        if (this.settings['carType'] === 'electricity') {
+          // 电车直接获取 base url
+          Keychain.set('myCarVIN', this.settings['myCarVIN'])
+          await this.handleGetApiBase(isDebug)
+        } else {
+          // 燃油车 需要先获取车架号
+          await this.handleVehiclesVIN(isDebug)
+        }
       }
     } else {
       if (isDebug) console.log('检测本地缓存已有 Token 数据:')
       if (isDebug) console.log(Keychain.get('userRefreshToken'))
       console.log('userRefreshToken 信息已存在，开始 handleVehiclesVIN() 函数')
-      await this.handleVehiclesVIN(isDebug)
+      // 判断车辆类型
+      if (this.settings['carType'] === 'electricity') {
+        // 电车直接获取 base url
+        Keychain.set('myCarVIN', this.settings['myCarVIN'])
+        await this.handleGetApiBase(isDebug)
+      } else {
+        // 燃油车 需要先获取车架号
+        await this.handleVehiclesVIN(isDebug)
+      }
     }
   }
 
@@ -1008,7 +1108,7 @@ class Widget extends Base {
         if (data) {
           Keychain.set('vehiclesBaseApi', data)
           console.log('handleGetApiBase 获取到车辆基本访问地址')
-          // 获取车架号
+          // 获取车辆数据
           await this.bootstrap(isDebug)
         } else {
           console.error('handleGetApiBase 获取数据失败')
@@ -1168,7 +1268,7 @@ class Widget extends Base {
     // 直接返回缓存数据
     if (longitude < 0 || latitude < 0) return { simple: '暂无位置信息', complete: '暂无位置信息' }
 
-    const aMapKey = this.settings['aMapKey'] ? this.settings['aMapKey'] : AUDI_AMAP_KEY
+    const aMapKey = this.settings['aMapKey']
     const options = {
       url: `https://restapi.amap.com/v3/geocode/regeo?key=${aMapKey}&location=${longitude},${latitude}&radius=1000&extensions=base&batch=false&roadlevel=0`,
       method: 'GET'
@@ -1178,7 +1278,7 @@ class Widget extends Base {
     if (isDebug) console.log(response)
     if (response.status === '1') {
       const addressComponent = response.regeocode.addressComponent
-      const simpleAddress = addressComponent.city + addressComponent.district + addressComponent.township
+      const simpleAddress = addressComponent.district + addressComponent.township
       const completeAddress = response.regeocode.formatted_address
       Keychain.set('carSimpleAddress', simpleAddress)
       Keychain.set('carCompleteAddress', completeAddress)
@@ -1203,6 +1303,92 @@ class Widget extends Base {
   }
 
   /**
+   * 获取电车车辆信息
+   * @param isDebug
+   * @return {Promise<void>}
+   */
+  async handleGetCarChargingStatus(isDebug = false) {
+    const url = AUDI_SERVER_API.vehiclesCharge
+    const tokenInfo = JSON.parse(Keychain.get('userBaseInfoData')).tokenInfo
+    const options = {
+      url: url(Keychain.get('myCarVIN')),
+      method: 'GET',
+      headers: {
+        ...{
+          'Authorization': 'Bearer ' + tokenInfo.accessToken,
+          'X-App-Name': 'BootstrapApp',
+          'X-App-Version': '1.0',
+          'Accept-Language': 'de-DE'
+        },
+        ...REQUEST_HEADER
+      }
+    }
+    const response = await this.http(options)
+    if (isDebug) console.log('获取电能车辆状态信息：')
+    if (isDebug) console.log(response)
+    // 判断接口状态
+    if (response.status === 'SUCCEED') {
+      // 接口获取数据成功
+      const data = response.data
+      Keychain.set('vehiclesStatusResponse', JSON.stringify(data))
+      return data
+    } else {
+      // 接口异常
+      console.error('vehiclesStatus 接口异常' + response)
+      if (Keychain.contains('vehiclesStatusResponse')) {
+        return JSON.parse(Keychain.get('vehiclesStatusResponse'))
+      }
+    }
+  }
+
+  /**
+   * 获取电车总里程信息
+   * @param isDebug
+   * @return {Promise<void>}
+   */
+  async handleGetCarTripInfo(isDebug = false) {
+    const url = AUDI_SERVER_API.vehiclesTripInfo
+    const tokenInfo = JSON.parse(Keychain.get('userBaseInfoData')).tokenInfo
+    const options = {
+      url: url,
+      method: 'POST',
+      headers: {
+        ...{
+          'Authorization': 'Bearer ' + tokenInfo.accessToken,
+          'X-App-Name': 'BootstrapApp',
+          'X-App-Version': '1.0',
+          'Accept-Language': 'de-DE'
+        },
+        ...REQUEST_HEADER
+      },
+      body: JSON.stringify({
+        vin: Keychain.get('myCarVIN'),
+        timeType: 'YEAR',
+        start: new Date().getFullYear().toString(),
+        end: new Date().getFullYear().toString(),
+        pageSize: 12,
+        pageNo: 1
+      })
+    }
+    const response = await this.http(options)
+    if (isDebug) console.log('获取电能车辆里程信息：')
+    if (isDebug) console.log(response)
+    // 判断接口状态
+    if (response.returnStatus === 'SUCCEED') {
+      // 接口获取数据成功
+      const data = response.data[0]
+      Keychain.set('vehiclesTripInfo', JSON.stringify(data))
+      return data
+    } else {
+      // 接口异常
+      console.error('handleGetCarTripInfo 接口异常' + response)
+      if (Keychain.contains('vehiclesTripInfo')) {
+        return JSON.parse(Keychain.get('vehiclesTripInfo'))
+      }
+    }
+  }
+
+  /**
    * 组件声明
    * @returns {Promise<void>}
    */
@@ -1214,12 +1400,38 @@ class Widget extends Base {
     小组件不会收集您的个人账户信息，所有账号信息将存在 iCloud 或者 iPhone 上但也请您妥善保管自己的账号\n\r
     小组件是开源、并且完全免费的，由大众车主开发，所有责任与一汽大众公司无关\n\r
     开发者: 淮城一只猫\n\r
-    温馨提示：由于一汽大众应用支持单点登录，即不支持多终端应用登录，建议在一汽大众应用「用车 - 更多功能 - 用户管理」进行添加用户，这样组件和应用独立执行。
+    温馨提示：由于一汽大众应用支持单点登录，即不支持多终端应用登录，建议在一汽大众应用「爱车 - 用户授权」进行添加用户，这样组件和应用独立执行。
     `
     alert.addAction('同意')
     alert.addCancelAction('不同意')
     const id = await alert.presentAlert()
     if (id === -1) return
+    await this.actionCarTypeSettings()
+  }
+
+  /**
+   * 账户类型
+   * @return {Promise<void>}
+   */
+  async actionAccountTypeSettings() {
+    const alert = new Alert()
+    alert.title = '大众账户类型'
+    alert.message = '请选择大众账户类型'
+  }
+
+  /**
+   * 车辆类型
+   * @return {Promise<void>}
+   */
+  async actionCarTypeSettings() {
+    const alert = new Alert()
+    alert.title = '车辆运作类型'
+    alert.message = '请选择车辆运作类型「油车/电车」'
+    alert.addAction('燃油车')
+    alert.addCancelAction('电能车')
+
+    const id = await alert.presentAlert()
+    this.settings['carType'] = id === -1 ? 'electricity' : 'gasoline'
     await this.actionAccountSettings()
   }
 
@@ -1234,6 +1446,7 @@ class Widget extends Base {
     alert.addTextField('一汽大众账号', this.settings['username'])
     alert.addSecureTextField('一汽大众密码', this.settings['password'])
     alert.addTextField('车牌号', this.settings['plateNo'])
+    if (this.settings['carType'] === 'electricity') alert.addTextField('车架号', this.settings['myCarVIN'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
@@ -1242,6 +1455,7 @@ class Widget extends Base {
     this.settings['username'] = alert.textFieldValue(0)
     this.settings['password'] = alert.textFieldValue(1)
     this.settings['plateNo'] = alert.textFieldValue(2)
+    this.settings['myCarVIN'] = alert.textFieldValue(3)
     this.saveSettings()
 
     console.log('开始进行用户登录')
@@ -1748,17 +1962,13 @@ class Widget extends Base {
   async actionPreferenceSettings5() {
     const alert = new Alert()
     alert.title = '高德地图密钥'
-    alert.message = '请输入组件所需要的高德地图 key 用于车辆逆地理编码以及地图资源\n\r获取途径可以在「关于小组件」菜单里加微信群进行咨询了解'
+    alert.message = '请输入组件所需要的高德地图 key 用于车辆逆地理编码以及地图资源'
     alert.addTextField('key 密钥', this.settings['aMapKey'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
-    if (id === -1) {
-      this.settings['aMapKey'] = AUDI_AMAP_KEY
-      this.saveSettings()
-      return await this.actionPreferenceSettings()
-    }
+    if (id === -1) return await this.actionPreferenceSettings()
     this.settings['aMapKey'] = alert.textFieldValue(0)
     this.saveSettings()
 
@@ -1839,6 +2049,7 @@ class Widget extends Base {
       'carSimpleAddress',
       'carCompleteAddress',
       'vehiclesStatusResponse',
+      'vehiclesTripInfo',
       this.SETTING_KEY
     ]
     keys.forEach(key => {

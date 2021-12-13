@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = '1.3.1.beta2'
+const AUDI_VERSION = '1.3.1'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -507,7 +507,7 @@ class Widget extends Base {
     fuelText.textOpacity = 0.75
     this.setWidgetTextColor(fuelText)
 
-    if (data.oilLevel) {
+    if (data.oilLevel && data.oilLevel !== '0.0') {
 
       carInfoStack.addSpacer(5)
 
@@ -830,7 +830,7 @@ class Widget extends Base {
 
     const statusStack = areaRightBottomStack.addStack()
     statusStack.backgroundColor = new Color('#ffffff', 0.25)
-    statusStack.borderColor = data.status ? new Color('#ffffff', 0.5) : new Color('#FF9900', 0.5)
+    statusStack.borderColor = data.status ? new Color('#ffffff', 0.5) : new Color('#ff0000', 0.5)
     statusStack.borderWidth = 2
     statusStack.cornerRadius = 5
     statusStack.setPadding(6, 15, 4, 15)
@@ -841,13 +841,13 @@ class Widget extends Base {
     // statusIconStack.backgroundColor = Color.orange()
     const statusIcon = statusIconStack.addImage(await this.getImageByUrl(this.template1IconsPath('lock')))
     statusIcon.imageSize = new Size(18, 18)
-    statusIcon.tintColor = data.status ? new Color('#ffffff', 0.5) : new Color('#FF9900', 0.5)
+    statusIcon.tintColor = data.status ? new Color('#ffffff', 0.5) : new Color('#ff0000', 0.5)
     statusStack.addSpacer(5)
     const statusTextStack = statusStack.addStack()
     // statusTextStack.backgroundColor = Color.cyan()
     const statusText = statusTextStack.addText(data.status ? isEn ? 'Car locked' : '已锁车' : isEn ? 'Car unlocked' : '未锁车')
     statusText.font = isEn ? new Font('AppleSDGothicNeo-Regular', 14) : new Font('PingFangSC-Medium', 14)
-    statusText.textColor = data.status ? new Color('#ffffff', 0.5) : new Color('#FF9900', 0.5)
+    statusText.textColor = data.status ? new Color('#ffffff', 0.5) : new Color('#ff0000', 0.5)
     // endregion
     // endregion
     return widget
@@ -983,6 +983,7 @@ class Widget extends Base {
     // 筛选出对应的数组
     const filterArr = arr.filter(item => lockArr.some(i => i === item.id))
     // 判断是否都锁门
+    // value === 0 不支持
     // value === 2 锁门
     // value === 3 未锁门
     return filterArr.every(item => item.value === '2')
@@ -1021,6 +1022,9 @@ class Widget extends Base {
     // 筛选出对应的数组
     const filterArr = arr.filter(item => doorArr.some(i => i.id === item.id))
     // 筛选出没有关门id
+    // value === 0 不支持
+    // value === 2 关门
+    // value === 3 未关门
     const result = filterArr.filter(item => item.value === '2')
     // 返回开门的数组
     return doorArr.filter(i => result.some(x => x.id === i.id))
@@ -1488,7 +1492,7 @@ class Widget extends Base {
     if (isDebug) console.log(response)
     if (response.status === '1') {
       const addressComponent = response.regeocode.addressComponent
-      const simpleAddress = addressComponent.city + addressComponent.district + addressComponent.township
+      const simpleAddress = addressComponent.district + addressComponent.township
       const completeAddress = response.regeocode.formatted_address
       Keychain.set('carSimpleAddress', simpleAddress)
       Keychain.set('carCompleteAddress', completeAddress)
