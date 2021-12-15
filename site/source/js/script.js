@@ -64,26 +64,39 @@
 
     // 列表刷新
     var token = '?access_token=2e5dab8d64977e068397ac68f8766780'
-    getGiteeTree('https://gitee.com/api/v5/repos/JaxsonWang/scriptable-audi/git/trees/master' + token, ['assets', 'audi-version.json', 'vw-version.json'], function(dataRoo1) {
+    getGiteeTree('https://gitee.com/api/v5/repos/JaxsonWang/scriptable-audi/git/trees/master' + token, ['assets', 'fvw-audi-version.json', 'fvw-version.json', 'svw-version.json'], function(dataRoo1) {
       getGiteeTree(dataRoo1[0].url + token, ['audi_cars'], function(dataRoo2) {
-        getGiteeTree(dataRoo2[0].url + token, null, function(dataRoo3) {
-          var imageArr = []
-          for (var i = 0; i < dataRoo3.length; i++) {
-            imageArr.push(dataRoo3[i].path)
-          }
-          renderAudiImageList(imageArr)
+        if (document.querySelector('.audi-car-images-list')) {
+          getGiteeTree(dataRoo2[0].url + token, null, function(dataRoo3) {
+            var imageArr = []
+            for (var i = 0; i < dataRoo3.length; i++) {
+              imageArr.push(dataRoo3[i].path)
+            }
+            renderAudiImageList(imageArr)
+          })
+        }
+      })
+      if (document.querySelector('#fvw-audi-version')) {
+        getGiteeTree(dataRoo1[1].url + token, null, function(dataRoo4) {
+          var base64 = dataRoo4.content
+          var json = JSON.parse(window.atob(base64))
+          document.querySelector('#fvw-audi-version').innerHTML = '一汽奥迪：v' + json.version
         })
-      })
-      getGiteeTree(dataRoo1[1].url + token, null, function(dataRoo4) {
-        var base64 = dataRoo4.content
-        var json = JSON.parse(window.atob(base64))
-        document.querySelector('#audi-version').innerHTML = '当前版本号：v' + json.version
-      })
-      getGiteeTree(dataRoo1[2].url + token, null, function(dataRoo5) {
-        var base64 = dataRoo5.content
-        var json = JSON.parse(window.atob(base64))
-        document.querySelector('#vw-version').innerHTML = '当前版本号：v' + json.version
-      })
+      }
+      if (document.querySelector('#fvw-version')) {
+        getGiteeTree(dataRoo1[2].url + token, null, function(dataRoo5) {
+          var base64 = dataRoo5.content
+          var json = JSON.parse(window.atob(base64))
+          document.querySelector('#fvw-version').innerHTML = '一汽大众：v' + json.version
+        })
+      }
+      if (document.querySelector('#svw-version')) {
+        getGiteeTree(dataRoo1[3].url + token, null, function(dataRoo6) {
+          var base64 = dataRoo6.content
+          var json = JSON.parse(window.atob(base64))
+          document.querySelector('#svw-version').innerHTML = '上汽大众：v' + json.version
+        })
+      }
     })
   })
 })(jQuery)

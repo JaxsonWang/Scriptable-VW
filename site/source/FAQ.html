@@ -77,10 +77,26 @@
                   </a>
                 </div>
                 <div id="accountAccordion2" class="collapse accordion-block">
-                  <p class="pb-0">1. 首先打开一汽奥迪 - 用车 - 更多功能 - 车辆定位 是否正确显示车辆位置</p>
+                  <p class="pb-0">1. 例如首先打开一汽奥迪 - 用车 - 更多功能 - 车辆定位 是否正确显示车辆位置，大众根据自己情况而定。</p>
                   <p class="py-0">2. 如果不能，则需要车上的 mib 系统关闭隐私选项，并且开启车辆位置开关</p>
                   <p class="py-0">3. 如果还不能请确保车辆是否自带导航功能，不带定位功能被阉割</p>
-                  <p class="pt-0">4. 如果上面不管用，可能你的车设备出现问题</p>
+                  <p class="py-0">4. 如果上述描述都正常，请申请高德 key 密钥，后期版本不内置，请自行注册高德 key。</p>
+                  <p class="pt-0">5. 如果上面不管用，可能你的车设备出现问题</p>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#accountAccordion5">
+                    高德 Key 是什么，如何去申请它？
+                  </a>
+                </div>
+                <div id="accountAccordion5" class="collapse accordion-block">
+                  <p class="pb-0">目前服务器返回的数据是经纬度</p>
+                  <p class="py-0">这个高德 key 密钥是可以通过高德服务器的逆地理编码，查出来具体的位置/p>
+                  <p class="py-0">如果你不填写高德 key，地址是默认不显示的，提前是你的车辆返回的经纬度是正常的。</p>
+                  <p class="py-0">具体申请教程可以查阅如下：</p>
+                  <p class="py-0">官方教程：<a href="https://lbs.amap.com/api/webservice/guide/create-project/get-key" target="_blank" rel="nofollow">https://lbs.amap.com/api/webservice/guide/create-project/get-key</a></p>
+                  <p class="pt-0">图文并茂：<a href="https://docs.qq.com/doc/DQWJjS2hSbE9QSGJo" target="_blank" rel="nofollow">https://docs.qq.com/doc/DQWJjS2hSbE9QSGJo</a></p>
                 </div>
               </div>
               <div class="item">
@@ -91,26 +107,26 @@
                 </div>
                 <div id="accountAccordion3" class="collapse accordion-block">
                   <p>
-                    能正常使用小组件提前需要你的一汽奥迪应用中的用车功能是正常的，即能看到续航、燃料、锁车车窗等状态，如果应用都不能正常显示，那么小组件也无法正常显示。
+                    能正常使用小组件提前需要你的车辆管理应用中的用车功能是正常的，即能看到续航、燃料、锁车车窗等状态，如果应用都不能正常显示，那么小组件也无法正常显示。
                   </p>
                 </div>
               </div>
               <div class="item">
                 <div class="item-link">
                   <a data-toggle="collapse" data-parent="#accountAccordion" href="#accountAccordion4">
-                    为什么要准备俩个一汽奥迪账户
+                    为什么要准备俩个车辆管理（例如一汽奥迪、上汽大众等）账户
                   </a>
                 </div>
                 <div id="accountAccordion4" class="collapse accordion-block">
-                  <p class="pb-0">目前一汽奥迪应用支持单点登陆，即设备A登陆账户，如果设备B再登陆会把设备A的账户挤出去。</p>
-                  <p class="py-0">所以建议再注册一个一汽奥迪的账户，并且在一汽奥迪 - 用车 - 更多功能 - 用户管理 - 添加授权用户。</p>
+                  <p class="pb-0">目前大众集团车辆应用支持单点登陆，即设备A登陆账户，如果设备B再登陆会把设备A的账户挤出去。</p>
+                  <p class="py-0">所以建议再注册一个大众集团车辆的账户，例如：一汽奥迪 - 用车 - 更多功能 - 用户管理 - 添加授权用户。</p>
                   <p class="pt-0">这个授权用户只用于小组件登陆使用，这样不会出现顶号并且组件莫名其妙报错的问题。</p>
                 </div>
               </div>
               <div class="item">
                 <div class="item-link">
                   <a data-toggle="collapse" data-parent="#accountAccordion" href="#carImages">
-                    车辆照片收集
+                    奥迪车辆照片收集
                   </a>
                 </div>
                 <div id="carImages" class="collapse accordion-block">
@@ -140,7 +156,7 @@
                 </div>
                 <div id="siriContent1" class="collapse accordion-block">
                   <p>
-                    目前「VW Joiner v1.0.0」第一版本支持，而「Audi Joiner v1.3.0」以上版本包括此版本支持和系统的 Siri 交互，请到脚本的弹窗脚本进行检查版本。
+                    目前「FVW Joiner v1.0.0」和「SVW Joiner v1.0.0」第一版本支持，而「FVW Audi Joiner v1.3.0」以上版本包括此版本支持和系统的 Siri 交互，请到脚本的弹窗脚本进行检查版本。
                   </p>
                   <p>
                     然后进行在下列资源列表下载快捷指令导入就可以使用了。
@@ -155,7 +171,7 @@
                 </div>
                 <div id="siriContent2" class="collapse accordion-block">
                   <p>
-                    除了版本限制以外，还要保证「Audi Joiner」和「VW Joiner」的脚本名称是不允许更改的，否则快捷指令无法使用。目前奥迪脚本名称叫「Audi-Joiner.js」大众的叫「VW-Joiner.js」
+                    除了版本限制以外，还要保证「FVW Audi Joiner」、「FVW Joiner」和「SVW Joiner」的脚本名称是不允许更改的，否则快捷指令无法使用。
                   </p>
                 </div>
               </div>
@@ -200,16 +216,16 @@
                 </div>
                 <div id="siriContent3" class="collapse accordion-block">
                   <p class="pb-0">
-                    奥迪专属：「嘿 Siri，我的车在哪里」：<a href="https://www.icloud.com/shortcuts/a4f336ba15794d0a9baa8d8afef1916d" target="_blank">点击打开</a>
+                    一汽奥迪专属：「嘿 Siri，我的车在哪里」：<a href="https://www.icloud.com/shortcuts/a4f336ba15794d0a9baa8d8afef1916d" target="_blank">点击打开</a>
                   </p>
                   <p class="pt-0">
-                    奥迪专属：「嘿 Siri，我的车状态如何」：<a href="https://www.icloud.com/shortcuts/c3f355ec2fdd4c8584ce67218fb19c04" target="_blank">点击打开</a>
+                    一汽奥迪专属：「嘿 Siri，我的车状态如何」：<a href="https://www.icloud.com/shortcuts/c3f355ec2fdd4c8584ce67218fb19c04" target="_blank">点击打开</a>
                   </p>
                   <p class="pb-0">
-                    大众专属：「嘿 Siri，我的车在哪」：<a href="https://www.icloud.com/shortcuts/d28c31565e76415abf9efba1733b3500" target="_blank">点击打开</a>
+                    一汽大众专属：「嘿 Siri，我的车在哪」：<a href="https://www.icloud.com/shortcuts/d28c31565e76415abf9efba1733b3500" target="_blank">点击打开</a>
                   </p>
                   <p class="pt-0">
-                    大众专属：「嘿 Siri，我的车状态」：<a href="https://www.icloud.com/shortcuts/338b2296699642128c027e4bb189e3f8" target="_blank">点击打开</a>
+                    一汽大众专属：「嘿 Siri，我的车状态」：<a href="https://www.icloud.com/shortcuts/338b2296699642128c027e4bb189e3f8" target="_blank">点击打开</a>
                   </p>
                 </div>
               </div>
@@ -225,7 +241,7 @@
               <div class="item">
                 <div class="item-link">
                   <a data-toggle="collapse" data-parent="#accountAccordion" href="#contactAccordion1">
-                    怎么联系作者咨询问题呢？
+                    怎么进入小组件交流群？
                   </a>
                 </div>
                 <div id="contactAccordion1" class="collapse accordion-block">
@@ -233,10 +249,10 @@
                     <img src="https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/groups/Me.JPG" class="donation-image" alt="png" />
                   </p>
                   <p class="text-center">
-                    或者加群主，拉群里交流（请注意说明车型奥迪/大众）
+                    不接受任何问题私聊，有问题群里交流。
                   </p>
                   <p class="text-center">
-                    群主微信号：<span>JaxsonWangChina</span>
+                    群主微信号：<span>JaxsonWangChina</span>（请注意说明车型奥迪/大众）
                   </p>
                 </div>
               </div>

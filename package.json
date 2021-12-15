@@ -5,8 +5,9 @@
   "main": "app.js",
   "scripts": {
     "start": "node app",
-    "build:Audi": "node pack.js src/Audi.js Audi-Joiner",
-    "build:VW": "node pack.js src/VW.js VW-Joiner",
+    "build:FVW-Audi": "node pack.js src/FVW-Audi.js FVW-Audi-Joiner",
+    "build:FVW": "node pack.js src/FVW.js FVW-Joiner",
+    "build:SVW": "node pack.js src/SVW.js SVW-Joiner",
     "ncu": "npx npm-check-updates -u"
   },
   "author": "淮城一只猫",

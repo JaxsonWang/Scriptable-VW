@@ -8,36 +8,38 @@
 // iOS 桌面组件脚本
 // 开发说明：请从 Widget 类开始编写，注释请勿修改
 //
-// FVW 一汽大众
+
 // 添加require，是为了vscode中可以正确引入包，以获得自动补全等功能
 if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = '1.0.3'
+const AUDI_VERSION = '1.3.1'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
 const DEFAULT_DARK_BACKGROUND_COLOR_2 = '#1E1E1E'
 
 const AUDI_SERVER_API = {
-  login: 'https://one-app-h5.faw-vw.com/prod-api/mobile/one-app/user/public/v1/login?appkey=6298289633',
+  login: 'https://audi2c.faw-vw.com/capi/v1/user/login',
   token: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/oauth2/v1/token',
-  vehiclesVIN: 'https://mal-1a.prd.cn.vwg-connect.cn/api/usermanagement/users/v1/vehicles',
-  vehiclesTripInfo: 'https://service-81jfxgzn-1256532032.bj.apigw.tencentcs.com/prepub/one-app-common/iov-api-gateway-v1/one/iov-gw/general/public/v1/iov/id_car_report/get_trip_info_by_time',
-  vehiclesCharge: vin => `https://mobile-cs.mosc.faw-vw.com/tm/mos/charging/public/getChargingStatus?vin=${vin}`,
+  mine: 'https://audi2c.faw-vw.com/capi/v1/user/mine',
   apiBase: vin => `https://mal-1a.prd.cn.vwg-connect.cn/api/cs/vds/v1/vehicles/${vin}/homeRegion`,
   vehiclesStatus: (url, vin) => `${url}/bs/vsr/v1/vehicles/${vin}/status`,
-  vehiclesPosition: (url, vin) => `${url}/bs/cf/v1/vehicles/${vin}/position`
+  vehiclesPosition: (url, vin) => `${url}/bs/cf/v1/vehicles/${vin}/position`,
+  vehicleServer: (appKey, nonce, sign, signt) => `https://audioneapp.faw-vw.com/v2/audi-vehicle-server/public/vehicleServer/queryDefaultVehicleDetails?appkey=${appKey}&nonce=${nonce}&sign=${sign}&signt=${signt}`
 }
-
+const SIGN_SERVER_API = {
+  sign: 'https://api.zhous.cloud/audiServer/signature/getSignature'
+}
 const REQUEST_HEADER = {
   Accept: 'application/json',
   'Content-Type': 'application/json',
-  'Did': 'VW_APP_iPhone_2025BD9B-0E98-49D1-A96F-2192F9598A52_15.1_3.15.2'
+  'User-Agent': 'MyAuDi/3.0.2 CFNetwork/1325.0.1 Darwin/21.1.0',
+  'X-Client-ID': 'de6d8b23-792f-47b8-82f4-e4cc59c2916e'
 }
-const DEFAULT_MY_CAR_PHOTO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_default_1.png'
-const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_logo.png'
+const DEFAULT_MY_CAR_PHOTO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png'
+const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 const GLOBAL_USER_DATA = {
   size: '',
   seriesName: '',
@@ -55,7 +57,7 @@ const GLOBAL_USER_DATA = {
   latitude: '',
   status: true, // false = 没锁车 true = 已锁车
   doorAndWindow: '', // 门窗状态
-  myOne: '与你一路同行'
+  myOne: '世间美好，与您环环相扣'
 }
 
 const DEVICE_SIZE  = {
@@ -105,8 +107,9 @@ class Widget extends Base {
    */
   constructor(arg) {
     super(arg)
-    this.name = '大众挂件'
-    this.desc = '大众车辆桌面组件展示'
+    this.styleType = arg
+    this.name = 'Audi 挂件'
+    this.desc = 'Audi 车辆桌面组件展示'
 
     if (config.runsInApp) {
       if (!Keychain.contains('authToken')) this.registerAction('账户登录', this.actionStatementSettings)
@@ -135,7 +138,7 @@ class Widget extends Base {
             return await this.renderLarge(data)
           case 'medium':
             data.size = size.medium
-            return await this.renderMedium(data)
+            return await this.renderMediumStyleType(data)
           default:
             data.size = size.small
             return await this.renderSmall(data)
@@ -146,6 +149,19 @@ class Widget extends Base {
       }
     } else {
       return await this.renderEmpty()
+    }
+  }
+
+  /**
+   * 渲染类型
+   * @return {Promise<ListWidget>}
+   */
+  async renderMediumStyleType(data) {
+    if (this.styleType.indexOf('简约风格') !== -1) {
+      return await this.renderMediumSimpleStyle(data)
+    } else {
+      return await this.renderMedium(data)
+      // return await this.renderMediumSimpleStyle(data)
     }
   }
 
@@ -233,7 +249,7 @@ class Widget extends Base {
     // headerStack.backgroundColor = Color.brown()
 
     const myCarStack = headerStack.addStack()
-    myCarStack.size = new Size(width - 90, headerStack.size.height)
+    myCarStack.size = new Size(width - 120, headerStack.size.height)
     // myCarStack.backgroundColor = Color.red()
     myCarStack.layoutVertically()
     const myCarText = myCarStack.addText(data.seriesName)
@@ -241,7 +257,7 @@ class Widget extends Base {
     this.setWidgetTextColor(myCarText)
 
     const logoStack = headerStack.addStack()
-    logoStack.size = new Size(90, headerStack.size.height)
+    logoStack.size = new Size(120, headerStack.size.height)
     logoStack.layoutVertically()
 
     const audiLogoStack = logoStack.addStack()
@@ -252,14 +268,13 @@ class Widget extends Base {
     // audiLogoStack.layoutVertically()
     // 显示车牌
     const plateNoStack = audiLogoStack.addStack()
-    // plateNoStack.backgroundColor = Color.blue()
     plateNoStack.size = new Size(70, logoStack.size.height)
     const plateNoText = plateNoStack.addText(this.showPlate() ? data.plateNo : ' ')
     plateNoText.font = Font.systemFont(12)
     this.setWidgetTextColor(plateNoText)
 
     const audiLogo = audiLogoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
-    audiLogo.imageSize = new Size(20, 15)
+    audiLogo.imageSize = new Size(50, 15)
     this.setWidgetImageColor(audiLogo)
     // endregion headerStack end
 
@@ -313,41 +328,24 @@ class Widget extends Base {
     const updateStack = leftStack.addStack()
     // updateStack.backgroundColor = Color.gray()
     updateStack.layoutVertically()
-    if (this.settings['carType'] === 'gasoline') {
-      // 格式化时间
-      const formatter = new DateFormatter()
-      formatter.dateFormat = this.showLocation() && data.carSimpleLocation !== '暂无位置信息' ? 'MM-dd HH:mm' : 'MM月dd日 HH:mm'
-      const updateDate = new Date(data.updateDate)
-      const updateDateString = formatter.string(updateDate)
-      const updateTimeText =
-        this.showLocation() && data.carSimpleLocation !== '暂无位置信息'
-          ? updateStack.addText(updateDateString + ' ' + (data.status ? '已锁车' : '未锁车'))
-          : updateStack.addText('当前状态: ' + (data.status ? '已锁车' : '未锁车'))
+    // 格式化时间
+    const formatter = new DateFormatter()
+    formatter.dateFormat = this.showLocation() && data.carSimpleLocation !== '暂无位置信息' ? 'MM-dd HH:mm' : 'MM月dd日 HH:mm'
+    const updateDate = new Date(data.updateDate)
+    const updateDateString = formatter.string(updateDate)
+    const updateTimeText =
+      this.showLocation() && data.carSimpleLocation !== '暂无位置信息'
+        ? updateStack.addText(updateDateString + ' ' + (data.status ? '已锁车' : '未锁车'))
+        : updateStack.addText('当前状态: ' + (data.status ? '已锁车' : '未锁车'))
+    updateTimeText.textOpacity = 0.75
+    updateTimeText.font = Font.systemFont(12)
+    data.status ? this.setWidgetTextColor(updateTimeText) : updateTimeText.textColor = new Color('#FF9900', 1)
+    if (!(this.showLocation() && data.carSimpleLocation !== '暂无位置信息')) {
+      // updateStack.addSpacer(5)
+      const updateTimeText = updateStack.addText('更新日期: ' + updateDateString)
       updateTimeText.textOpacity = 0.75
       updateTimeText.font = Font.systemFont(12)
-      data.status ? this.setWidgetTextColor(updateTimeText) : updateTimeText.textColor = new Color('#FF9900', 1)
-      if (!(this.showLocation() && data.carSimpleLocation !== '暂无位置信息')) {
-        // updateStack.addSpacer(5)
-        const updateTimeText = updateStack.addText('更新日期: ' + updateDateString)
-        updateTimeText.textOpacity = 0.75
-        updateTimeText.font = Font.systemFont(12)
-        this.setWidgetTextColor(updateTimeText)
-      }
-    } else {
-      // 格式化时间
-      const formatter = new DateFormatter()
-      formatter.dateFormat = 'YYYY年MM月dd日 HH:mm'
-      const updateDate = new Date(data.updateDate)
-      const updateDateString = formatter.string(updateDate)
-      const updateTime = updateStack.addText('更新日期: ')
-      updateTime.textOpacity = 0.75
-      updateTime.font = Font.systemFont(12)
-      this.setWidgetTextColor(updateTime)
-
-      const updateText = updateStack.addText(updateDateString)
-      updateText.textOpacity = 0.75
-      updateText.font = Font.systemFont(12)
-      this.setWidgetTextColor(updateText)
+      this.setWidgetTextColor(updateTimeText)
     }
 
     // 根据选项是否开启位置显示
@@ -378,17 +376,15 @@ class Widget extends Base {
     const carPhotoImage = carPhotoStack.addImage(await this.getMyCarPhoto())
     carPhotoImage.imageSize = new Size(rightStack.size.width, carPhotoStack.size.height)
 
-    if (this.settings['carType'] === 'gasoline') {
-      // 车辆状态
-      const carStatusStack = rightStack.addStack()
-      carStatusStack.size = new Size(rightStack.size.width, 14)
-      // carStatusStack.backgroundColor = Color.gray()
+    // 车辆状态
+    const carStatusStack = rightStack.addStack()
+    carStatusStack.size = new Size(rightStack.size.width, 14)
+    // carStatusStack.backgroundColor = Color.gray()
 
-      const doorAndWindowStatus = data.doorAndWindow ? '车门车窗已关闭' : '请检查车门车窗是否已关闭'
-      const carStatusText = carStatusStack.addText(doorAndWindowStatus)
-      carStatusText.font = Font.systemFont(12)
-      data.doorAndWindow ? this.setWidgetTextColor(carStatusText) : carStatusText.textColor = new Color('#FF9900', 1)
-    }
+    const doorAndWindowStatus = data.doorAndWindow ? '车门车窗已关闭' : '请检查车门车窗是否已关闭'
+    const carStatusText = carStatusStack.addText(doorAndWindowStatus)
+    carStatusText.font = Font.systemFont(12)
+    data.doorAndWindow ? this.setWidgetTextColor(carStatusText) : carStatusText.textColor = new Color('#FF9900', 1)
     // endregion
 
     // 祝语 height = 14
@@ -528,70 +524,38 @@ class Widget extends Base {
     travelText.textOpacity = 0.75
     this.setWidgetTextColor(travelText)
 
-    if (this.settings['carType'] === 'electricity') {
-      const travelText1 = carInfoStack.addText(`单次最长行驶: ${data.highestOdo} km`)
-      travelText1.font = Font.systemFont(14)
-      travelText1.textOpacity = 0.75
-      this.setWidgetTextColor(travelText1)
-      const travelText2 = carInfoStack.addText(`单次最久行驶: ${data.highestTime} min`)
-      travelText2.font = Font.systemFont(14)
-      travelText2.textOpacity = 0.75
-      this.setWidgetTextColor(travelText2)
-    }
-
     carInfoStack.addSpacer(5)
 
     // 更新时间
     const updateTimeStack = carInfoStack.addStack()
-    updateTimeStack.layoutVertically()
     // updateTimeStack.backgroundColor = Color.red()
     // updateTimeStack.backgroundColor = new Color('#ffffff', 0.25)
     // updateTimeStack.setPadding(2, 3, 2, 3)
     // updateTimeStack.cornerRadius = 5
-
-    if (this.settings['carType'] === 'gasoline') {
-      // 格式化时间
-      const formatter = new DateFormatter()
-      formatter.dateFormat = 'yyyy-MM-dd HH:mm'
-      const updateDate = new Date(data.updateDate)
-      const updateDateString = formatter.string(updateDate)
-      const metaText5 = updateTimeStack.addText(updateDateString + ' ' + (data.status ? '已锁车' : '未锁车'))
-      metaText5.textOpacity = 0.75
-      metaText5.font = Font.systemFont(12)
-      data.status ? this.setWidgetTextColor(metaText5) : metaText5.textColor = new Color('#FF9900', 1)
-    } else {
-      // 格式化时间
-      const formatter = new DateFormatter()
-      formatter.dateFormat = 'YYYY年MM月dd日 HH:mm'
-      const updateDate = new Date(data.updateDate)
-      const updateDateString = formatter.string(updateDate)
-      const updateTime = updateTimeStack.addText('更新日期: ')
-      updateTime.textOpacity = 0.75
-      updateTime.font = Font.systemFont(12)
-      this.setWidgetTextColor(updateTime)
-
-      const updateText = updateTimeStack.addText(updateDateString)
-      updateText.textOpacity = 0.75
-      updateText.font = Font.systemFont(12)
-      this.setWidgetTextColor(updateText)
-    }
+    // 格式化时间
+    const formatter = new DateFormatter()
+    formatter.dateFormat = 'yyyy-MM-dd HH:mm'
+    const updateDate = new Date(data.updateDate)
+    const updateDateString = formatter.string(updateDate)
+    const metaText5 = updateTimeStack.addText(updateDateString + ' ' + (data.status ? '已锁车' : '未锁车'))
+    metaText5.textOpacity = 0.75
+    metaText5.font = Font.systemFont(12)
+    data.status ? this.setWidgetTextColor(metaText5) : metaText5.textColor = new Color('#FF9900', 1)
 
     carInfoStack.addSpacer(5)
 
-    if (this.settings['carType'] === 'gasoline') {
-      // 车辆状态
-      const statusStack = carInfoStack.addStack()
-      // statusStack.backgroundColor = Color.orange()
-      statusStack.size = widgetSize(statusStack.size.height)
-      statusStack.topAlignContent()
-      statusStack.layoutVertically()
-      const doorAndWindowStatus = data.doorAndWindow ? '车门车窗已关闭' : '请检查车门车窗是否已关闭'
-      const statusText = statusStack.addText(doorAndWindowStatus)
-      statusText.font = Font.systemFont(12)
-      data.doorAndWindow ? this.setWidgetTextColor(statusText) : statusText.textColor = new Color('#FF9900', 1)
+    // 车辆状态
+    const statusStack = carInfoStack.addStack()
+    // statusStack.backgroundColor = Color.orange()
+    statusStack.size = widgetSize(statusStack.size.height)
+    statusStack.topAlignContent()
+    statusStack.layoutVertically()
+    const doorAndWindowStatus = data.doorAndWindow ? '车门车窗已关闭' : '请检查车门车窗是否已关闭'
+    const statusText = statusStack.addText(doorAndWindowStatus)
+    statusText.font = Font.systemFont(12)
+    data.doorAndWindow ? this.setWidgetTextColor(statusText) : statusText.textColor = new Color('#FF9900', 1)
 
-      carInfoStack.addSpacer(5)
-    }
+    carInfoStack.addSpacer(5)
 
     // 地理位置
     if (this.showLocation() && data.carCompleteLocation !== '暂无位置信息') {
@@ -649,7 +613,7 @@ class Widget extends Base {
 
     widget.backgroundImage = await this.shadowImage(await this.getImageByUrl(DEFAULT_MY_CAR_PHOTO))
 
-    const text = widget.addText('欢迎使用 FVW-Joiner iOS 桌面组件')
+    const text = widget.addText('欢迎使用 Audi-Joiner iOS 桌面组件')
     switch (this.widgetFamily) {
       case 'large':
         text.font = Font.blackSystemFont(18)
@@ -695,6 +659,201 @@ class Widget extends Base {
   }
 
   /**
+   * 中组件固定模板 - 简约风格
+   * @param data
+   * @return {Promise<ListWidget>}
+   */
+  async renderMediumSimpleStyle(data) {
+    const params = this.params2obj(this.styleType)
+    const isEn = params?.lang?.toLocaleLowerCase() === 'english'
+    // const isEn = true
+
+    const widget = new ListWidget()
+
+    widget.backgroundImage = await this.getImageByUrl(this.template1IconsPath('scriptable_style_type1_background'))
+
+    const width = data?.size?.width - 36
+    const height = data?.size?.height
+
+    const containerStack = widget.addStack()
+    containerStack.size = new Size(width, height)
+    // containerStack.backgroundColor = Color.gray()
+
+    // region AreaLeftStack
+    const areaLeftStack = containerStack.addStack()
+    areaLeftStack.size = new Size(containerStack.size.width - containerStack.size.width / 2, containerStack.size.height)
+    // areaLeftStack.backgroundColor = Color.blue()
+    areaLeftStack.layoutVertically()
+
+    // region areaLeftTopStack
+    const areaLeftTopStack = areaLeftStack.addStack()
+    areaLeftTopStack.size = new Size(areaLeftStack.size.width, areaLeftStack.size.height - areaLeftStack.size.height / 2.5)
+    // areaLeftTopStack.backgroundColor = new Color('#EB5D68', 1)
+    areaLeftTopStack.layoutVertically()
+
+    const areaLeftTopStackHeight = areaLeftStack.size.height
+    // logo
+    const carLogoStack = areaLeftTopStack.addStack()
+    carLogoStack.size = new Size(areaLeftTopStack.size.width, 25)
+    // carLogoStack.backgroundColor = Color.blue()
+    carLogoStack.topAlignContent()
+    carLogoStack.layoutVertically()
+    const carLogo = carLogoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
+    carLogo.tintColor = new Color('#838383', 1)
+    carLogo.imageSize = new Size(60, carLogoStack.size.height)
+
+    areaLeftTopStack.addSpacer(5)
+
+    // 车辆名称
+    const myCarStack = areaLeftTopStack.addStack()
+    myCarStack.size = new Size(areaLeftTopStack.size.width, 30)
+    myCarStack.topAlignContent()
+    myCarStack.layoutVertically()
+
+    const myCarNameStack = myCarStack.addStack()
+
+    const myCarText = myCarNameStack.addText(params.seriesName || data.seriesName)
+    myCarText.font = isEn ? new Font('Futura-Medium', 22) : new Font('PingFangSC-Medium', 22)
+    myCarText.textColor = Color.white()
+
+    myCarNameStack.addSpacer(5)
+
+    // 警示警告
+    const warnStack = myCarNameStack.addStack()
+    // warnStack.setPadding(10, 0, 0, 0)
+    warnStack.size = new Size(14, 14)
+    warnStack.backgroundColor = Color.red()
+    warnStack.cornerRadius = 50
+    const warnText = warnStack.addText('!')
+    warnText.font = Font.systemFont(12)
+    warnText.textColor = Color.white()
+
+    // areaLeftTopStack.addSpacer(1)
+
+    // 更新日期
+    const metaInfoStack = areaLeftTopStack.addStack()
+    // metaInfoStack.backgroundColor = Color.gray()
+    metaInfoStack.size = new Size(areaLeftTopStack.size.width, 14)
+    metaInfoStack.topAlignContent()
+    metaInfoStack.layoutVertically()
+
+    const updateMetaInfoStack = metaInfoStack.addStack()
+    // 图标显示
+    const updateIconStack = updateMetaInfoStack.addStack()
+    const updateIcon = updateIconStack.addImage(await this.getImageByUrl(this.template1IconsPath('updateTime')))
+    updateIcon.imageSize = new Size(16, 16)
+    updateIcon.tintColor = new Color('#eeeeee', 0.5)
+
+    updateMetaInfoStack.addSpacer(2)
+
+    // 格式化时间
+    const formatter = new DateFormatter()
+    formatter.dateFormat = 'YYYY-MM-dd HH:mm'
+    const updateDate = new Date(data.updateDate)
+    const updateDateString = formatter.string(updateDate)
+
+    const updateDateText = updateMetaInfoStack.addText(updateDateString)
+    updateDateText.font = isEn ? new Font('AppleSDGothicNeo-Regular', 12) : new Font('PingFangSC-Medium', 12)
+    updateDateText.textColor = new Color('#eeeeee', 0.5)
+    updateDateText.textOpacity = 0.75
+    // endregion
+
+    // region areaLeftBottomStack
+    const areaLeftBottomStack = areaLeftStack.addStack()
+    areaLeftBottomStack.size = new Size(areaLeftStack.size.width, areaLeftStack.size.height / 2.5)
+    // areaLeftBottomStack.backgroundColor = new Color('#F9DE06', 0.1)
+    areaLeftBottomStack.layoutVertically()
+    // 续航信息
+    const rangeStack = areaLeftBottomStack.addStack()
+    // rangeStack.backgroundColor = Color.red()
+    rangeStack.size = new Size(areaLeftBottomStack.size.width, 18)
+    rangeStack.topAlignContent()
+    rangeStack.layoutVertically()
+    const rangeMetaInfoStack = rangeStack.addStack()
+    // 图标显示
+    const rangeIconStack = rangeMetaInfoStack.addStack()
+    const rangeIcon = rangeIconStack.addImage(await this.getImageByUrl(this.template1IconsPath('pointer')))
+    rangeIcon.imageSize = new Size(18, 18)
+    rangeIcon.tintColor = new Color('#eeeeee', 0.5)
+    rangeMetaInfoStack.addSpacer(5)
+    const rangeText = rangeMetaInfoStack.addText(`${isEn ? 'Range' : '续航'}: ${data.endurance} km`)
+    rangeText.font = isEn ? new Font('AppleSDGothicNeo-Regular', 14) : new Font('PingFangSC-Medium', 14)
+    rangeText.textColor = new Color('#eeeeee', 0.5)
+    rangeText.textOpacity = 0.75
+
+    areaLeftBottomStack.addSpacer(5)
+    // 燃料信息
+    const fuelStack = areaLeftBottomStack.addStack()
+    // fuelStack.backgroundColor = Color.blue()
+    fuelStack.size = new Size(areaLeftBottomStack.size.width, 18)
+    fuelStack.topAlignContent()
+    fuelStack.layoutVertically()
+    const fuelMetaInfoStack = fuelStack.addStack()
+    // 图标显示
+    const fuelIconStack = fuelMetaInfoStack.addStack()
+    const fuelIcon = fuelIconStack.addImage(await this.getImageByUrl(this.template1IconsPath('dashboard_1')))
+    fuelIcon.imageSize = new Size(18, 18)
+    fuelIcon.tintColor = new Color('#eeeeee', 0.5)
+    fuelMetaInfoStack.addSpacer(5)
+    const fuelText = fuelMetaInfoStack.addText(`${isEn ? 'Fuel level' : '燃料'}: ${data.fuelLevel}%`)
+    fuelText.font = isEn ? new Font('AppleSDGothicNeo-Regular', 14) : new Font('PingFangSC-Medium', 14)
+    fuelText.textColor = new Color('#eeeeee', 0.5)
+    fuelText.textOpacity = 0.75
+    // endregion
+    // endregion
+
+    // region AreaRightStack
+    const areaRightStack = containerStack.addStack()
+    areaRightStack.size = new Size(containerStack.size.width / 2, containerStack.size.height)
+    // areaRightStack.backgroundColor = Color.red()
+    areaRightStack.layoutVertically()
+
+    // region areaRightTopStack
+    const areaRightTopStack = areaRightStack.addStack()
+    areaRightTopStack.size = new Size(areaRightStack.size.width, areaRightStack.size.height - areaRightStack.size.height / 3.5)
+    // areaRightTopStack.backgroundColor = new Color('#EB5D68', 1)
+    areaRightTopStack.bottomAlignContent()
+    // 车辆图片
+    const carImage = areaRightTopStack.addImage(await this.getMyCarPhoto())
+    carImage.imageSize = new Size(areaRightTopStack.size.width, areaRightTopStack.size.height / 1.8)
+    // carImage.borderWidth = 1
+    // carImage.borderColor = Color.blue()
+
+    // endregion
+
+    areaRightStack.addSpacer(10)
+
+    // region areaRightBottomStack
+    const areaRightBottomStack = areaRightStack.addStack()
+    areaRightBottomStack.size = new Size(areaRightStack.size.width, areaRightStack.size.height / 3.5)
+    // areaRightBottomStack.backgroundColor = new Color('#F9DE06', 1)
+
+    const statusStack = areaRightBottomStack.addStack()
+    statusStack.backgroundColor = new Color('#ffffff', 0.25)
+    statusStack.borderColor = data.status ? new Color('#ffffff', 0.5) : new Color('#ff0000', 0.5)
+    statusStack.borderWidth = 2
+    statusStack.cornerRadius = 5
+    statusStack.setPadding(6, 15, 4, 15)
+    statusStack.centerAlignContent()
+
+    // 锁车解锁图标
+    const statusIconStack = statusStack.addStack()
+    // statusIconStack.backgroundColor = Color.orange()
+    const statusIcon = statusIconStack.addImage(await this.getImageByUrl(this.template1IconsPath('lock')))
+    statusIcon.imageSize = new Size(18, 18)
+    statusIcon.tintColor = data.status ? new Color('#ffffff', 0.5) : new Color('#ff0000', 0.5)
+    statusStack.addSpacer(5)
+    const statusTextStack = statusStack.addStack()
+    // statusTextStack.backgroundColor = Color.cyan()
+    const statusText = statusTextStack.addText(data.status ? isEn ? 'Car locked' : '已锁车' : isEn ? 'Car unlocked' : '未锁车')
+    statusText.font = isEn ? new Font('AppleSDGothicNeo-Regular', 14) : new Font('PingFangSC-Medium', 14)
+    statusText.textColor = data.status ? new Color('#ffffff', 0.5) : new Color('#ff0000', 0.5)
+    // endregion
+    // endregion
+    return widget
+  }
+
+  /**
    * 渐变色
    * @returns {LinearGradient}
    */
@@ -722,109 +881,82 @@ class Widget extends Base {
    * @returns {Promise<{Object}>}
    */
   async bootstrap(isDebug = false) {
-    // 基本信息
-    // 车辆名称
-    GLOBAL_USER_DATA.seriesName = this.settings['myCarName'] || '嗨！大众！'
-    // 车辆功率类型
-    GLOBAL_USER_DATA.modelShortName = this.settings['myCarModelName'] || 'car model'
-    GLOBAL_USER_DATA.vin = Keychain.get('myCarVIN') // 车架号
-    GLOBAL_USER_DATA.plateNo = this.settings['plateNo'] // 车牌号
+    try {
+      const getUserMineData = JSON.parse(Keychain.get('userMineData'))
+      const getVehicleData = getUserMineData.vehicleDto
+      // 车辆名称
+      GLOBAL_USER_DATA.seriesName = this.settings['myCarName'] ? this.settings['myCarName'] : getVehicleData?.seriesName
+      // 车辆功率类型
+      GLOBAL_USER_DATA.modelShortName = this.settings['myCarModelName'] ? this.settings['myCarModelName'] : getVehicleData?.carModelName
+      if (getVehicleData.vin) GLOBAL_USER_DATA.vin = getVehicleData?.vin // 车架号
+      if (getVehicleData.plateNo) GLOBAL_USER_DATA.plateNo = getVehicleData?.plateNo // 车牌号
+    } catch (error) {
+      return '获取用户信息失败，' + error
+    }
 
-    if (this.settings['carType'] === 'gasoline') {
-      // 是否开启位置
-      if (this.showLocation()) {
-        if (this.settings['aMapKey']) {
-          try {
-            const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition(isDebug))
-            const getVehiclesAddress = await this.handleGetCarAddress(isDebug)
-            // simple: '暂无位置信息',
-            // complete: '暂无位置信息'
-            if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = parseInt(getVehiclesPosition.longitude, 10) / 1000000 // 车辆经度
-            if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = parseInt(getVehiclesPosition.latitude, 10) / 1000000// 车辆纬度
-            if (getVehiclesAddress) GLOBAL_USER_DATA.carSimpleLocation = getVehiclesAddress.simple // 简略地理位置
-            if (getVehiclesAddress) GLOBAL_USER_DATA.carCompleteLocation = getVehiclesAddress.complete // 详细地理位置
-          } catch (error) {
-            GLOBAL_USER_DATA.longitude = -1 // 车辆经度
-            GLOBAL_USER_DATA.latitude = -1 // 车辆纬度
-            GLOBAL_USER_DATA.carSimpleLocation = '暂无位置信息' // 详细地理位置
-            GLOBAL_USER_DATA.carCompleteLocation = '暂无位置信息' // 详细地理位置
-          }
-        } else {
-          console.log('没有输入高德 key 无法获取车辆位置信息')
+    // 是否开启位置
+    if (this.showLocation()) {
+      if (this.settings['aMapKey']) {
+        try {
+          const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition(isDebug))
+          const getVehiclesAddress = await this.handleGetCarAddress(isDebug)
+          // simple: '暂无位置信息',
+          // complete: '暂无位置信息'
+          if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = parseInt(getVehiclesPosition.longitude, 10) / 1000000 // 车辆经度
+          if (getVehiclesPosition.latitude) GLOBAL_USER_DATA.latitude = parseInt(getVehiclesPosition.latitude, 10) / 1000000// 车辆纬度
+          if (getVehiclesAddress) GLOBAL_USER_DATA.carSimpleLocation = getVehiclesAddress.simple // 简略地理位置
+          if (getVehiclesAddress) GLOBAL_USER_DATA.carCompleteLocation = getVehiclesAddress.complete // 详细地理位置
+        } catch (error) {
+          GLOBAL_USER_DATA.longitude = -1 // 车辆经度
+          GLOBAL_USER_DATA.latitude = -1 // 车辆纬度
+          GLOBAL_USER_DATA.carSimpleLocation = '暂无位置信息' // 详细地理位置
+          GLOBAL_USER_DATA.carCompleteLocation = '暂无位置信息' // 详细地理位置
         }
+      } else {
+        console.log('没有输入高德 key 无法获取车辆位置信息')
       }
+    }
 
-      try {
-        const getVehiclesStatus = await this.handleVehiclesStatus()
-        const getVehicleResponseData = getVehiclesStatus?.StoredVehicleDataResponse?.vehicleData?.data
-        const getVehiclesStatusArr = getVehicleResponseData ? getVehicleResponseData : []
-        const getCarStatusArr = getVehiclesStatusArr.find(i => i.id === '0x0301FFFFFF')?.field
-        // 燃料续航
-        // 0x0301030005 奥迪
-        // 0x0301030006 大众
-        const enduranceVal = getCarStatusArr.find(i => i.id === '0x0301030006')?.value // 燃料总行程
+    try {
+      const getVehiclesStatus = await this.handleVehiclesStatus()
+      const getVehicleResponseData = getVehiclesStatus?.StoredVehicleDataResponse?.vehicleData?.data
+      const getVehiclesStatusArr = getVehicleResponseData ? getVehicleResponseData : []
+      const getCarStatusArr = getVehiclesStatusArr.find(i => i.id === '0x0301FFFFFF')?.field
+      const enduranceVal = getCarStatusArr.find(i => i.id === '0x0301030005')?.value // 燃料总行程
 
-        // 获取机油
-        const oilArr = getVehiclesStatusArr.find(i => i.id === '0x0204FFFFFF')?.field
-        const oilLevelVal = oilArr ? oilArr.find(i => i.id === '0x0204040003')?.value : undefined
-        // 机油信息
-        if (oilLevelVal) GLOBAL_USER_DATA.oilLevel = oilLevelVal
+      // 获取机油
+      const oilArr = getVehiclesStatusArr.find(i => i.id === '0x0204FFFFFF')?.field
+      const oilLevelVal = oilArr ? oilArr.find(i => i.id === '0x0204040003')?.value : undefined
+      // 机油信息
+      if (oilLevelVal) GLOBAL_USER_DATA.oilLevel = oilLevelVal
 
-        // 判断电车
-        // 0x0301030002 = 电池
-        // 0x030103000A = 燃料
-        const fuelLevelVal = getCarStatusArr.find(i => i.id === '0x0301030002')?.value ? getCarStatusArr.find(i => i.id === '0x0301030002')?.value : getCarStatusArr.find(i => i.id === '0x030103000A')?.value
-        const mileageVal = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.value // 总里程
-        // 更新时间
-        const updateDate = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.tsCarSentUtc
 
-        // 检查门锁 车门 车窗等状态
-        const isLocked = await this.getCarIsLocked(getCarStatusArr)
-        const doorStatusArr = await this.getCarDoorStatus(getCarStatusArr)
-        const windowStatusArr = await this.getCarWindowStatus(getCarStatusArr)
-        const equipmentStatusArr = [...doorStatusArr, ...windowStatusArr].map(i => i.name)
-        // NEDC 续航 单位 km
-        if (enduranceVal) GLOBAL_USER_DATA.endurance = enduranceVal
-        // 燃料 单位百分比
-        if (fuelLevelVal) GLOBAL_USER_DATA.fuelLevel = fuelLevelVal
-        // 总里程
-        if (mileageVal) GLOBAL_USER_DATA.mileage = mileageVal
-        if (updateDate) GLOBAL_USER_DATA.updateDate = updateDate
-        // 车辆状态 true = 已锁车
-        GLOBAL_USER_DATA.status = isLocked
-        // true 车窗已关闭 | false 请检查车窗是否关闭
-        if (equipmentStatusArr) GLOBAL_USER_DATA.doorAndWindow = equipmentStatusArr.length === 0
-      } catch (error) {
-        return error
-      }
-    } else {
-      // 电车数据
-      try {
-        const getVehiclesStatus = await this.handleGetCarChargingStatus()
-        const getVehiclesTripInfo = await this.handleGetCarTripInfo()
+      // 判断电车
+      // 0x0301030002 = 电池
+      // 0x030103000A = 燃料
+      const fuelLevelVal = getCarStatusArr.find(i => i.id === '0x0301030002')?.value ? getCarStatusArr.find(i => i.id === '0x0301030002')?.value : getCarStatusArr.find(i => i.id === '0x030103000A')?.value
+      const mileageVal = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.value // 总里程
+      // 更新时间
+      const updateDate = getVehiclesStatusArr.find(i => i.id === '0x0101010002')?.field[0]?.tsCarSentUtc
 
-        const enduranceVal = getVehiclesStatus?.batteryStatus?.rechargeMileage
-        const fuelLevelVal = getVehiclesStatus?.batteryStatus?.batteryPercentage
-        // 更新时间
-        const updateDate = getVehiclesStatus?.batteryStatus?.carCapturedTimestamp
-
-        const mileageVal = getVehiclesTripInfo?.tripStatsVo?.currOdo // 总里程
-        const highestOdo = getVehiclesTripInfo?.tripStatsVo?.highestOdo // 单次最长行驶
-        const highestTime = getVehiclesTripInfo?.tripStatsVo?.highestTime // 单次最久行驶
-
-        // NEDC 续航 单位 km
-        if (enduranceVal) GLOBAL_USER_DATA.endurance = enduranceVal
-        // 燃料 单位百分比
-        if (fuelLevelVal) GLOBAL_USER_DATA.fuelLevel = fuelLevelVal
-
-        if (updateDate) GLOBAL_USER_DATA.updateDate = updateDate
-
-        if (mileageVal) GLOBAL_USER_DATA.mileage = mileageVal
-        if (highestOdo) GLOBAL_USER_DATA.highestOdo = highestOdo
-        if (highestTime) GLOBAL_USER_DATA.highestTime = Math.ceil(highestTime / 60)
-      } catch (error) {
-
-      }
+      // 检查门锁 车门 车窗等状态
+      const isLocked = await this.getCarIsLocked(getCarStatusArr)
+      const doorStatusArr = await this.getCarDoorStatus(getCarStatusArr)
+      const windowStatusArr = await this.getCarWindowStatus(getCarStatusArr)
+      const equipmentStatusArr = [...doorStatusArr, ...windowStatusArr].map(i => i.name)
+      // NEDC 续航 单位 km
+      if (enduranceVal) GLOBAL_USER_DATA.endurance = enduranceVal
+      // 燃料 单位百分比
+      if (fuelLevelVal) GLOBAL_USER_DATA.fuelLevel = fuelLevelVal
+      // 总里程
+      if (mileageVal) GLOBAL_USER_DATA.mileage = mileageVal
+      if (updateDate) GLOBAL_USER_DATA.updateDate = updateDate
+      // 车辆状态 true = 已锁车
+      GLOBAL_USER_DATA.status = isLocked
+      // true 车窗已关闭 | false 请检查车窗是否关闭
+      if (equipmentStatusArr) GLOBAL_USER_DATA.doorAndWindow = equipmentStatusArr.length === 0
+    } catch (error) {
+      return error
     }
 
     if (this.settings['myOne']) GLOBAL_USER_DATA.myOne = this.settings['myOne'] // 一言
@@ -851,6 +983,7 @@ class Widget extends Base {
     // 筛选出对应的数组
     const filterArr = arr.filter(item => lockArr.some(i => i === item.id))
     // 判断是否都锁门
+    // value === 0 不支持
     // value === 2 锁门
     // value === 3 未锁门
     return filterArr.every(item => item.value === '2')
@@ -889,6 +1022,9 @@ class Widget extends Base {
     // 筛选出对应的数组
     const filterArr = arr.filter(item => doorArr.some(i => i.id === item.id))
     // 筛选出没有关门id
+    // value === 0 不支持
+    // value === 2 关门
+    // value === 3 未关门
     const result = filterArr.filter(item => item.value === '2')
     // 返回开门的数组
     return doorArr.filter(i => result.some(x => x.id === i.id))
@@ -940,7 +1076,7 @@ class Widget extends Base {
   }
 
   /**
-   * 登录大众服务器
+   * 登录奥迪服务器
    * @param {boolean} isDebug
    * @returns {Promise<void>}
    */
@@ -951,7 +1087,8 @@ class Widget extends Base {
         method: 'POST',
         headers: REQUEST_HEADER,
         body: JSON.stringify({
-          scope: "openid profile mbb",
+          loginChannelEnum: 'APP',
+          loginTypeEnum: 'ACCOUNT_PASSWORD',
           account: this.settings['username'],
           password: this.settings['password']
         })
@@ -960,44 +1097,163 @@ class Widget extends Base {
       if (isDebug) console.log('获取登陆信息:')
       if (isDebug) console.log(response)
       // 判断接口状态
-      if (response.returnStatus === 'SUCCEED') {
+      if (response.code === 0) {
         // 登录成功 存储登录信息
         console.log('登陆成功')
         Keychain.set('userBaseInfoData', JSON.stringify(response.data))
-        await this.notify('登录成功', '正在从服务器获取车辆数据，请耐心等待！')
+        await this.notify('登录成功', '正在从 Audi 服务器获取车辆数据，请耐心等待！')
         // 准备交换验证密钥数据
-        await this.handleAudiGetToken(isDebug)
+        await this.handleAudiGetToken('userIDToken', isDebug)
+        await this.handleUserMineData(isDebug)
       } else {
         // 登录异常
-        await this.notify('登录失败', response.errorMessage)
-        console.error('用户登录失败：' + response.errorMessage)
+        await this.notify('登录失败', response.message)
+        console.error('用户登录失败：' + response.message)
       }
     } else {
       // 已存在用户信息
       if (isDebug) console.log('检测本地缓存已有登陆数据:')
       if (isDebug) console.log(Keychain.get('userBaseInfoData'))
-      await this.handleAudiGetToken()
+      await this.handleAudiGetToken('userIDToken')
+      await this.handleUserMineData()
+    }
+  }
+
+  /**
+   * 获取车辆基本信息
+   * 该接口返回绑定车辆的侧身照片，不过有白底背景
+   * 后期可以利用抠图api完善
+   * @returns {Promise<void>}
+   */
+   async handleQueryDefaultVehicleData() {
+    if (!Keychain.contains('defaultVehicleData')) {
+      if (!Keychain.contains('userBaseInfoData')) {
+        return console.error('获取密钥数据失败，没有拿到用户登录信息，请重新登录再重试！')
+      }
+      const getUserBaseInfoData =JSON.parse(Keychain.get('userBaseInfoData'))
+      //服务器获取签名
+      const signOptions = {
+        url: SIGN_SERVER_API.sign,
+        method: 'POST',
+        headers: {
+          ...{
+            Platform : '1'
+          },
+          ...REQUEST_HEADER
+        }
+      }
+      const signatureREesponse = await this.http(signOptions)
+      if (signatureREesponse.code !== 0){
+        return console.error(signatureREesponse.data)
+      } else{
+        const data = signatureREesponse.data
+        const options = {
+          url: AUDI_SERVER_API.vehicleServer(data.appkey, data.nonce, data.sign, data.signt),
+          method: 'GET',
+          headers: {
+            ...{
+              token: 'Bearer ' + getUserBaseInfoData.accessToken
+            },
+            ...REQUEST_HEADER
+          }
+        }
+        const response = await this.http(options)
+        // 判断接口状态
+        if (response.status === 'SUCCEED') {
+          // 存储车辆信息
+          console.log(response)
+          // Keychain.set('defaultVehicleData', JSON.stringify(response.data))
+          // Keychain.set('myCarVIN', response.data?.vin)
+          console.log('车辆基本信息获取成功')
+          // 准备交换验证密钥数据
+          await this.handleAudiGetToken('userRefreshToken')
+        } else {
+          // 获取异常
+          await console.error('车辆信息获取失败，请稍后重新登录再重试！')
+        }
+      }
+    }
+  }
+
+  /**
+   * 获取用户信息
+   * @param {boolean} isDebug
+   * @returns {Promise<void>}
+   */
+  async handleUserMineData(isDebug = false) {
+    if (isDebug || !Keychain.contains('userMineData')) {
+      const getUserBaseInfoData =JSON.parse(Keychain.get('userBaseInfoData'))
+      const options = {
+        url: AUDI_SERVER_API.mine,
+        method: 'GET',
+        headers: {
+          ...{
+            'X-ACCESS-TOKEN': getUserBaseInfoData.accessToken,
+            'X-CHANNEL': 'IOS',
+            'x-mobile': getUserBaseInfoData.user.mobile
+          },
+          ...REQUEST_HEADER
+        }
+      }
+      const response = await this.http(options)
+      if (isDebug) console.log('获取用户信息：')
+      if (isDebug) console.log(response)
+      // 判断接口状态
+      if (response.code === 0) {
+        // 存储车辆信息
+        console.log('获取用户基本信息成功')
+        Keychain.set('userMineData', JSON.stringify(response.data))
+        Keychain.set('myCarVIN', response.data?.vehicleDto?.vin)
+        // 准备交换验证密钥数据
+        await this.handleAudiGetToken('userRefreshToken', isDebug)
+      } else {
+        // 获取异常
+        console.error('获取用户基本信息失败，准备重新登录获取密钥')
+        if (Keychain.contains('userBaseInfoData')) Keychain.remove('userBaseInfoData')
+        // 重新登录
+        await this.handleAudiLogin(isDebug)
+      }
+    } else {
+      console.log('userMineData 信息已存在，开始获取 userRefreshToken')
+      if (isDebug) console.log(Keychain.get('userMineData'))
+      await this.handleAudiGetToken('userRefreshToken')
     }
   }
 
   /**
    * 获取密钥数据
+   * @param {'userIDToken' | 'userRefreshToken'} type
    * @param {boolean} isDebug
    * @returns {Promise<void>}
    */
-  async handleAudiGetToken(isDebug = false) {
-    if (isDebug || !Keychain.contains('userRefreshToken')) {
+  async handleAudiGetToken(type, isDebug = false) {
+    if (isDebug || !Keychain.contains(type)) {
+      if (type === 'userIDToken' && !Keychain.contains('userBaseInfoData')) {
+        return console.error('获取密钥数据失败，没有拿到用户登录信息，请重新登录再重试！')
+      }
+      if (type === 'userRefreshToken' && !Keychain.contains('userIDToken')) {
+        return console.error('获取密钥数据失败，没有拿到用户 ID Token，请重新登录再重试！')
+      }
 
-      const tokenInfo = JSON.parse(Keychain.get('userBaseInfoData')).tokenInfo
-      // token 参数
-      const requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(tokenInfo.idToken)}&scope=${encodeURIComponent('t2_fawvw:fal')}`
+      // 根据交换token请求参数不同
+      let requestParams = ''
+      const getUserBaseInfoData = JSON.parse(Keychain.get('userBaseInfoData'))
+      switch (type) {
+        case 'userIDToken':
+          requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(getUserBaseInfoData.idToken)}&scope=${encodeURIComponent('sc2:fal')}`
+          break
+        case 'userRefreshToken':
+          const getUserIDToken =JSON.parse(Keychain.get('userIDToken'))
+          requestParams = `grant_type=${encodeURIComponent('refresh_token')}&token=${encodeURIComponent(getUserIDToken.refresh_token)}&scope=${encodeURIComponent('sc2:fal')}&vin=${Keychain.get('myCarVIN')}`
+          break
+      }
 
       const options = {
         url: AUDI_SERVER_API.token,
         method: 'POST',
         headers: {
-          'X-Client-ID': 'a45ba796-7171-437a-9c39-8695e2f5cf88',
-          'User-Agent': 'NewAfterMarket-ios/3.15.2 CFNetwork/1325.0.1 Darwin/21.1.0',
+          'X-Client-ID': 'de6d8b23-792f-47b8-82f4-e4cc59c2916e',
+          'User-Agent': 'MyAuDi/3.0.2 CFNetwork/1325.0.1 Darwin/21.1.0',
         },
         body: requestParams
       }
@@ -1008,75 +1264,25 @@ class Widget extends Base {
       if (response.error) {
         switch (response.error) {
           case 'invalid_grant':
-            console.error('token 数据过期，正在重新获取数据中，请耐心等待...')
-            await this.handleAudiGetToken(true)
-            break
-          case 'invalid_request':
-            console.error('token 数据错误')
+            console.error('IDToken 数据过期，正在重新获取数据中，请耐心等待...')
+            await this.handleAudiGetToken('userIDToken', true)
             break
         }
       } else {
         // 获取密钥数据成功，存储数据
-        Keychain.set('userRefreshToken', JSON.stringify(response))
-        console.log('当前密钥数据获取成功：userRefreshToken')
-        Keychain.set('authToken', response.access_token)
-        console.log('authToken 密钥设置成功')
-        // 判断车辆类型
-        if (this.settings['carType'] === 'electricity') {
-          // 电车直接获取 base url
-          Keychain.set('myCarVIN', this.settings['myCarVIN'])
+        Keychain.set(type, JSON.stringify(response))
+        console.log('当前密钥数据获取成功：' + type)
+        if (type === 'userRefreshToken') {
+          Keychain.set('authToken', response.access_token)
+          console.log('authToken 密钥设置成功')
+          // 正式获取车辆信息
           await this.handleGetApiBase(isDebug)
-        } else {
-          // 燃油车 需要先获取车架号
-          await this.handleVehiclesVIN(isDebug)
         }
       }
     } else {
-      if (isDebug) console.log('检测本地缓存已有 Token 数据:')
-      if (isDebug) console.log(Keychain.get('userRefreshToken'))
-      console.log('userRefreshToken 信息已存在，开始 handleVehiclesVIN() 函数')
-      // 判断车辆类型
-      if (this.settings['carType'] === 'electricity') {
-        // 电车直接获取 base url
-        Keychain.set('myCarVIN', this.settings['myCarVIN'])
-        await this.handleGetApiBase(isDebug)
-      } else {
-        // 燃油车 需要先获取车架号
-        await this.handleVehiclesVIN(isDebug)
-      }
-    }
-  }
-
-  /**
-   * 获取车辆车架号
-   * @return {Promise<void>}
-   */
-  async handleVehiclesVIN(isDebug = false) {
-    if (isDebug || !Keychain.contains('myCarVIN')) {
-      const options = {
-        url: AUDI_SERVER_API.vehiclesVIN,
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-          'Authorization': 'Bearer ' + Keychain.get('authToken'),
-        }
-      }
-      const response = await this.http(options)
-      // 判断接口状态
-      if (response?.userVehicles?.vehicle) {
-        const data = response?.userVehicles?.vehicle[0]
-        Keychain.set('myCarVIN', data)
-        console.log('handleVehiclesVIN 获取到车辆车架号')
-        // 获取基础链接
-        await this.handleGetApiBase(isDebug)
-      } else {
-        console.error('handleVehiclesVIN 获取数据失败')
-      }
-    } else {
-      if (isDebug) console.log('检测本地缓存已有车架号数据:')
-      if (isDebug) console.log(Keychain.get('handleVehiclesVIN'))
-      console.log('handleVehiclesVIN 信息已存在，开始 handleGetApiBase() 函数')
-      await this.handleGetApiBase(isDebug)
+      // 已存在的时候
+      console.log(type + ' 信息已存在，开始 handleGetApiBase() 函数')
+      if (type === 'userRefreshToken') await this.handleGetApiBase()
     }
   }
 
@@ -1108,7 +1314,7 @@ class Widget extends Base {
         if (data) {
           Keychain.set('vehiclesBaseApi', data)
           console.log('handleGetApiBase 获取到车辆基本访问地址')
-          // 获取车辆数据
+          // 获取车辆信息
           await this.bootstrap(isDebug)
         } else {
           console.error('handleGetApiBase 获取数据失败')
@@ -1130,14 +1336,15 @@ class Widget extends Base {
    */
   async handleVehiclesStatus(isDebug = false) {
     const url = AUDI_SERVER_API.vehiclesStatus
+
     const options = {
       url: url(Keychain.get('vehiclesBaseApi'), Keychain.get('myCarVIN')),
       method: 'GET',
       headers: {
         ...{
           'Authorization': 'Bearer ' + Keychain.get('authToken'),
-          'X-App-Name': 'BootstrapApp',
-          'X-App-Version': '1.0',
+          'X-App-Name': 'MyAuDi',
+          'X-App-Version': '113',
           'Accept-Language': 'de-DE'
         },
         ...REQUEST_HEADER
@@ -1153,14 +1360,14 @@ class Widget extends Base {
       switch (response.error.errorCode) {
         case 'gw.error.authentication':
           console.error('获取车辆状态失败 error: ' + response.error.errorCode)
-          await this.handleAudiGetToken(true)
+          await this.handleAudiGetToken('userRefreshToken', true)
           await this.handleVehiclesStatus()
           break
         case 'mbbc.rolesandrights.unauthorized':
-          await this.notify('unauthorized 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽大众应用查看！')
+          await this.notify('unauthorized 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽奥迪应用查看！')
           break
         case 'mbbc.rolesandrights.unknownService':
-          await this.notify('unknownService 错误', '请到菜单「路线配置」更换对应车型路线！')
+          await this.notify('unknownService 错误', '请联系开发者！')
           break
         case 'mbbc.rolesandrights.unauthorizedUserDisabled':
           // todo 错误
@@ -1194,8 +1401,8 @@ class Widget extends Base {
       headers: {
         ...{
           'Authorization': 'Bearer ' + Keychain.get('authToken'),
-          'X-App-Name': 'BootstrapApp',
-          'X-App-Version': '1.0',
+          'X-App-Name': 'MyAuDi',
+          'X-App-Version': '113',
           'Accept-Language': 'de-DE'
         },
         ...REQUEST_HEADER
@@ -1218,7 +1425,7 @@ class Widget extends Base {
       switch (response.error.errorCode) {
         case 'gw.error.authentication':
           console.error('获取车辆位置失败 error: ' + response.error.errorCode)
-          await this.handleAudiGetToken(true)
+          await this.handleAudiGetToken('userRefreshToken', true)
           await this.handleVehiclesPosition()
           break
         case 'CF.technical.9031':
@@ -1253,6 +1460,13 @@ class Widget extends Base {
    * @returns {Promise<{simple: string, complete: string}>}
    */
   async handleGetCarAddress(isDebug = false) {
+    if (!this.settings['aMapKey']) {
+      await this.notify('获取车辆位置失败', '请输入高德 key 才能获取车辆位置信息')
+      return {
+        simple: '暂无位置信息',
+        complete: '暂无位置信息'
+      }
+    }
     if (!Keychain.contains('storedPositionResponse') && !Keychain.contains('carPosition')) {
       await console.error('获取车辆经纬度失败，请退出登录再登录重试！')
       return {
@@ -1303,92 +1517,6 @@ class Widget extends Base {
   }
 
   /**
-   * 获取电车车辆信息
-   * @param isDebug
-   * @return {Promise<void>}
-   */
-  async handleGetCarChargingStatus(isDebug = false) {
-    const url = AUDI_SERVER_API.vehiclesCharge
-    const tokenInfo = JSON.parse(Keychain.get('userBaseInfoData')).tokenInfo
-    const options = {
-      url: url(Keychain.get('myCarVIN')),
-      method: 'GET',
-      headers: {
-        ...{
-          'Authorization': 'Bearer ' + tokenInfo.accessToken,
-          'X-App-Name': 'BootstrapApp',
-          'X-App-Version': '1.0',
-          'Accept-Language': 'de-DE'
-        },
-        ...REQUEST_HEADER
-      }
-    }
-    const response = await this.http(options)
-    if (isDebug) console.log('获取电能车辆状态信息：')
-    if (isDebug) console.log(response)
-    // 判断接口状态
-    if (response.status === 'SUCCEED') {
-      // 接口获取数据成功
-      const data = response.data
-      Keychain.set('vehiclesStatusResponse', JSON.stringify(data))
-      return data
-    } else {
-      // 接口异常
-      console.error('vehiclesStatus 接口异常' + response)
-      if (Keychain.contains('vehiclesStatusResponse')) {
-        return JSON.parse(Keychain.get('vehiclesStatusResponse'))
-      }
-    }
-  }
-
-  /**
-   * 获取电车总里程信息
-   * @param isDebug
-   * @return {Promise<void>}
-   */
-  async handleGetCarTripInfo(isDebug = false) {
-    const url = AUDI_SERVER_API.vehiclesTripInfo
-    const tokenInfo = JSON.parse(Keychain.get('userBaseInfoData')).tokenInfo
-    const options = {
-      url: url,
-      method: 'POST',
-      headers: {
-        ...{
-          'Authorization': 'Bearer ' + tokenInfo.accessToken,
-          'X-App-Name': 'BootstrapApp',
-          'X-App-Version': '1.0',
-          'Accept-Language': 'de-DE'
-        },
-        ...REQUEST_HEADER
-      },
-      body: JSON.stringify({
-        vin: Keychain.get('myCarVIN'),
-        timeType: 'YEAR',
-        start: new Date().getFullYear().toString(),
-        end: new Date().getFullYear().toString(),
-        pageSize: 12,
-        pageNo: 1
-      })
-    }
-    const response = await this.http(options)
-    if (isDebug) console.log('获取电能车辆里程信息：')
-    if (isDebug) console.log(response)
-    // 判断接口状态
-    if (response.returnStatus === 'SUCCEED') {
-      // 接口获取数据成功
-      const data = response.data[0]
-      Keychain.set('vehiclesTripInfo', JSON.stringify(data))
-      return data
-    } else {
-      // 接口异常
-      console.error('handleGetCarTripInfo 接口异常' + response)
-      if (Keychain.contains('vehiclesTripInfo')) {
-        return JSON.parse(Keychain.get('vehiclesTripInfo'))
-      }
-    }
-  }
-
-  /**
    * 组件声明
    * @returns {Promise<void>}
    */
@@ -1398,30 +1526,14 @@ class Widget extends Base {
     alert.message = `
     小组件需要使用到您的一汽大众应用的账号，首次登录请配置账号、密码进行令牌获取\n\r
     小组件不会收集您的个人账户信息，所有账号信息将存在 iCloud 或者 iPhone 上但也请您妥善保管自己的账号\n\r
-    小组件是开源、并且完全免费的，由大众车主开发，所有责任与一汽大众公司无关\n\r
+    小组件是开源、并且完全免费的，由奥迪车主开发，所有责任与一汽奥迪公司无关\n\r
     开发者: 淮城一只猫\n\r
-    温馨提示：由于一汽大众应用支持单点登录，即不支持多终端应用登录，建议在一汽大众应用「爱车 - 用户授权」进行添加用户，这样组件和应用独立执行。
+    温馨提示：由于一汽奥迪应用支持单点登录，即不支持多终端应用登录，建议在一汽奥迪应用「用车 - 更多功能 - 用户管理」进行添加用户，这样组件和应用独立执行。
     `
     alert.addAction('同意')
     alert.addCancelAction('不同意')
     const id = await alert.presentAlert()
     if (id === -1) return
-    await this.actionCarTypeSettings()
-  }
-
-  /**
-   * 车辆类型
-   * @return {Promise<void>}
-   */
-  async actionCarTypeSettings() {
-    const alert = new Alert()
-    alert.title = '车辆运作类型'
-    alert.message = '请选择车辆运作类型「油车/电车」'
-    alert.addAction('燃油车')
-    alert.addCancelAction('电能车')
-
-    const id = await alert.presentAlert()
-    this.settings['carType'] = id === -1 ? 'electricity' : 'gasoline'
     await this.actionAccountSettings()
   }
 
@@ -1431,12 +1543,10 @@ class Widget extends Base {
    */
   async actionAccountSettings() {
     const alert = new Alert()
-    alert.title = '一汽大众账户登录'
-    alert.message = '登录一汽大众账号展示车辆数据'
-    alert.addTextField('一汽大众账号', this.settings['username'])
-    alert.addSecureTextField('一汽大众密码', this.settings['password'])
-    alert.addTextField('车牌号', this.settings['plateNo'])
-    if (this.settings['carType'] === 'electricity') alert.addTextField('车架号', this.settings['myCarVIN'])
+    alert.title = '一汽奥迪账户登录'
+    alert.message = '登录一汽奥迪账号展示车辆数据'
+    alert.addTextField('一汽奥迪账号', this.settings['username'])
+    alert.addSecureTextField('一汽奥迪密码', this.settings['password'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
@@ -1444,10 +1554,7 @@ class Widget extends Base {
     if (id === -1) return
     this.settings['username'] = alert.textFieldValue(0)
     this.settings['password'] = alert.textFieldValue(1)
-    this.settings['plateNo'] = alert.textFieldValue(2)
-    this.settings['myCarVIN'] = alert.textFieldValue(3)
     this.saveSettings()
-
     console.log('开始进行用户登录')
     await this.handleAudiLogin()
   }
@@ -1761,9 +1868,6 @@ class Widget extends Base {
     try {
       const img = await Photos.fromLibrary()
       const height = img.size.height
-      console.log('壁纸图片属性：')
-      console.log(img)
-      console.log(height)
       const phone = this.phoneSizes()[height]
       if (!phone) {
         message = '您选择的照片好像不是正确的截图，或者您的机型暂时不支持。'
@@ -2029,17 +2133,18 @@ class Widget extends Base {
 
     const keys = [
       'userBaseInfoData',
+      'defaultVehicleData',
+      'userMineData',
       'myCarVIN',
       'authToken',
+      'userIDToken',
       'userRefreshToken',
-      'vehiclesBaseApi',
       'storedPositionResponse',
       'findCarResponse',
       'carPosition',
       'carSimpleAddress',
       'carCompleteAddress',
       'vehiclesStatusResponse',
-      'vehiclesTripInfo',
       this.SETTING_KEY
     ]
     keys.forEach(key => {
@@ -2056,9 +2161,9 @@ class Widget extends Base {
    * @returns {Promise<void>}
    */
   async actionCheckUpdate() {
-    const UPDATE_FILE = 'FVW-Joiner.js'
+    const UPDATE_FILE = 'FVW-Audi-Joiner.js'
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
-    const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/fvw-version.json')
+    const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/fvw-audi-version.json')
     const response = await request.loadJSON()
     console.log(`远程版本：${response?.version}`)
     if (response?.version === AUDI_VERSION) return this.notify('无需更新', '远程版本一致，暂无更新')
@@ -2077,7 +2182,7 @@ class Widget extends Base {
     const REMOTE_RES = await REMOTE_REQ.load()
     FILE_MGR.write(FILE_MGR.joinPath(FILE_MGR.documentsDirectory(), UPDATE_FILE), REMOTE_RES)
 
-    await this.notify('FVW-Joiner 桌面组件更新完毕！')
+    await this.notify('Audi 桌面组件更新完毕！')
   }
 
   /**
@@ -2085,7 +2190,7 @@ class Widget extends Base {
    * @returns {Promise<void>}
    */
   async actionDonation() {
-    Safari.open( 'https://joiner.i95.me/donation.html')
+    Safari.open( 'https://audi.i95.me/donation.html')
   }
 
   /**
@@ -2093,7 +2198,7 @@ class Widget extends Base {
    * @returns {Promise<void>}
    */
   async actionAbout() {
-    Safari.open( 'https://joiner.i95.me/about.html')
+    Safari.open( 'https://audi.i95.me/about.html')
   }
 
   /**
@@ -2111,6 +2216,9 @@ class Widget extends Base {
     }, {
       name: 'handleAudiLogin',
       text: '登陆数据'
+    }, {
+      name: 'handleUserMineData',
+      text: '用户信息数据'
     }, {
       name: 'handleVehiclesStatus',
       text: '当前车辆状态数据'
@@ -2401,6 +2509,28 @@ class Widget extends Base {
    */
   filePath(fileName) {
     return Files.joinPath(Files.documentsDirectory(), fileName)
+  }
+
+  /**
+   * 固定模板 - 简约风格图片路径
+   * @param name
+   * @return {string}
+   */
+  template1IconsPath(name) {
+    return 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/template1_icons/' + name + '.png'
+  }
+
+  /**
+   * 字符串转对象
+   */
+  params2obj(params) {
+    const obj = {}
+    let parr = params.split('&')
+    for(let i of parr) {
+      let arr = i.split('=')
+      obj[arr[0]] = arr[1]
+    }
+    return obj
   }
 }
 
