@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = '1.3.1'
+const AUDI_VERSION = '1.3.2'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_1 = '#FFFFFF'
 const DEFAULT_LIGHT_BACKGROUND_COLOR_2 = '#B2D4EC'
 const DEFAULT_DARK_BACKGROUND_COLOR_1 = '#404040'
@@ -422,7 +422,7 @@ class Widget extends Base {
     const headerStackHeight = 36
     const carInfoStackHeight = 160
     const tipStackHeight = 14
-    const carPhotoStackHeight = height - headerStackHeight - carInfoStackHeight - tipStackHeight - 50
+    const carPhotoStackHeight = height - headerStackHeight - carInfoStackHeight - tipStackHeight - 40
 
     // region header
     // 头部
@@ -558,30 +558,38 @@ class Widget extends Base {
     carInfoStack.addSpacer(5)
 
     // 地理位置
-    if (this.showLocation() && data.carCompleteLocation !== '暂无位置信息') {
-      const locationStack = carInfoStack.addStack()
-      locationStack.topAlignContent()
-      locationStack.layoutVertically()
-      // locationStack.backgroundColor = Color.orange()
-      locationStack.size = new Size(width - 120, 30)
-      const locationText = locationStack.addText(data.carCompleteLocation)
-      locationText.font = Font.systemFont(12)
-      locationText.textOpacity = 0.75
-      locationText.lineLimit = 2
-      this.setWidgetTextColor(locationText)
-    }
+    // if (this.showLocation() && data.carCompleteLocation !== '暂无位置信息') {
+    //   const locationStack = carInfoStack.addStack()
+    //   locationStack.topAlignContent()
+    //   locationStack.layoutVertically()
+    //   // locationStack.backgroundColor = Color.orange()
+    //   locationStack.size = new Size(width - 120, 30)
+    //   const locationText = locationStack.addText(data.carCompleteLocation)
+    //   locationText.font = Font.systemFont(12)
+    //   locationText.textOpacity = 0.75
+    //   locationText.lineLimit = 2
+    //   this.setWidgetTextColor(locationText)
+    // }
 
     carInfoStack.addSpacer(5)
     // endregion
 
-    // region 车辆照片
     const carPhotoStack = widget.addStack()
     // carPhotoStack.backgroundColor = Color.brown()
     carPhotoStack.size = widgetSize(carPhotoStackHeight)
-    const metaImage = carPhotoStack.addImage(await this.getMyCarPhoto())
-    metaImage.imageSize = new Size(width - 80, carPhotoStack.size.height)
-    metaImage.centerAlignImage()
-    // endregion
+    // 显示地图位置
+    // data.longitude = 116.481485
+    // data.latitude = 39.990464
+    if (this.showLocation() && data.longitude !== -1 && data.latitude !== -1) {
+      const metaImage = carPhotoStack.addImage(await this.getImageByUrl('https://restapi.amap.com/v3/staticmap?traffic=1&zoom=17&size='+ (width * 2) +'*'+ (carPhotoStack.size.height * 2) +'&markers=mid,,:'+ data.longitude +','+ data.latitude +'&key=' + this.settings['aMapKey']))
+      metaImage.imageSize = new Size(width, carPhotoStack.size.height)
+      metaImage.centerAlignImage()
+    } else {
+      // 车辆照片
+      const metaImage = carPhotoStack.addImage(await this.getMyCarPhoto())
+      metaImage.imageSize = new Size(width - 50, carPhotoStack.size.height)
+      metaImage.centerAlignImage()
+    }
 
     // region 车辆状态
     // const statusStack = widget.addStack()
@@ -591,6 +599,8 @@ class Widget extends Base {
     // metaText7.font = Font.systemFont(12)
     // data.doorAndWindow ? this.setWidgetTextColor(metaText7) : metaText7.textColor = new Color('#FF9900', 1)
     // endregion
+
+    widget.addSpacer(10)
 
     // 祝语 height = 14
     const tipStack = widget.addStack()
@@ -839,7 +849,7 @@ class Widget extends Base {
     // 锁车解锁图标
     const statusIconStack = statusStack.addStack()
     // statusIconStack.backgroundColor = Color.orange()
-    const statusIcon = statusIconStack.addImage(await this.getImageByUrl(this.template1IconsPath('lock')))
+    const statusIcon = statusIconStack.addImage(data.status ? await this.getImageByUrl(this.template1IconsPath('lock')) : await this.getImageByUrl(this.template1IconsPath('unlock')))
     statusIcon.imageSize = new Size(18, 18)
     statusIcon.tintColor = data.status ? new Color('#ffffff', 0.5) : new Color('#ff0000', 0.5)
     statusStack.addSpacer(5)
