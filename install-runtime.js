@@ -11,7 +11,10 @@ const obj = menuList[menuId];
 
 const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']();
 await Promise.all(obj.name.map(async js => {
-  const REQ = new Request(`https://gitee.com/JaxsonWang/scriptable-audi/raw/master/build/${encodeURIComponent(js)}`);
+  let REQ = new Request(`https://gitee.com/JaxsonWang/scriptable-audi/raw/master/build/${encodeURIComponent(js)}`);
+  if (js === 'FVW-Joiner.js') {
+    REQ = new Request('https://gitee.com/wang4869cw/FVW-Joiner/raw/master/dist/FVW-Joiner.js');
+  }
   const RES = await REQ.load();
   FILE_MGR.write(FILE_MGR.joinPath(FILE_MGR.documentsDirectory(), js), RES);
 }));
