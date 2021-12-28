@@ -111,16 +111,18 @@ class Widget extends Base {
     this.name = 'Audi 挂件'
     this.desc = 'Audi 车辆桌面组件展示'
 
-    if (Device.isPhone && config.runsInApp) {
-      if (!Keychain.contains('authToken')) this.registerAction('账户登录', this.actionStatementSettings)
-      if (Keychain.contains('authToken')) this.registerAction('偏好配置', this.actionPreferenceSettings)
-      this.registerAction('重置组件', this.actionLogOut)
-      if (Keychain.contains('authToken')) this.registerAction('重载数据', this.actionLogAction)
-      this.registerAction('检查更新', this.actionCheckUpdate)
-      this.registerAction('打赏作者', this.actionDonation)
-      this.registerAction('当前版本: v' + AUDI_VERSION, this.actionAbout)
+    if (Device.isPhone) {
+      if (config.runsInApp) {
+        if (!Keychain.contains('authToken')) this.registerAction('账户登录', this.actionStatementSettings)
+        if (Keychain.contains('authToken')) this.registerAction('偏好配置', this.actionPreferenceSettings)
+        this.registerAction('重置组件', this.actionLogOut)
+        if (Keychain.contains('authToken')) this.registerAction('重载数据', this.actionLogAction)
+        this.registerAction('检查更新', this.actionCheckUpdate)
+        this.registerAction('打赏作者', this.actionDonation)
+        this.registerAction('当前版本: v' + AUDI_VERSION, this.actionAbout)
+      }
     } else {
-      this.notify('系统通知', '目前仅在 iPhone 支持小组件')
+      this.notify('系统通知', '目前仅在 iPhone 支持小组件').then()
     }
   }
 
@@ -129,28 +131,32 @@ class Widget extends Base {
    * 可以根据 this.widgetFamily 来判断小组件尺寸，以返回不同大小的内容
    */
   async render() {
-    const data = await this.getData()
-    const screenSize = Device.screenSize()
-    const size = DEVICE_SIZE[`${screenSize.width}x${screenSize.height}`] || DEVICE_SIZE['428x926']
-    if (data) {
-      if (typeof data === 'object') {
-        switch (this.widgetFamily) {
-          case 'large':
-            data.size = size.large
-            return await this.renderLarge(data)
-          case 'medium':
-            data.size = size.medium
-            return await this.renderMediumStyleType(data)
-          default:
-            data.size = size.small
-            return await this.renderSmall(data)
+    try {
+      const data = await this.getData()
+      const screenSize = Device.screenSize()
+      const size = DEVICE_SIZE[`${screenSize.width}x${screenSize.height}`] || DEVICE_SIZE['428x926']
+      if (data) {
+        if (typeof data === 'object') {
+          switch (this.widgetFamily) {
+            case 'large':
+              data.size = size.large
+              return await this.renderLarge(data)
+            case 'medium':
+              data.size = size.medium
+              return await this.renderMediumStyleType(data)
+            default:
+              data.size = size.small
+              return await this.renderSmall(data)
+          }
+        } else {
+          // 返回组件错误信息
+          return await this.renderError(data)
         }
       } else {
-        // 返回组件错误信息
-        return await this.renderError(data)
+        return await this.renderEmpty()
       }
-    } else {
-      return await this.renderEmpty()
+    } catch (error) {
+      return await this.renderError('请检查手机环境是否正常，例如网络等')
     }
   }
 
