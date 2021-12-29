@@ -94,7 +94,7 @@ class Base {
       ctx.size = new Size(100, 100)
       ctx.setFillColor(Color.red())
       ctx.fillRect(new Rect(0, 0, 100, 100))
-      return ctx.getImage();
+      return ctx.getImage()
     }
   }
 
@@ -181,7 +181,7 @@ class Base {
       md5hh = (a, b, c, d, x, s, t) => md5cmn(b ^ c ^ d, a, b, x, s, t),
       md5ii = (a, b, c, d, x, s, t) => md5cmn(c ^ (b | (~d)), a, b, x, s, t)
     const firstChunk = (chunks, x, i) => {
-        let [a, b, c, d] = chunks;
+        let [a, b, c, d] = chunks
         a = md5ff(a, b, c, d, x[i + 0], 7, -680876936)
         d = md5ff(d, a, b, c, x[i + 1], 12, -389564586)
         c = md5ff(c, d, a, b, x[i + 2], 17, 606105819)
@@ -205,7 +205,7 @@ class Base {
         return [a, b, c, d]
       },
       secondChunk = (chunks, x, i) => {
-        let [a, b, c, d] = chunks;
+        let [a, b, c, d] = chunks
         a = md5gg(a, b, c, d, x[i + 1], 5, -165796510)
         d = md5gg(d, a, b, c, x[i + 6], 9, -1069501632)
         c = md5gg(c, d, a, b, x[i + 11], 14, 643717713)
@@ -229,7 +229,7 @@ class Base {
         return [a, b, c, d]
       },
       thirdChunk = (chunks, x, i) => {
-        let [a, b, c, d] = chunks;
+        let [a, b, c, d] = chunks
         a = md5hh(a, b, c, d, x[i + 5], 4, -378558)
         d = md5hh(d, a, b, c, x[i + 8], 11, -2022574463)
         c = md5hh(c, d, a, b, x[i + 11], 16, 1839030562)
@@ -253,7 +253,7 @@ class Base {
         return [a, b, c, d]
       },
       fourthChunk = (chunks, x, i) => {
-        let [a, b, c, d] = chunks;
+        let [a, b, c, d] = chunks
         a = md5ii(a, b, c, d, x[i], 6, -198630844)
         d = md5ii(d, a, b, c, x[i + 7], 10, 1126891415)
         c = md5ii(c, d, a, b, x[i + 14], 15, -1416354905)
@@ -278,14 +278,14 @@ class Base {
     const binlMD5 = (x, len) => {
       /* append padding */
       x[len >> 5] |= 0x80 << (len % 32)
-      x[(((len + 64) >>> 9) << 4) + 14] = len;
+      x[(((len + 64) >>> 9) << 4) + 14] = len
       let commands = [firstChunk, secondChunk, thirdChunk, fourthChunk],
         initialChunks = [
           1732584193,
           -271733879,
           -1732584194,
           271733878
-        ];
+        ]
       return Array.from({length: Math.floor(x.length / 16) + 1}, (v, i) => i * 16)
         .reduce((chunks, i) => commands
           .reduce((newChunks, apply) => apply(newChunks, x, i), chunks.slice())
@@ -300,12 +300,12 @@ class Base {
     }, [])
     const rstrMD5 = string => binl2rstr(binlMD5(rstr2binl(string), string.length * 8))
     const rstr2hex = input => {
-      const hexTab = (pos) => '0123456789abcdef'.charAt(pos);
+      const hexTab = (pos) => '0123456789abcdef'.charAt(pos)
       return Array.from(input).map(c => c.charCodeAt(0)).reduce((output, x, i) => output + hexTab((x >>> 4) & 0x0F) + hexTab(x & 0x0F), '')
     }
     const str2rstrUTF8 = unicodeString => {
-      if (typeof unicodeString !== 'string') throw new TypeError('parameter ‘unicodeString’ is not a string');
-      const cc = c => c.charCodeAt(0);
+      if (typeof unicodeString !== 'string') throw new TypeError('parameter ‘unicodeString’ is not a string')
+      const cc = c => c.charCodeAt(0)
       return unicodeString
         .replace(/[\u0080-\u07ff]/g,  // U+0080 - U+07FF => 2 bytes 110yyyyy, 10zzzzzz
           c => String.fromCharCode(0xc0 | cc(c) >> 6, 0x80 | cc(c) & 0x3f))
