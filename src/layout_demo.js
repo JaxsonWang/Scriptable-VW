@@ -71,7 +71,7 @@ class Widget extends Base {
     widget.setPadding(padding, padding, padding, padding)
     widget.backgroundColor = Color.red()
 
-    // logo
+    // region logoStack
     let rowLogo = this.addStackTo(widget, 'horizontal')
     rowLogo.centerAlignContent()
     rowLogo.backgroundColor = Color.blue()
@@ -91,6 +91,90 @@ class Widget extends Base {
     headlineLabel.leftAlignText()
     headlineLabel.font = Font.mediumSystemFont(16)
     headlineLabel.textColor = new Color('#e6e6e6', 1)
+    // endregion
+
+    widget.addSpacer(4)
+
+    // region mainStack
+    const mainStack = this.addStackTo(widget, 'horizontal')
+    mainStack.centerAlignContent()
+    mainStack.backgroundColor = Color.lightGray()
+
+    const carStack = this.addStackTo(mainStack, 'vertical')
+    carStack.backgroundColor = Color.green()
+    const carPhoto = await this.getImageByUrl(DEFAULT_MY_CAR_PHOTO)
+    const carPhotoStack = carStack.addImage(carPhoto)
+    carPhotoStack.rightAlignImage()
+    // carPhotoStack.imageSize = new Size(120, 180)
+
+    mainStack.addSpacer()
+
+    const rowStack1 = this.addStackTo(mainStack, 'vertical')
+    rowStack1.backgroundColor = Color.orange()
+
+    const rowStack2 = this.addStackTo(mainStack, 'vertical')
+    rowStack2.backgroundColor = Color.green()
+
+    const infoStack1 = this.addStackTo(rowStack1, 'vertical')
+    infoStack1.backgroundColor = Color.orange()
+
+    const metaStack1 = this.addStackTo(infoStack1, 'vertical')
+    metaStack1.backgroundColor = Color.brown()
+    const textStack1 = metaStack1.addText('测试1')
+    textStack1.font = Font.mediumSystemFont(16)
+    textStack1.textColor = new Color('#e6e6e6', 1)
+
+    const metaStack2 = this.addStackTo(infoStack1, 'vertical')
+    metaStack2.backgroundColor = Color.orange()
+    const textStack2 = metaStack2.addText('测试2')
+    textStack2.font = Font.mediumSystemFont(16)
+    textStack2.textColor = new Color('#e6e6e6', 1)
+
+    const infoStack2 = this.addStackTo(rowStack1, 'vertical')
+    infoStack2.backgroundColor = Color.orange()
+
+    const metaStack3 = this.addStackTo(infoStack2, 'vertical')
+    metaStack3.backgroundColor = Color.brown()
+    const textStack3 = metaStack3.addText('测试3')
+    textStack3.font = Font.mediumSystemFont(16)
+    textStack3.textColor = new Color('#e6e6e6', 1)
+
+    const metaStack4 = this.addStackTo(infoStack2, 'vertical')
+    metaStack4.backgroundColor = Color.orange()
+    const textStack4 = metaStack4.addText('测试4')
+    textStack4.font = Font.mediumSystemFont(16)
+    textStack4.textColor = new Color('#e6e6e6', 1)
+
+    const infoStack3 = this.addStackTo(rowStack2, 'vertical')
+    infoStack3.backgroundColor = Color.orange()
+
+    const metaStack5 = this.addStackTo(infoStack3, 'vertical')
+    metaStack5.backgroundColor = Color.brown()
+    const textStack5 = metaStack5.addText('测试5')
+    textStack5.font = Font.mediumSystemFont(16)
+    textStack5.textColor = new Color('#e6e6e6', 1)
+
+    const metaStack6 = this.addStackTo(infoStack3, 'vertical')
+    metaStack6.backgroundColor = Color.orange()
+    const textStack6 = metaStack6.addText('测试6')
+    textStack6.font = Font.mediumSystemFont(16)
+    textStack6.textColor = new Color('#e6e6e6', 1)
+
+    const infoStack4 = this.addStackTo(rowStack2, 'vertical')
+    infoStack4.backgroundColor = Color.orange()
+
+    const metaStack7 = this.addStackTo(infoStack4, 'vertical')
+    metaStack7.backgroundColor = Color.brown()
+    const textStack7 = metaStack7.addText('测试7')
+    textStack7.font = Font.mediumSystemFont(16)
+    textStack7.textColor = new Color('#e6e6e6', 1)
+
+    const metaStack8 = this.addStackTo(infoStack4, 'vertical')
+    metaStack8.backgroundColor = Color.orange()
+    const textStack8 = metaStack8.addText('测试8')
+    textStack8.font = Font.mediumSystemFont(16)
+    textStack8.textColor = new Color('#e6e6e6', 1)
+    // endregion
 
     return widget
   }
