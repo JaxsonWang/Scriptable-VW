@@ -10,6 +10,10 @@ class Base {
     this.init()
   }
 
+  /**
+   * 初始化配置
+   * @param {string} widgetFamily
+   */
   init(widgetFamily = config.widgetFamily) {
     // 组件大小：small,medium,large
     this.widgetFamily = widgetFamily
@@ -28,7 +32,7 @@ class Base {
   /**
    * 注册点击操作菜单
    * @param {string} name 操作函数名
-   * @param {function} func 点击后执行的函数
+   * @param {Function} func 点击后执行的函数
    */
   registerAction(name, func) {
     this._actions[name] = func.bind(this)
@@ -53,8 +57,8 @@ class Base {
 
   /**
    * HTTP 请求接口
-   * @param options 配置项
-   * @return {string | json | null}
+   * @param {Object} options request 选项配置
+   * @returns {Promise<JSON | String>}
    */
   async http(options) {
     const url = options?.url || url
@@ -103,7 +107,8 @@ class Base {
    * @param {string} title 通知标题
    * @param {string} body 通知内容
    * @param {string} url 点击后打开的URL
-   * @param opts
+   * @param {Object} opts
+   * @return {Promise<void>}
    */
   async notify(title, body = '', url = undefined, opts = {}) {
     let n = new Notification()
@@ -118,7 +123,8 @@ class Base {
    * 给图片加一层半透明遮罩
    * @param {Image} img 要处理的图片
    * @param {string} color 遮罩背景颜色
-   * @param {float} opacity 透明度
+   * @param {number} opacity 透明度
+   * @return {Promise<Image>}
    */
   async shadowImage(img, color = '#000000', opacity = 0.7) {
     let ctx = new DrawContext()
@@ -133,35 +139,36 @@ class Base {
   }
 
   /**
+   * 存储当前设置
+   * @param {boolean} notify 是否通知提示
+   */
+  async saveSettings(notify = true) {
+    const result = (typeof this.settings === 'object') ? JSON.stringify(this.settings) : String(this.settings)
+    Keychain.set(this.SETTING_KEY, result)
+    if (notify) await this.notify('设置成功', '桌面组件稍后将自动刷新')
+  }
+
+  /**
    * 获取当前插件的设置
    * @param {boolean} json 是否为json格式
    */
   getSettings(json = true) {
-    let res = json ? {} : ''
+    let result = json ? {} : ''
     let cache = ''
     if (Keychain.contains(this.SETTING_KEY)) {
       cache = Keychain.get(this.SETTING_KEY)
     }
     if (json) {
       try {
-        res = JSON.parse(cache)
-      } catch (e) {
+        result = JSON.parse(cache)
+      } catch (error) {
+        // throw new Error('JSON 数据解析失败' + error)
       }
     } else {
-      res = cache
+      result = cache
     }
 
-    return res
-  }
-
-  /**
-   * 存储当前设置
-   * @param {boolean} notify 是否通知提示
-   */
-  saveSettings(notify = true) {
-    let res = (typeof this.settings === 'object') ? JSON.stringify(this.settings) : String(this.settings)
-    Keychain.set(this.SETTING_KEY, res)
-    if (notify) this.notify('设置成功', '桌面组件稍后将自动刷新')
+    return result
   }
 
   /**
@@ -315,6 +322,60 @@ class Base {
     const rawMD5 = s => rstrMD5(str2rstrUTF8(s))
     const hexMD5 = s => rstr2hex(rawMD5(s))
     return hexMD5(string)
+  }
+
+  /**
+   * 新增 Stack 布局
+   * @param {WidgetStack | ListWidget} stack 节点信息
+   * @param {'horizontal' | 'vertical'} layout 布局类型
+   * @returns {WidgetStack}
+   */
+  addStackTo(stack, layout) {
+    const newStack = stack.addStack()
+    layout === 'horizontal' ? newStack.layoutHorizontally() : newStack.layoutVertically()
+    return newStack
+  }
+
+  /**
+   * SFSymbol 图标
+   * @param {string} sfSymbolName
+   * @returns {Image}
+   */
+  getSFSymbolImage(sfSymbolName) {
+    return SFSymbol.named(sfSymbolName).image
+  }
+
+  /**
+   * 根据百分比输出 hex 颜色
+   * @param {number} pct
+   * @return {Color}
+   */
+  getColorForPercentage(pct) {
+    const percentColors = [
+      { pct: 0.0, color: { r: 0xff, g: 0x00, b: 0 } },
+      { pct: 0.5, color: { r: 0xff, g: 0xff, b: 0 } },
+      { pct: 1.0, color: { r: 0x00, g: 0xff, b: 0 } }
+    ]
+
+    let i = 1
+    for (i; i < percentColors.length - 1; i++) {
+      if (pct < percentColors[i].pct) {
+        break
+      }
+    }
+    const lower = percentColors[i - 1]
+    const upper = percentColors[i]
+    const range = upper.pct - lower.pct
+    const rangePct = (pct - lower.pct) / range
+    const pctLower = 1 - rangePct
+    const pctUpper = rangePct
+    const color = {
+      r: Math.floor(lower.color.r * pctLower + upper.color.r * pctUpper),
+      g: Math.floor(lower.color.g * pctLower + upper.color.g * pctUpper),
+      b: Math.floor(lower.color.b * pctLower + upper.color.b * pctUpper)
+    }
+    // return 'rgb(' + [color.r, color.g, color.b].join(',') + ')'
+    return new Color('#' + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1), 1)
   }
 }
 
