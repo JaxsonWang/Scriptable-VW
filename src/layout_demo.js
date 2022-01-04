@@ -75,13 +75,14 @@ class Widget extends Base {
     widget.setPadding(padding, padding, padding, padding)
 
     // region logoStack
-    let rowLogo = this.addStackTo(widget, 'horizontal')
+    const rowLogo = this.addStackTo(widget, 'horizontal')
     rowLogo.centerAlignContent()
 
     const logoStack = this.addStackTo(rowLogo, 'vertical')
     const airtelLogo = await this.getImageByUrl(DEFAULT_AUDI_LOGO)
     const airtelLogoImg = logoStack.addImage(airtelLogo)
     airtelLogoImg.imageSize = new Size(60, 30)
+    airtelLogoImg.tintColor = new Color('#ffffff', 1)
 
     rowLogo.addSpacer()
 
@@ -97,68 +98,82 @@ class Widget extends Base {
     const mainStack = this.addStackTo(widget, 'horizontal')
     mainStack.centerAlignContent()
 
-    // region 右侧车辆图片
-    const carStack = this.addStackTo(mainStack, 'vertical')
-    const carPhoto = await this.getImageByUrl(DEFAULT_MY_CAR_PHOTO)
-    const carPhotoStack = carStack.addImage(carPhoto)
-    carPhotoStack.rightAlignImage()
-    // carPhotoStack.imageSize = new Size(120, 180)
-    // endregion
-
     mainStack.addSpacer()
 
     // region 状态信息展示
     const rowStack1 = this.addStackTo(mainStack, 'vertical')
 
-    const infoStack1 = this.addStackTo(rowStack1, 'vertical')
+    const infoStack1 = this.addStackTo(rowStack1, 'horizontal')
+    infoStack1.bottomAlignContent()
 
     const metaStack1 = this.addStackTo(infoStack1, 'vertical')
-    const imageStack1 = metaStack1.addImage(this.getSFSymbolImage('car.fill'))
+    metaStack1.bottomAlignContent()
+    const imageStack1 = metaStack1.addImage(this.getSFSymbolImage('fuelpump.fill'))
     imageStack1.imageSize = new Size(20, 20)
+    imageStack1.tintColor = new Color('#ffffff', 1)
+
+    infoStack1.addSpacer(5)
 
     const metaStack2 = this.addStackTo(infoStack1, 'horizontal')
+    metaStack2.bottomAlignContent()
     const textMetaStack1 = metaStack2.addText('210km')
-    textMetaStack1.font = Font.mediumSystemFont(12)
-    const textMetaStack2 = metaStack2.addText('18%')
+    textMetaStack1.font = Font.boldMonospacedSystemFont(14)
+    metaStack2.addSpacer(3)
+    const textMetaStack2 = metaStack2.addText('21%')
     textMetaStack2.font = Font.mediumSystemFont(12)
-    textMetaStack2.textColor = 18 < 20 ? new Color('#000000', 1) : this.getColorForPercentage(18)
-    // const textMetaStack3 = metaStack2.addText('56%')
-    // textMetaStack3.font = Font.mediumSystemFont(8)
+    metaStack2.addSpacer(1)
+    const textMetaStack3 = metaStack2.addText('56%')
+    textMetaStack3.font = Font.mediumSystemFont(8)
 
-    const infoStack2 = this.addStackTo(rowStack1, 'vertical')
+    rowStack1.addSpacer(2)
 
+    const infoStack2 = this.addStackTo(rowStack1, 'horizontal')
+    infoStack2.bottomAlignContent()
     const metaStack3 = this.addStackTo(infoStack2, 'vertical')
-    const textStack3 = metaStack3.addText('测试3')
-    textStack3.font = Font.mediumSystemFont(16)
+    metaStack3.bottomAlignContent()
+    const imageStack2 = metaStack3.addImage(this.getSFSymbolImage('car.fill'))
+    imageStack2.imageSize = new Size(20, 20)
+    imageStack2.tintColor = new Color('#ffffff', 1)
 
-    const metaStack4 = this.addStackTo(infoStack2, 'vertical')
-    const textStack4 = metaStack4.addText('测试4')
-    textStack4.font = Font.mediumSystemFont(16)
+    infoStack2.addSpacer(5)
 
-    const rowStack2 = this.addStackTo(mainStack, 'vertical')
+    const metaStack4 = this.addStackTo(infoStack2, 'horizontal')
+    metaStack4.bottomAlignContent()
+    const textStack4 = metaStack4.addText('22941km')
+    textStack4.font = Font.mediumSystemFont(12)
 
-    const infoStack3 = this.addStackTo(rowStack2, 'vertical')
+    rowStack1.addSpacer(2)
 
+    const infoStack3 = this.addStackTo(rowStack1, 'horizontal')
+    infoStack3.bottomAlignContent()
     const metaStack5 = this.addStackTo(infoStack3, 'vertical')
-    const textStack5 = metaStack5.addText('测试5')
-    textStack5.font = Font.mediumSystemFont(16)
+    metaStack5.bottomAlignContent()
+    const imageStack3 = metaStack5.addImage(this.getSFSymbolImage('clock.arrow.circlepath'))
+    imageStack3.imageSize = new Size(21, 20)
+    imageStack3.tintColor = new Color('#ffffff', 1)
 
-    const metaStack6 = this.addStackTo(infoStack3, 'vertical')
-    const textStack6 = metaStack6.addText('测试6')
-    textStack6.font = Font.mediumSystemFont(16)
+    infoStack3.addSpacer(5)
 
-    const infoStack4 = this.addStackTo(rowStack2, 'vertical')
+    const metaStack6 = this.addStackTo(infoStack3, 'horizontal')
+    metaStack6.bottomAlignContent()
+    const textStack5 = metaStack6.addText('2020-12-01 12:20:12')
+    textStack5.font = Font.mediumSystemFont(12)
+    // endregion
 
-    const metaStack7 = this.addStackTo(infoStack4, 'vertical')
-    const textStack7 = metaStack7.addText('测试7')
-    textStack7.font = Font.mediumSystemFont(16)
-
-    const metaStack8 = this.addStackTo(infoStack4, 'vertical')
-    const textStack8 = metaStack8.addText('测试8')
-    textStack8.font = Font.mediumSystemFont(16)
+    // region 右侧车辆图片
+    const carStack = this.addStackTo(mainStack, 'vertical')
+    const carPhoto = await this.getImageByUrl(DEFAULT_MY_CAR_PHOTO)
+    const carPhotoStack = carStack.addImage(carPhoto)
+    carPhotoStack.rightAlignImage()
     // endregion
 
     // endregion
+
+    widget.addSpacer(2)
+
+    const locationText = widget.addText('江苏省苏州市工业园区斜塘街翰林苑小区')
+    locationText.font = Font.mediumSystemFont(12)
+    locationText.centerAlignText()
 
     return widget
   }

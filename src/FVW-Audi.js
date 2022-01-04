@@ -1284,7 +1284,8 @@ class Widget extends Base {
         console.log('当前密钥数据获取成功：' + type)
         if (type === 'userRefreshToken') {
           Keychain.set('authToken', response.access_token)
-          console.log('authToken 密钥设置成功')
+          console.log('userRefreshToken 密钥设置成功')
+          console.log('访问 handleGetApiBase 接口1')
           // 正式获取车辆信息
           await this.handleGetApiBase(isDebug)
         }
@@ -1302,7 +1303,9 @@ class Widget extends Base {
    * @return {Promise<void>}
    */
   async handleGetApiBase(isDebug = false) {
+    console.log(Keychain.contains('vehiclesBaseApi'))
     if (isDebug || !Keychain.contains('vehiclesBaseApi')) {
+      console.log('开始获取数据')
       const options = {
         url: AUDI_SERVER_API.apiBase(Keychain.get('myCarVIN')),
         method: 'GET',
@@ -1312,6 +1315,8 @@ class Widget extends Base {
         }
       }
       const response = await this.http(options)
+      console.log('handleGetApiBase')
+      console.log(response)
       // 判断接口状态
       if (response.error) {
         // 接口异常
@@ -1331,6 +1336,7 @@ class Widget extends Base {
         }
       }
     } else {
+      console.log(Keychain.get('vehiclesBaseApi'))
       if (isDebug) console.log('检测本地缓存已有 vehiclesBaseApi 数据:')
       if (isDebug) console.log(Keychain.get('vehiclesBaseApi'))
       console.log('handleVehiclesVIN 信息已存在，开始 bootstrap() 函数')
@@ -2154,6 +2160,7 @@ class Widget extends Base {
       'carSimpleAddress',
       'carCompleteAddress',
       'vehiclesStatusResponse',
+      'vehiclesBaseApi',
       this.SETTING_KEY
     ]
     keys.forEach(key => {
