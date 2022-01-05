@@ -78,18 +78,24 @@ class Widget extends Base {
     const rowLogo = this.addStackTo(widget, 'horizontal')
     rowLogo.centerAlignContent()
 
-    const logoStack = this.addStackTo(rowLogo, 'vertical')
-    const airtelLogo = await this.getImageByUrl(DEFAULT_AUDI_LOGO)
-    const airtelLogoImg = logoStack.addImage(airtelLogo)
-    airtelLogoImg.imageSize = new Size(60, 30)
-    airtelLogoImg.tintColor = new Color('#ffffff', 1)
+    const nameStack = this.addStackTo(rowLogo, 'vertical')
+    const carText = nameStack.addText('奥迪 A4L')
+    carText.font = new Font('PingFangSC-Medium', 20)
 
     rowLogo.addSpacer()
 
     const headlineSurroundingStack = this.addStackTo(rowLogo, 'vertical')
     const headlineLabel = headlineSurroundingStack.addText('苏DY38Z8')
     headlineLabel.leftAlignText()
-    headlineLabel.font = Font.mediumSystemFont(16)
+    headlineLabel.font = Font.mediumSystemFont(14)
+
+    rowLogo.addSpacer(5)
+
+    const logoStack = this.addStackTo(rowLogo, 'vertical')
+    const airtelLogo = await this.getImageByUrl(DEFAULT_AUDI_LOGO)
+    const airtelLogoImg = logoStack.addImage(airtelLogo)
+    airtelLogoImg.imageSize = new Size(40, 25)
+    airtelLogoImg.tintColor = new Color('#ffffff', 1)
     // endregion
 
     widget.addSpacer(4)
@@ -109,7 +115,7 @@ class Widget extends Base {
     const metaStack1 = this.addStackTo(infoStack1, 'vertical')
     metaStack1.bottomAlignContent()
     const imageStack1 = metaStack1.addImage(this.getSFSymbolImage('fuelpump.fill'))
-    imageStack1.imageSize = new Size(20, 20)
+    imageStack1.imageSize = new Size(15, 15)
     imageStack1.tintColor = new Color('#ffffff', 1)
 
     infoStack1.addSpacer(5)
@@ -125,14 +131,14 @@ class Widget extends Base {
     const textMetaStack3 = metaStack2.addText('56%')
     textMetaStack3.font = Font.mediumSystemFont(8)
 
-    rowStack1.addSpacer(2)
+    rowStack1.addSpacer(5)
 
     const infoStack2 = this.addStackTo(rowStack1, 'horizontal')
     infoStack2.bottomAlignContent()
     const metaStack3 = this.addStackTo(infoStack2, 'vertical')
     metaStack3.bottomAlignContent()
     const imageStack2 = metaStack3.addImage(this.getSFSymbolImage('car.fill'))
-    imageStack2.imageSize = new Size(20, 20)
+    imageStack2.imageSize = new Size(15, 15)
     imageStack2.tintColor = new Color('#ffffff', 1)
 
     infoStack2.addSpacer(5)
@@ -142,21 +148,21 @@ class Widget extends Base {
     const textStack4 = metaStack4.addText('22941km')
     textStack4.font = Font.mediumSystemFont(12)
 
-    rowStack1.addSpacer(2)
+    rowStack1.addSpacer(5)
 
     const infoStack3 = this.addStackTo(rowStack1, 'horizontal')
     infoStack3.bottomAlignContent()
     const metaStack5 = this.addStackTo(infoStack3, 'vertical')
     metaStack5.bottomAlignContent()
     const imageStack3 = metaStack5.addImage(this.getSFSymbolImage('clock.arrow.circlepath'))
-    imageStack3.imageSize = new Size(21, 20)
+    imageStack3.imageSize = new Size(15, 15)
     imageStack3.tintColor = new Color('#ffffff', 1)
 
     infoStack3.addSpacer(5)
 
     const metaStack6 = this.addStackTo(infoStack3, 'horizontal')
     metaStack6.bottomAlignContent()
-    const textStack5 = metaStack6.addText('2020-12-01 12:20:12')
+    const textStack5 = metaStack6.addText('12-01 12:20:12')
     textStack5.font = Font.mediumSystemFont(12)
     // endregion
 
@@ -172,7 +178,7 @@ class Widget extends Base {
     widget.addSpacer(2)
 
     const locationText = widget.addText('江苏省苏州市工业园区斜塘街翰林苑小区')
-    locationText.font = Font.mediumSystemFont(12)
+    locationText.font = Font.mediumSystemFont(10)
     locationText.centerAlignText()
 
     return widget
