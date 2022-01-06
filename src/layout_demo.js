@@ -166,6 +166,8 @@ class Widget extends Base {
     textStack5.font = Font.mediumSystemFont(12)
     // endregion
 
+    mainStack.addSpacer(10)
+
     // region 右侧车辆图片
     const carStack = this.addStackTo(mainStack, 'vertical')
     const carPhoto = await this.getImageByUrl(DEFAULT_MY_CAR_PHOTO)
