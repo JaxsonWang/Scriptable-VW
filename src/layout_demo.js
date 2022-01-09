@@ -183,7 +183,6 @@ class Widget extends Base {
     carPhotoStack.centerAlignImage()
     // endregion
     // endregion
-    widget.addSpacer(5)
     const locationStack = this.addStackTo(widget, 'horizontal')
     locationStack.centerAlignContent()
     locationStack.addSpacer()
@@ -207,6 +206,7 @@ class Widget extends Base {
     widget.setPadding(10, 10, 10, 10)
     // region headerStack
     const rowHeader = this.addStackTo(widget, 'horizontal')
+    rowHeader.setPadding(0, 0, 10, 0)
     rowHeader.topAlignContent()
     // 顶部左侧
     const headerLeftStack = this.addStackTo(rowHeader, 'vertical')
@@ -236,7 +236,6 @@ class Widget extends Base {
     plateNoText.font = new Font('PingFangSC-Regular', 14)
     plateNoText.textColor = this.dynamicTextColor()
     // endregion
-    widget.addSpacer(10)
     // region mainStack
     const mainStack = this.addStackTo(widget, 'horizontal')
     mainStack.centerAlignContent()
@@ -356,13 +355,14 @@ class Widget extends Base {
     const carPhotoStack = rowRightStack.addImage(carPhoto)
     carPhotoStack.centerAlignImage()
     // endregion
-    widget.addSpacer(20)
     // 地图/一言展示
     let leftImage = 'https://restapi.amap.com/v3/staticmap?markers=mid,0xFF0000,0:116.37359,39.92437&size=100*60&scale=2&zoom=15&traffic=1&key=c078fb16379c25bc0aad8633d82cf1dd'
     let rightText = '江苏省苏州市工业园区斜塘街翰林苑小区'
     // leftImage = 'https://i95.me/images/audi_logo_1.png'
     // rightText = '世间美好，与您环环相扣'
-    const footerStack = this.addStackTo(widget, 'horizontal')
+    const footerWrapperStack = this.addStackTo(widget, 'horizontal')
+    footerWrapperStack.setPadding(20, 0, 0, 0)
+    const footerStack = this.addStackTo(footerWrapperStack, 'horizontal')
     footerStack.cornerRadius = 25
     footerStack.borderColor = new Color('#000000', 0.25)
     footerStack.borderWidth = 2
@@ -386,10 +386,10 @@ class Widget extends Base {
     locationText.textColor = this.dynamicTextColor()
     footerStack.addSpacer()
     // 有地理数据时候展示一言
-    widget.addSpacer(10)
     const oneStack = this.addStackTo(widget, 'horizontal')
-    oneStack.centerAlignContent()
+    oneStack.setPadding(10, 0, 0, 0)
     oneStack.addSpacer()
+    oneStack.centerAlignContent()
     const oneText = oneStack.addText('世间美好，与您环环相扣')
     oneText.font = new Font('PingFangSC-Regular', 12)
     oneText.textColor = this.dynamicTextColor()
