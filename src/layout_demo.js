@@ -71,117 +71,127 @@ class Widget extends Base {
    */
   async renderMedium(data) {
     const widget = new ListWidget()
-    const padding = 10
-    widget.setPadding(padding, padding, padding, padding)
-
+    widget.backgroundGradient = this.dynamicBackgroundColor()
+    widget.setPadding(10, 10, 10, 10)
     // region logoStack
-    const rowLogo = this.addStackTo(widget, 'horizontal')
-    rowLogo.centerAlignContent()
-
-    const nameStack = this.addStackTo(rowLogo, 'vertical')
+    const rowHeader = this.addStackTo(widget, 'horizontal')
+    rowHeader.setPadding(0, 0, 0, 0)
+    rowHeader.topAlignContent()
+    // 车辆名称
+    const nameStack = this.addStackTo(rowHeader, 'vertical')
     const carText = nameStack.addText('奥迪 A4L')
-    carText.font = new Font('PingFangSC-Medium', 20)
-
-    rowLogo.addSpacer()
-
-    const headlineSurroundingStack = this.addStackTo(rowLogo, 'vertical')
-    const headlineLabel = headlineSurroundingStack.addText('苏DY38Z8')
-    headlineLabel.leftAlignText()
-    headlineLabel.font = Font.mediumSystemFont(14)
-
-    rowLogo.addSpacer(5)
-
-    const logoStack = this.addStackTo(rowLogo, 'vertical')
-    const airtelLogo = await this.getImageByUrl(DEFAULT_AUDI_LOGO)
-    const airtelLogoImg = logoStack.addImage(airtelLogo)
-    airtelLogoImg.imageSize = new Size(40, 25)
-    airtelLogoImg.tintColor = new Color('#ffffff', 1)
+    carText.font = new Font('PingFangSC-Medium', 18)
+    carText.textColor = this.dynamicTextColor()
+    const powerText = nameStack.addText('2.0 140KW B9 40TFSI S-line')
+    powerText.font = new Font('PingFangSC-Thin', 10)
+    powerText.textColor = this.dynamicTextColor()
+    rowHeader.addSpacer()
+    const headerRightStack = this.addStackTo(rowHeader, 'vertical')
+    headerRightStack.centerAlignContent()
+    const baseInfoStack = this.addStackTo(headerRightStack, 'horizontal')
+    baseInfoStack.addSpacer()
+    baseInfoStack.centerAlignContent()
+    const plateNoStack = this.addStackTo(baseInfoStack, 'vertical')
+    plateNoStack.centerAlignContent()
+    const plateNoText = plateNoStack.addText('苏DY38Z8')
+    plateNoText.font = new Font('PingFangSC-Regular', 12)
+    plateNoText.textColor = this.dynamicTextColor()
+    baseInfoStack.addSpacer(5)
+    const logoStack = this.addStackTo(baseInfoStack, 'vertical')
+    logoStack.centerAlignContent()
+    const carLogoImage = logoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
+    carLogoImage.imageSize = new Size(40, 16)
+    carLogoImage.tintColor = this.dynamicTextColor()
+    const statusStack = this.addStackTo(headerRightStack, 'horizontal')
+    statusStack.centerAlignContent()
+    statusStack.addSpacer()
+    const carLockStack = this.addStackTo(statusStack, 'horizontal')
+    carLockStack.centerAlignContent()
+    const carDoorImage = carLockStack.addImage(this.getSFSymbolImage('lock.slash.fill'))
+    carDoorImage.imageSize = new Size(18, 18)
+    carDoorImage.tintColor = new Color('#cc0000', 1)
+    const carLockImage = carLockStack.addImage(this.getSFSymbolImage('lock.fill'))
+    carLockImage.imageSize = new Size(18, 18)
+    carLockImage.tintColor = this.dynamicTextColor()
     // endregion
-
-    widget.addSpacer(4)
-
     // region mainStack
     const mainStack = this.addStackTo(widget, 'horizontal')
+    mainStack.setPadding(0, 0, 0, 0)
     mainStack.centerAlignContent()
-
-    mainStack.addSpacer()
-
     // region 状态信息展示
-    const rowStack1 = this.addStackTo(mainStack, 'vertical')
+    const rowLeftStack = this.addStackTo(mainStack, 'vertical')
+    // 续航/燃料信息
+    const carInfoStack = this.addStackTo(rowLeftStack, 'horizontal')
+    carInfoStack.bottomAlignContent()
+    const carInfoImageStack = this.addStackTo(carInfoStack, 'vertical')
+    carInfoImageStack.bottomAlignContent()
+    const carInfoImage = carInfoImageStack.addImage(this.getSFSymbolImage('timer'))
+    carInfoImage.imageSize = new Size(18, 18)
+    carInfoImage.tintColor = this.dynamicTextColor()
+    carInfoStack.addSpacer(5)
+    const carInfoTextStack = this.addStackTo(carInfoStack, 'horizontal')
+    carInfoTextStack.bottomAlignContent()
+    const enduranceText = carInfoTextStack.addText('210km')
+    enduranceText.font = new Font('Futura-CondensedExtraBold', 14)
+    enduranceText.textColor = this.dynamicTextColor()
+    carInfoTextStack.addSpacer(3)
+    const fuelText1 = carInfoTextStack.addText('21%')
+    fuelText1.font = new Font('Futura-Medium', 12)
+    fuelText1.textColor = this.dynamicTextColor()
+    carInfoTextStack.addSpacer(1)
+    const fuelText2 = carInfoTextStack.addText('56%')
+    fuelText2.font = new Font('Futura-Medium', 8)
+    fuelText2.textColor = this.dynamicTextColor()
 
-    const infoStack1 = this.addStackTo(rowStack1, 'horizontal')
-    infoStack1.bottomAlignContent()
+    rowLeftStack.spacing = 1
+    // 总里程
+    const mileageStack = this.addStackTo(rowLeftStack, 'horizontal')
+    mileageStack.bottomAlignContent()
+    const mileageImageStack = this.addStackTo(mileageStack, 'vertical')
+    mileageImageStack.bottomAlignContent()
+    const mileageImage = mileageImageStack.addImage(this.getSFSymbolImage('car'))
+    mileageImage.imageSize = new Size(18, 18)
+    mileageImage.tintColor = this.dynamicTextColor()
+    mileageStack.addSpacer(5)
+    const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
+    mileageTextStack.bottomAlignContent()
+    const mileageText = mileageTextStack.addText('22941km')
+    mileageText.font = new Font('Futura-Medium', 12)
+    mileageText.textColor = this.dynamicTextColor()
 
-    const metaStack1 = this.addStackTo(infoStack1, 'vertical')
-    metaStack1.bottomAlignContent()
-    const imageStack1 = metaStack1.addImage(this.getSFSymbolImage('fuelpump.fill'))
-    imageStack1.imageSize = new Size(15, 15)
-    imageStack1.tintColor = new Color('#ffffff', 1)
-
-    infoStack1.addSpacer(5)
-
-    const metaStack2 = this.addStackTo(infoStack1, 'horizontal')
-    metaStack2.bottomAlignContent()
-    const textMetaStack1 = metaStack2.addText('210km')
-    textMetaStack1.font = Font.boldMonospacedSystemFont(14)
-    metaStack2.addSpacer(3)
-    const textMetaStack2 = metaStack2.addText('21%')
-    textMetaStack2.font = Font.mediumSystemFont(12)
-    metaStack2.addSpacer(1)
-    const textMetaStack3 = metaStack2.addText('56%')
-    textMetaStack3.font = Font.mediumSystemFont(8)
-
-    rowStack1.addSpacer(5)
-
-    const infoStack2 = this.addStackTo(rowStack1, 'horizontal')
-    infoStack2.bottomAlignContent()
-    const metaStack3 = this.addStackTo(infoStack2, 'vertical')
-    metaStack3.bottomAlignContent()
-    const imageStack2 = metaStack3.addImage(this.getSFSymbolImage('car.fill'))
-    imageStack2.imageSize = new Size(15, 15)
-    imageStack2.tintColor = new Color('#ffffff', 1)
-
-    infoStack2.addSpacer(5)
-
-    const metaStack4 = this.addStackTo(infoStack2, 'horizontal')
-    metaStack4.bottomAlignContent()
-    const textStack4 = metaStack4.addText('22941km')
-    textStack4.font = Font.mediumSystemFont(12)
-
-    rowStack1.addSpacer(5)
-
-    const infoStack3 = this.addStackTo(rowStack1, 'horizontal')
-    infoStack3.bottomAlignContent()
-    const metaStack5 = this.addStackTo(infoStack3, 'vertical')
-    metaStack5.bottomAlignContent()
-    const imageStack3 = metaStack5.addImage(this.getSFSymbolImage('clock.arrow.circlepath'))
-    imageStack3.imageSize = new Size(15, 15)
-    imageStack3.tintColor = new Color('#ffffff', 1)
-
-    infoStack3.addSpacer(5)
-
-    const metaStack6 = this.addStackTo(infoStack3, 'horizontal')
-    metaStack6.bottomAlignContent()
-    const textStack5 = metaStack6.addText('12-01 12:20:12')
-    textStack5.font = Font.mediumSystemFont(12)
+    rowLeftStack.spacing = 1
+    // 更新日期
+    const dateTimeStack = this.addStackTo(rowLeftStack, 'horizontal')
+    dateTimeStack.bottomAlignContent()
+    const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical')
+    dateTimeImageStack.bottomAlignContent()
+    const dateTimeImage = dateTimeImageStack.addImage(this.getSFSymbolImage('goforward'))
+    dateTimeImage.imageSize = new Size(18, 18)
+    dateTimeImage.tintColor = this.dynamicTextColor()
+    dateTimeStack.addSpacer(5)
+    const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
+    dateTimeTextStack.bottomAlignContent()
+    const dateTimeText = dateTimeTextStack.addText('12-01 12:20:12')
+    dateTimeText.font = new Font('Futura-Medium', 12)
+    dateTimeText.textColor = this.dynamicTextColor()
     // endregion
-
-    mainStack.addSpacer(10)
-
+    mainStack.addSpacer()
     // region 右侧车辆图片
-    const carStack = this.addStackTo(mainStack, 'vertical')
+    const rowRightStack = this.addStackTo(mainStack, 'vertical')
     const carPhoto = await this.getImageByUrl(DEFAULT_MY_CAR_PHOTO)
-    const carPhotoStack = carStack.addImage(carPhoto)
-    carPhotoStack.rightAlignImage()
+    const carPhotoStack = rowRightStack.addImage(carPhoto)
+    carPhotoStack.centerAlignImage()
     // endregion
-
     // endregion
-
-    widget.addSpacer(2)
-
-    const locationText = widget.addText('江苏省苏州市工业园区斜塘街翰林苑小区')
-    locationText.font = Font.mediumSystemFont(10)
+    widget.addSpacer(5)
+    const locationStack = this.addStackTo(widget, 'horizontal')
+    locationStack.centerAlignContent()
+    locationStack.addSpacer()
+    const locationText = locationStack.addText('江苏省苏州市工业园区斜塘街翰林苑小区')
+    locationText.font = new Font('PingFangSC-Regular', 10)
+    locationText.textColor = this.dynamicTextColor()
     locationText.centerAlignText()
+    locationStack.addSpacer()
 
     return widget
   }
@@ -193,7 +203,199 @@ class Widget extends Base {
    */
   async renderLarge(data) {
     const widget = new ListWidget()
-    widget.addText('Hello World').centerAlignText()
+    widget.backgroundGradient = this.dynamicBackgroundColor()
+    widget.setPadding(10, 10, 10, 10)
+    // region headerStack
+    const rowHeader = this.addStackTo(widget, 'horizontal')
+    rowHeader.topAlignContent()
+    // 顶部左侧
+    const headerLeftStack = this.addStackTo(rowHeader, 'vertical')
+    // 车辆名称
+    const nameStack = this.addStackTo(headerLeftStack, 'vertical')
+    const carText = nameStack.addText('奥迪 A4L')
+    carText.font = new Font('PingFangSC-Medium', 22)
+    carText.textColor = this.dynamicTextColor()
+    // 功率显示
+    const powerStack = this.addStackTo(headerLeftStack, 'vertical')
+    const powerText = powerStack.addText('2.0 140KW B9 40TFSI S-line')
+    powerText.font = new Font('PingFangSC-Thin', 14)
+    powerText.textColor = this.dynamicTextColor()
+    // 俩侧分割
+    rowHeader.addSpacer()
+    // 顶部右侧
+    const headerRightStack = this.addStackTo(rowHeader, 'vertical')
+    // Logo
+    const carLogoStack = this.addStackTo(headerRightStack, 'vertical')
+    const carLogoImage = carLogoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
+    carLogoImage.imageSize = new Size(70, 20)
+    carLogoImage.tintColor = this.dynamicTextColor()
+    headerRightStack.addSpacer(5)
+    // 车牌信息
+    const plateNoStack = this.addStackTo(headerRightStack, 'vertical')
+    const plateNoText = plateNoStack.addText('苏DY38Z8')
+    plateNoText.font = new Font('PingFangSC-Regular', 14)
+    plateNoText.textColor = this.dynamicTextColor()
+    // endregion
+    widget.addSpacer(10)
+    // region mainStack
+    const mainStack = this.addStackTo(widget, 'horizontal')
+    mainStack.centerAlignContent()
+    mainStack.setPadding(0, 0, 0, 0)
+    // region 状态信息展示
+    const rowLeftStack = this.addStackTo(mainStack, 'vertical')
+    // region 续航里程
+    const enduranceStack = this.addStackTo(rowLeftStack, 'horizontal')
+    enduranceStack.bottomAlignContent()
+    const enduranceImageStack = this.addStackTo(enduranceStack, 'vertical')
+    enduranceImageStack.bottomAlignContent()
+    const enduranceImage = enduranceImageStack.addImage(this.getSFSymbolImage('flag'))
+    enduranceImage.imageSize = new Size(20, 20)
+    enduranceImage.tintColor = this.dynamicTextColor()
+    enduranceStack.addSpacer(5)
+    const enduranceTextStack = this.addStackTo(enduranceStack, 'horizontal')
+    enduranceTextStack.bottomAlignContent()
+    const enduranceText = enduranceTextStack.addText('210km')
+    enduranceText.font = new Font('Futura-Medium', 14)
+    enduranceText.textColor = this.dynamicTextColor()
+    // endregion
+    rowLeftStack.addSpacer(5)
+    // region 燃料信息
+    const fuelStack = this.addStackTo(rowLeftStack, 'horizontal')
+    fuelStack.bottomAlignContent()
+    const fuelImageStack = this.addStackTo(fuelStack, 'vertical')
+    fuelImageStack.bottomAlignContent()
+    const fuelImage = fuelImageStack.addImage(this.getSFSymbolImage('bolt.circle'))
+    fuelImage.imageSize = new Size(20, 20)
+    fuelImage.tintColor = this.dynamicTextColor()
+    fuelStack.addSpacer(5)
+    // 汽油
+    const fuelTextStack1 = this.addStackTo(fuelStack, 'horizontal')
+    fuelTextStack1.bottomAlignContent()
+    const fuelText1 = fuelTextStack1.addText('57%')
+    fuelText1.font = new Font('Futura-Medium', 14)
+    fuelText1.textColor = this.dynamicTextColor()
+    fuelStack.addSpacer(5)
+    // 电池
+    const fuelTextStack2 = this.addStackTo(fuelStack, 'horizontal')
+    fuelTextStack2.bottomAlignContent()
+    const fuelText2 = fuelTextStack2.addText('44%')
+    fuelText2.font = new Font('Futura-Medium', 12)
+    fuelText2.textColor = this.dynamicTextColor()
+    // endregion
+    rowLeftStack.addSpacer(5)
+    // region 总里程
+    const mileageStack = this.addStackTo(rowLeftStack, 'horizontal')
+    mileageStack.bottomAlignContent()
+    const mileageImageStack = this.addStackTo(mileageStack, 'vertical')
+    mileageImageStack.bottomAlignContent()
+    const mileageImage = mileageImageStack.addImage(this.getSFSymbolImage('car'))
+    mileageImage.imageSize = new Size(20, 20)
+    mileageImage.tintColor = this.dynamicTextColor()
+    mileageStack.addSpacer(5)
+    const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
+    mileageTextStack.bottomAlignContent()
+    const mileageText = mileageTextStack.addText('22941km')
+    mileageText.font = new Font('Futura-Medium', 14)
+    mileageText.textColor = this.dynamicTextColor()
+    // endregion
+    rowLeftStack.addSpacer(5)
+    // region 机油数据
+    const oilStack = this.addStackTo(rowLeftStack, 'horizontal')
+    oilStack.bottomAlignContent()
+    const oilImageStack = this.addStackTo(oilStack, 'vertical')
+    oilImageStack.bottomAlignContent()
+    const oilImage = oilImageStack.addImage(this.getSFSymbolImage('drop.circle'))
+    oilImage.imageSize = new Size(20, 20)
+    oilImage.tintColor = this.dynamicTextColor()
+    oilStack.addSpacer(5)
+    const oilTextStack = this.addStackTo(oilStack, 'horizontal')
+    oilTextStack.bottomAlignContent()
+    const oilText = oilTextStack.addText('78.87%')
+    oilText.font = new Font('Futura-Medium', 14)
+    oilText.textColor = this.dynamicTextColor()
+    // endregion
+    rowLeftStack.addSpacer(5)
+    // region 锁车状态
+    const lockedStack = this.addStackTo(rowLeftStack, 'horizontal')
+    lockedStack.bottomAlignContent()
+    const lockedImageStack = this.addStackTo(lockedStack, 'vertical')
+    lockedImageStack.bottomAlignContent()
+    const lockedImage = lockedImageStack.addImage(this.getSFSymbolImage('lock.circle'))
+    lockedImage.imageSize = new Size(20, 20)
+    lockedImage.tintColor = this.dynamicTextColor()
+    lockedImage.tintColor = new Color('#D53A2F', 1)
+    lockedStack.addSpacer(5)
+    const lockedTextStack = this.addStackTo(lockedStack, 'horizontal')
+    lockedTextStack.bottomAlignContent()
+    const lockedText = lockedTextStack.addText('未锁车')
+    lockedText.font = new Font('Futura-Medium', 14)
+    lockedText.textColor = this.dynamicTextColor()
+    lockedText.textColor = new Color('#D53A2F', 1)
+    // endregion
+    rowLeftStack.addSpacer(5)
+    // region 更新日期
+    const dateTimeStack = this.addStackTo(rowLeftStack, 'horizontal')
+    dateTimeStack.bottomAlignContent()
+    const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical')
+    dateTimeImageStack.bottomAlignContent()
+    const dateTimeImage = dateTimeImageStack.addImage(this.getSFSymbolImage('goforward'))
+    dateTimeImage.imageSize = new Size(20, 20)
+    dateTimeImage.tintColor = this.dynamicTextColor()
+    dateTimeStack.addSpacer(5)
+    const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
+    dateTimeTextStack.bottomAlignContent()
+    const dateTimeText = dateTimeTextStack.addText('12:20:12')
+    dateTimeText.font = new Font('Futura-Medium', 14)
+    dateTimeText.textColor = this.dynamicTextColor()
+    // endregion
+    // endregion
+    mainStack.addSpacer()
+    // region 右侧车辆图片
+    const rowRightStack = this.addStackTo(mainStack, 'vertical')
+    const carPhoto = await this.getImageByUrl(DEFAULT_MY_CAR_PHOTO)
+    const carPhotoStack = rowRightStack.addImage(carPhoto)
+    carPhotoStack.centerAlignImage()
+    // endregion
+    widget.addSpacer(20)
+    // 地图/一言展示
+    let leftImage = 'https://restapi.amap.com/v3/staticmap?markers=mid,0xFF0000,0:116.37359,39.92437&size=100*60&scale=2&zoom=15&traffic=1&key=c078fb16379c25bc0aad8633d82cf1dd'
+    let rightText = '江苏省苏州市工业园区斜塘街翰林苑小区'
+    // leftImage = 'https://i95.me/images/audi_logo_1.png'
+    // rightText = '世间美好，与您环环相扣'
+    const footerStack = this.addStackTo(widget, 'horizontal')
+    footerStack.cornerRadius = 25
+    footerStack.borderColor = new Color('#000000', 0.25)
+    footerStack.borderWidth = 2
+    footerStack.setPadding(0, 0, 0, 20)
+    footerStack.centerAlignContent()
+    // 地图图片
+    const footerLeftStack = this.addStackTo(footerStack, 'vertical')
+    footerLeftStack.cornerRadius = 25
+    footerLeftStack.borderWidth = 2
+    footerLeftStack.borderColor = new Color('#000000', 0.25)
+    const locationImage = await this.getImageByUrl(leftImage)
+    const locationImageStack = footerLeftStack.addImage(locationImage)
+    locationImageStack.imageSize = new Size(100, 60)
+    locationImageStack.centerAlignImage()
+    footerStack.addSpacer()
+    // 地理位置
+    const footerRightStack = this.addStackTo(footerStack, 'vertical')
+    const locationText = footerRightStack.addText(rightText)
+    locationText.font = new Font('PingFangSC-Regular', 12)
+    locationText.centerAlignText()
+    locationText.textColor = this.dynamicTextColor()
+    footerStack.addSpacer()
+    // 有地理数据时候展示一言
+    widget.addSpacer(10)
+    const oneStack = this.addStackTo(widget, 'horizontal')
+    oneStack.centerAlignContent()
+    oneStack.addSpacer()
+    const oneText = oneStack.addText('世间美好，与您环环相扣')
+    oneText.font = new Font('PingFangSC-Regular', 12)
+    oneText.textColor = this.dynamicTextColor()
+    oneText.centerAlignText()
+    oneStack.addSpacer()
+
     return widget
   }
 

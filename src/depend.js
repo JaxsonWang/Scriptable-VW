@@ -377,6 +377,38 @@ class Base {
     // return 'rgb(' + [color.r, color.g, color.b].join(',') + ')'
     return new Color('#' + ((1 << 24) + (color.r << 16) + (color.g << 8) + color.b).toString(16).slice(1), 1)
   }
+
+  /**
+   * 获取动态字体颜色
+   * @return {Color}
+   */
+  dynamicTextColor() {
+    const lightTextColor = this.settings['lightTextColor'] ? this.settings['lightTextColor'] : '#000000'
+    const darkTextColor = this.settings['darkTextColor'] ? this.settings['darkTextColor'] : '#ffffff'
+    return Color.dynamic(new Color(lightTextColor, 1), new Color(darkTextColor, 1))
+  }
+
+  /**
+   * 动态背景色
+   * @return {LinearGradient}
+   */
+  dynamicBackgroundColor() {
+    const bgColor = new LinearGradient()
+
+    const lightBgColor1 = this.settings['lightBgColor1'] ? this.settings['lightBgColor1'] : '#ffffff'
+    const lightBgColor2 = this.settings['lightBgColor2'] ? this.settings['lightBgColor2'] : '#dbefff'
+    const darkBgColor1 = this.settings['darkBgColor1'] ? this.settings['darkBgColor1'] : '#414345'
+    const darkBgColor2 = this.settings['darkBgColor2'] ? this.settings['darkBgColor2'] : '#232526'
+
+    const startColor = Color.dynamic(new Color(lightBgColor1, 1), new Color(darkBgColor1, 1))
+    const endColor = Color.dynamic(new Color(lightBgColor2, 1), new Color(darkBgColor2, 1))
+
+    bgColor.colors = [startColor, endColor]
+
+    bgColor.locations = [0.0, 1.0]
+
+    return bgColor
+  }
 }
 
 // @base.end
