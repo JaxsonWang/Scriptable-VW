@@ -108,7 +108,7 @@ class Base {
    * @param {string} body 通知内容
    * @param {string} url 点击后打开的URL
    * @param {Object} opts
-   * @return {Promise<void>}
+   * @returns {Promise<void>}
    */
   async notify(title, body = '', url = undefined, opts = {}) {
     let n = new Notification()
@@ -124,7 +124,7 @@ class Base {
    * @param {Image} img 要处理的图片
    * @param {string} color 遮罩背景颜色
    * @param {number} opacity 透明度
-   * @return {Promise<Image>}
+   * @returns {Promise<Image>}
    */
   async shadowImage(img, color = '#000000', opacity = 0.7) {
     let ctx = new DrawContext()
@@ -348,7 +348,7 @@ class Base {
   /**
    * 根据百分比输出 hex 颜色
    * @param {number} pct
-   * @return {Color}
+   * @returns {Color}
    */
   getColorForPercentage(pct) {
     const percentColors = [
@@ -380,7 +380,7 @@ class Base {
 
   /**
    * 获取动态字体颜色
-   * @return {Color}
+   * @returns {Color}
    */
   dynamicTextColor() {
     const lightTextColor = this.settings['lightTextColor'] ? this.settings['lightTextColor'] : '#000000'
@@ -390,7 +390,7 @@ class Base {
 
   /**
    * 动态背景色
-   * @return {LinearGradient}
+   * @returns {LinearGradient}
    */
   dynamicBackgroundColor() {
     const bgColor = new LinearGradient()
@@ -408,6 +408,24 @@ class Base {
     bgColor.locations = [0.0, 1.0]
 
     return bgColor
+  }
+
+  /**
+   * 一维数组转换二维数组
+   * @param arr
+   * @param num
+   * @returns {*[]}
+   */
+  format2Array(arr, num) {
+    const  pages = []
+    arr.forEach((item, index) => {
+      const page = Math.floor(index / num)
+      if (!pages[page]) {
+        pages[page] = []
+      }
+      pages[page].push(item)
+    })
+    return pages
   }
 }
 

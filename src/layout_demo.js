@@ -247,7 +247,7 @@ class Widget extends Base {
     enduranceStack.bottomAlignContent()
     const enduranceImageStack = this.addStackTo(enduranceStack, 'vertical')
     enduranceImageStack.bottomAlignContent()
-    const enduranceImage = enduranceImageStack.addImage(this.getSFSymbolImage('flag'))
+    const enduranceImage = enduranceImageStack.addImage(this.getSFSymbolImage('flag.circle'))
     enduranceImage.imageSize = new Size(20, 20)
     enduranceImage.tintColor = this.dynamicTextColor()
     enduranceStack.addSpacer(5)
@@ -329,7 +329,7 @@ class Widget extends Base {
     const lockedText = lockedTextStack.addText('未锁车')
     lockedText.font = new Font('Futura-Medium', 14)
     lockedText.textColor = this.dynamicTextColor()
-    lockedText.textColor = new Color('#D53A2F', 1)
+    lockedText.textColor = new Color('#EB4F3C', 1)
     // endregion
     rowLeftStack.addSpacer(5)
     // region 更新日期
@@ -351,9 +351,56 @@ class Widget extends Base {
     mainStack.addSpacer()
     // region 右侧车辆图片
     const rowRightStack = this.addStackTo(mainStack, 'vertical')
+    rowRightStack.addSpacer()
+    const carPhotoStack = this.addStackTo(rowRightStack, 'horizontal')
+    carPhotoStack.addSpacer()
+    carPhotoStack.centerAlignContent()
     const carPhoto = await this.getImageByUrl(DEFAULT_MY_CAR_PHOTO)
-    const carPhotoStack = rowRightStack.addImage(carPhoto)
-    carPhotoStack.centerAlignImage()
+    const carPhotoImage = carPhotoStack.addImage(carPhoto)
+    carPhotoImage.centerAlignImage()
+    const statusStack = this.addStackTo(rowRightStack, 'vertical')
+    statusStack.setPadding(5, 0, 0, 0)
+    statusStack.centerAlignContent()
+    const carStatus = []
+    // const carStatus = ['前左窗', '后左门', '后右门', '天窗']
+    // const carStatus = ['前左窗', '前右窗', '后左窗', '后右窗', '前左门', '前右门', '后左门', '后右门', '天窗', '后备箱', '引擎盖']
+    if (carStatus.length !== 0) {
+      const statusArray = this.format2Array(carStatus, 2)
+      statusArray.forEach(arr => {
+        const statusRowStack = this.addStackTo(statusStack, 'horizontal')
+        statusRowStack.setPadding(2, 0, 2, 0)
+        statusRowStack.centerAlignContent()
+        arr.forEach(item => {
+          const statusItemStack = this.addStackTo(statusRowStack, 'horizontal')
+          statusItemStack.addSpacer()
+          statusItemStack.centerAlignContent()
+          const statusItemImage = statusItemStack.addImage(this.getSFSymbolImage('bell.fill'))
+          statusItemImage.imageSize = new Size(14, 14)
+          statusItemImage.tintColor = new Color('#EB4F3C', 1)
+          statusItemStack.addSpacer(2)
+          const statusItemText = statusItemStack.addText(item + '未关闭')
+          statusItemText.font = new Font('PingFangSC-Regular', 12)
+          statusItemText.textColor = new Color('#EB4F3C', 1)
+          statusItemText.centerAlignText()
+          statusItemStack.addSpacer()
+        })
+      })
+    } else {
+      const statusItemStack = this.addStackTo(statusStack, 'horizontal')
+      statusItemStack.setPadding(5, 0, 5, 0)
+      statusItemStack.addSpacer()
+      statusItemStack.centerAlignContent()
+      const statusItemImage = statusItemStack.addImage(this.getSFSymbolImage('checkmark.circle.fill'))
+      statusItemImage.imageSize = new Size(14, 14)
+      statusItemImage.tintColor = new Color('#65DB79', 1)
+      statusItemStack.addSpacer(2)
+      const statusItemText = statusItemStack.addText('当前车窗已全关闭')
+      statusItemText.font = new Font('PingFangSC-Regular', 12)
+      statusItemText.textColor = this.dynamicTextColor()
+      statusItemText.centerAlignText()
+      statusItemStack.addSpacer()
+    }
+    rowRightStack.addSpacer()
     // endregion
     // 地图/一言展示
     let leftImage = 'https://restapi.amap.com/v3/staticmap?markers=mid,0xFF0000,0:116.37359,39.92437&size=100*60&scale=2&zoom=15&traffic=1&key=c078fb16379c25bc0aad8633d82cf1dd'
@@ -364,7 +411,7 @@ class Widget extends Base {
     footerWrapperStack.setPadding(20, 0, 0, 0)
     const footerStack = this.addStackTo(footerWrapperStack, 'horizontal')
     footerStack.cornerRadius = 25
-    footerStack.borderColor = new Color('#000000', 0.25)
+    footerStack.borderColor = Color.dynamic(new Color('#ffffff', 0.5), new Color('#ffffff', 0.25))
     footerStack.borderWidth = 2
     footerStack.setPadding(0, 0, 0, 20)
     footerStack.centerAlignContent()
@@ -372,7 +419,7 @@ class Widget extends Base {
     const footerLeftStack = this.addStackTo(footerStack, 'vertical')
     footerLeftStack.cornerRadius = 25
     footerLeftStack.borderWidth = 2
-    footerLeftStack.borderColor = new Color('#000000', 0.25)
+    footerLeftStack.borderColor = Color.dynamic(new Color('#ffffff', 0.5), new Color('#ffffff', 0.25))
     const locationImage = await this.getImageByUrl(leftImage)
     const locationImageStack = footerLeftStack.addImage(locationImage)
     locationImageStack.imageSize = new Size(100, 60)
