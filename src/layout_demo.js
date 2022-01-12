@@ -231,7 +231,7 @@ class Widget extends Base {
     carLogoImage.tintColor = this.dynamicTextColor()
     headerRightStack.addSpacer(5)
     // 车牌信息
-    const plateNoStack = this.addStackTo(headerRightStack, 'vertical')
+    const plateNoStack = this.addStackTo(headerRightStack, 'horizontal')
     const plateNoText = plateNoStack.addText('苏DY38Z8')
     plateNoText.font = new Font('PingFangSC-Regular', 14)
     plateNoText.textColor = this.dynamicTextColor()
@@ -287,7 +287,7 @@ class Widget extends Base {
     mileageStack.bottomAlignContent()
     const mileageImageStack = this.addStackTo(mileageStack, 'vertical')
     mileageImageStack.bottomAlignContent()
-    const mileageImage = mileageImageStack.addImage(this.getSFSymbolImage('car'))
+    const mileageImage = mileageImageStack.addImage(this.getSFSymbolImage('car.circle'))
     mileageImage.imageSize = new Size(20, 20)
     mileageImage.tintColor = this.dynamicTextColor()
     mileageStack.addSpacer(5)
@@ -337,7 +337,7 @@ class Widget extends Base {
     dateTimeStack.bottomAlignContent()
     const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical')
     dateTimeImageStack.bottomAlignContent()
-    const dateTimeImage = dateTimeImageStack.addImage(this.getSFSymbolImage('goforward'))
+    const dateTimeImage = dateTimeImageStack.addImage(this.getSFSymbolImage('repeat.circle'))
     dateTimeImage.imageSize = new Size(20, 20)
     dateTimeImage.tintColor = this.dynamicTextColor()
     dateTimeStack.addSpacer(5)
@@ -361,8 +361,8 @@ class Widget extends Base {
     const statusStack = this.addStackTo(rowRightStack, 'vertical')
     statusStack.setPadding(5, 0, 0, 0)
     statusStack.centerAlignContent()
-    const carStatus = []
-    // const carStatus = ['前左窗', '后左门', '后右门', '天窗']
+    // const carStatus = []
+    const carStatus = ['前左窗', '后左门', '后右门', '天窗']
     // const carStatus = ['前左窗', '前右窗', '后左窗', '后右窗', '前左门', '前右门', '后左门', '后右门', '天窗', '后备箱', '引擎盖']
     if (carStatus.length !== 0) {
       const statusArray = this.format2Array(carStatus, 2)
@@ -374,7 +374,7 @@ class Widget extends Base {
           const statusItemStack = this.addStackTo(statusRowStack, 'horizontal')
           statusItemStack.addSpacer()
           statusItemStack.centerAlignContent()
-          const statusItemImage = statusItemStack.addImage(this.getSFSymbolImage('bell.fill'))
+          const statusItemImage = statusItemStack.addImage(this.getSFSymbolImage('exclamationmark.shield.fill'))
           statusItemImage.imageSize = new Size(14, 14)
           statusItemImage.tintColor = new Color('#EB4F3C', 1)
           statusItemStack.addSpacer(2)
@@ -390,7 +390,7 @@ class Widget extends Base {
       statusItemStack.setPadding(5, 0, 5, 0)
       statusItemStack.addSpacer()
       statusItemStack.centerAlignContent()
-      const statusItemImage = statusItemStack.addImage(this.getSFSymbolImage('checkmark.circle.fill'))
+      const statusItemImage = statusItemStack.addImage(this.getSFSymbolImage('checkmark.shield.fill'))
       statusItemImage.imageSize = new Size(14, 14)
       statusItemImage.tintColor = new Color('#65DB79', 1)
       statusItemStack.addSpacer(2)
@@ -408,10 +408,10 @@ class Widget extends Base {
     // leftImage = 'https://i95.me/images/audi_logo_1.png'
     // rightText = '世间美好，与您环环相扣'
     const footerWrapperStack = this.addStackTo(widget, 'horizontal')
-    footerWrapperStack.setPadding(20, 0, 0, 0)
+    footerWrapperStack.setPadding(0, 0, 0, 0)
     const footerStack = this.addStackTo(footerWrapperStack, 'horizontal')
     footerStack.cornerRadius = 25
-    footerStack.borderColor = Color.dynamic(new Color('#ffffff', 0.5), new Color('#ffffff', 0.25))
+    footerStack.borderColor = Color.dynamic(new Color('#000000', 0.25), new Color('#ffffff', 0.25))
     footerStack.borderWidth = 2
     footerStack.setPadding(0, 0, 0, 20)
     footerStack.centerAlignContent()
@@ -419,7 +419,7 @@ class Widget extends Base {
     const footerLeftStack = this.addStackTo(footerStack, 'vertical')
     footerLeftStack.cornerRadius = 25
     footerLeftStack.borderWidth = 2
-    footerLeftStack.borderColor = Color.dynamic(new Color('#ffffff', 0.5), new Color('#ffffff', 0.25))
+    footerLeftStack.borderColor = Color.dynamic(new Color('#000000', 0.25), new Color('#ffffff', 0.25))
     const locationImage = await this.getImageByUrl(leftImage)
     const locationImageStack = footerLeftStack.addImage(locationImage)
     locationImageStack.imageSize = new Size(100, 60)
