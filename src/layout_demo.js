@@ -13,7 +13,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = 20211127.2
+const SCRIPT_VERSION = '2.0.0_Beta1'
 
 const DEFAULT_MY_CAR_PHOTO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png'
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
@@ -29,6 +29,13 @@ class Widget extends Base {
     this.desc = 'Template'
 
     if (config.runsInApp) {
+      this.registerAction('账户登录', this.actionAccountLogin)
+      this.registerAction('偏好配置', this.actionPreferences)
+      this.registerAction('刷新数据', this.actionRefreshData)
+      this.registerAction('登出重置', this.actionLogOut)
+      this.registerAction('检查更新', this.actionCheckUpdate)
+      this.registerAction('打赏作者', this.actionDonation)
+      this.registerAction('当前版本: v' + SCRIPT_VERSION, this.actionAbout)
     }
   }
 
@@ -471,6 +478,21 @@ class Widget extends Base {
   getData() {
     return this.bootstrap()
   }
+
+  /**
+   * 账户登录
+   */
+  actionAccountLogin() {}
+
+  /**
+   * 偏好设置
+   */
+  actionPreferences() {}
+
+  /**
+   * 刷新数据
+   */
+  actionRefreshData() {}
 }
 
 // @组件代码结束
