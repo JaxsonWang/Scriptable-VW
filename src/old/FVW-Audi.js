@@ -107,22 +107,18 @@ class Widget extends Base {
    */
   constructor(arg) {
     super(arg)
-    this.arg = arg
+    this.styleType = arg
     this.name = 'Audi 挂件'
     this.desc = 'Audi 车辆桌面组件展示'
 
-    if (Device.isPhone) {
-      if (config.runsInApp) {
-        if (!Keychain.contains('authToken')) this.registerAction('账户登录', this.actionStatementSettings)
-        if (Keychain.contains('authToken')) this.registerAction('偏好配置', this.actionPreferenceSettings)
-        this.registerAction('重置组件', this.actionLogOut)
-        if (Keychain.contains('authToken')) this.registerAction('重载数据', this.actionLogAction)
-        this.registerAction('检查更新', this.actionCheckUpdate)
-        this.registerAction('打赏作者', this.actionDonation)
-        this.registerAction('当前版本: v' + AUDI_VERSION, this.actionAbout)
-      }
-    } else {
-      this.notify('系统通知', '目前仅在 iPhone 支持小组件').then()
+    if (config.runsInApp) {
+      if (!Keychain.contains('authToken')) this.registerAction('账户登录', this.actionStatementSettings)
+      if (Keychain.contains('authToken')) this.registerAction('偏好配置', this.actionPreferenceSettings)
+      this.registerAction('重置组件', this.actionLogOut)
+      if (Keychain.contains('authToken')) this.registerAction('重载数据', this.actionLogAction)
+      this.registerAction('检查更新', this.actionCheckUpdate)
+      this.registerAction('打赏作者', this.actionDonation)
+      this.registerAction('当前版本: v' + AUDI_VERSION, this.actionAbout)
     }
   }
 
@@ -131,32 +127,28 @@ class Widget extends Base {
    * 可以根据 this.widgetFamily 来判断小组件尺寸，以返回不同大小的内容
    */
   async render() {
-    try {
-      const data = await this.getData()
-      const screenSize = Device.screenSize()
-      const size = DEVICE_SIZE[`${screenSize.width}x${screenSize.height}`] || DEVICE_SIZE['428x926']
-      if (data) {
-        if (typeof data === 'object') {
-          switch (this.widgetFamily) {
-            case 'large':
-              data.size = size.large
-              return await this.renderLarge(data)
-            case 'medium':
-              data.size = size.medium
-              return await this.renderMediumStyleType(data)
-            default:
-              data.size = size.small
-              return await this.renderSmall(data)
-          }
-        } else {
-          // 返回组件错误信息
-          return await this.renderError(data)
+    const data = await this.getData()
+    const screenSize = Device.screenSize()
+    const size = DEVICE_SIZE[`${screenSize.width}x${screenSize.height}`] || DEVICE_SIZE['428x926']
+    if (data) {
+      if (typeof data === 'object') {
+        switch (this.widgetFamily) {
+          case 'large':
+            data.size = size.large
+            return await this.renderLarge(data)
+          case 'medium':
+            data.size = size.medium
+            return await this.renderMediumStyleType(data)
+          default:
+            data.size = size.small
+            return await this.renderSmall(data)
         }
       } else {
-        return await this.renderEmpty()
+        // 返回组件错误信息
+        return await this.renderError(data)
       }
-    } catch (error) {
-      return await this.renderError('请检查手机环境是否正常，例如网络等')
+    } else {
+      return await this.renderEmpty()
     }
   }
 
@@ -165,7 +157,7 @@ class Widget extends Base {
    * @return {Promise<ListWidget>}
    */
   async renderMediumStyleType(data) {
-    if (this.arg.indexOf('简约风格') !== -1) {
+    if (this.styleType.indexOf('简约风格') !== -1) {
       return await this.renderMediumSimpleStyle(data)
     } else {
       return await this.renderMedium(data)
@@ -682,7 +674,7 @@ class Widget extends Base {
    * @return {Promise<ListWidget>}
    */
   async renderMediumSimpleStyle(data) {
-    const params = this.params2obj(this.arg)
+    const params = this.params2obj(this.styleType)
     const isEn = params?.lang?.toLocaleLowerCase() === 'english'
     // const isEn = true
 
@@ -895,10 +887,10 @@ class Widget extends Base {
 
   /**
    * 处理数据业务
-   * @param {Boolean} forceRefresh
+   * @param {Boolean} isDebug
    * @returns {Promise<{Object}>}
    */
-  async bootstrap(forceRefresh = false) {
+  async bootstrap(isDebug = false) {
     try {
       const getUserMineData = JSON.parse(Keychain.get('userMineData'))
       const getVehicleData = getUserMineData.vehicleDto
@@ -916,8 +908,8 @@ class Widget extends Base {
     if (this.showLocation()) {
       if (this.settings['aMapKey']) {
         try {
-          const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition(forceRefresh))
-          const getVehiclesAddress = await this.handleGetCarAddress(forceRefresh)
+          const getVehiclesPosition = JSON.parse(await this.handleVehiclesPosition(isDebug))
+          const getVehiclesAddress = await this.handleGetCarAddress(isDebug)
           // simple: '暂无位置信息',
           // complete: '暂无位置信息'
           if (getVehiclesPosition.longitude) GLOBAL_USER_DATA.longitude = parseInt(getVehiclesPosition.longitude, 10) / 1000000 // 车辆经度
@@ -1095,11 +1087,11 @@ class Widget extends Base {
 
   /**
    * 登录奥迪服务器
-   * @param {boolean} forceRefresh
+   * @param {boolean} isDebug
    * @returns {Promise<void>}
    */
-  async handleAudiLogin(forceRefresh = false) {
-    if (forceRefresh || !Keychain.contains('userBaseInfoData')) {
+  async handleAudiLogin(isDebug = false) {
+    if (isDebug || !Keychain.contains('userBaseInfoData')) {
       const options = {
         url: AUDI_SERVER_API.login,
         method: 'POST',
@@ -1112,15 +1104,17 @@ class Widget extends Base {
         })
       }
       const response = await this.http(options)
+      if (isDebug) console.log('获取登陆信息:')
+      if (isDebug) console.log(response)
       // 判断接口状态
       if (response.code === 0) {
         // 登录成功 存储登录信息
-        console.log('用户登陆成功')
+        console.log('登陆成功')
         Keychain.set('userBaseInfoData', JSON.stringify(response.data))
         await this.notify('登录成功', '正在从 Audi 服务器获取车辆数据，请耐心等待！')
         // 准备交换验证密钥数据
-        await this.handleAudiGetToken('userIDToken', forceRefresh)
-        await this.handleUserMineData(forceRefresh)
+        await this.handleAudiGetToken('userIDToken', isDebug)
+        await this.handleUserMineData(isDebug)
       } else {
         // 登录异常
         await this.notify('登录失败', response.message)
@@ -1128,6 +1122,8 @@ class Widget extends Base {
       }
     } else {
       // 已存在用户信息
+      if (isDebug) console.log('检测本地缓存已有登陆数据:')
+      if (isDebug) console.log(Keychain.get('userBaseInfoData'))
       await this.handleAudiGetToken('userIDToken')
       await this.handleUserMineData()
     }
@@ -1191,11 +1187,11 @@ class Widget extends Base {
 
   /**
    * 获取用户信息
-   * @param {boolean} forceRefresh
+   * @param {boolean} isDebug
    * @returns {Promise<void>}
    */
-  async handleUserMineData(forceRefresh = false) {
-    if (forceRefresh || !Keychain.contains('userMineData')) {
+  async handleUserMineData(isDebug = false) {
+    if (isDebug || !Keychain.contains('userMineData')) {
       const getUserBaseInfoData =JSON.parse(Keychain.get('userBaseInfoData'))
       const options = {
         url: AUDI_SERVER_API.mine,
@@ -1210,6 +1206,8 @@ class Widget extends Base {
         }
       }
       const response = await this.http(options)
+      if (isDebug) console.log('获取用户信息：')
+      if (isDebug) console.log(response)
       // 判断接口状态
       if (response.code === 0) {
         // 存储车辆信息
@@ -1217,16 +1215,17 @@ class Widget extends Base {
         Keychain.set('userMineData', JSON.stringify(response.data))
         Keychain.set('myCarVIN', response.data?.vehicleDto?.vin)
         // 准备交换验证密钥数据
-        await this.handleAudiGetToken('userRefreshToken', forceRefresh)
+        await this.handleAudiGetToken('userRefreshToken', isDebug)
       } else {
         // 获取异常
         console.error('获取用户基本信息失败，准备重新登录获取密钥')
         if (Keychain.contains('userBaseInfoData')) Keychain.remove('userBaseInfoData')
         // 重新登录
-        await this.handleAudiLogin(forceRefresh)
+        await this.handleAudiLogin(isDebug)
       }
     } else {
       console.log('userMineData 信息已存在，开始获取 userRefreshToken')
+      if (isDebug) console.log(Keychain.get('userMineData'))
       await this.handleAudiGetToken('userRefreshToken')
     }
   }
@@ -1234,11 +1233,11 @@ class Widget extends Base {
   /**
    * 获取密钥数据
    * @param {'userIDToken' | 'userRefreshToken'} type
-   * @param {boolean} forceRefresh
+   * @param {boolean} isDebug
    * @returns {Promise<void>}
    */
-  async handleAudiGetToken(type, forceRefresh = false) {
-    if (forceRefresh || !Keychain.contains(type)) {
+  async handleAudiGetToken(type, isDebug = false) {
+    if (isDebug || !Keychain.contains(type)) {
       if (type === 'userIDToken' && !Keychain.contains('userBaseInfoData')) {
         return console.error('获取密钥数据失败，没有拿到用户登录信息，请重新登录再重试！')
       }
@@ -1269,6 +1268,8 @@ class Widget extends Base {
         body: requestParams
       }
       const response = await this.http(options)
+      if (isDebug) console.log('用户密钥信息：')
+      if (isDebug) console.log(response)
       // 判断接口状态
       if (response.error) {
         switch (response.error) {
@@ -1283,9 +1284,10 @@ class Widget extends Base {
         console.log('当前密钥数据获取成功：' + type)
         if (type === 'userRefreshToken') {
           Keychain.set('authToken', response.access_token)
-          console.log('authToken 密钥设置成功')
+          console.log('userRefreshToken 密钥设置成功')
+          console.log('访问 handleGetApiBase 接口1')
           // 正式获取车辆信息
-          await this.handleGetApiBase(forceRefresh)
+          await this.handleGetApiBase(isDebug)
         }
       }
     } else {
@@ -1297,11 +1299,13 @@ class Widget extends Base {
 
   /**
    * 动态获取接口地址
-   * @param forceRefresh
+   * @param isDebug
    * @return {Promise<void>}
    */
-  async handleGetApiBase(forceRefresh = false) {
-    if (forceRefresh || !Keychain.contains('vehiclesBaseApi')) {
+  async handleGetApiBase(isDebug = false) {
+    console.log(Keychain.contains('vehiclesBaseApi'))
+    if (isDebug || !Keychain.contains('vehiclesBaseApi')) {
+      console.log('开始获取数据')
       const options = {
         url: AUDI_SERVER_API.apiBase(Keychain.get('myCarVIN')),
         method: 'GET',
@@ -1311,6 +1315,8 @@ class Widget extends Base {
         }
       }
       const response = await this.http(options)
+      console.log('handleGetApiBase')
+      console.log(response)
       // 判断接口状态
       if (response.error) {
         // 接口异常
@@ -1324,24 +1330,27 @@ class Widget extends Base {
           Keychain.set('vehiclesBaseApi', data)
           console.log('handleGetApiBase 获取到车辆基本访问地址')
           // 获取车辆信息
-          await this.bootstrap(forceRefresh)
+          await this.bootstrap(isDebug)
         } else {
           console.error('handleGetApiBase 获取数据失败')
         }
       }
     } else {
+      console.log(Keychain.get('vehiclesBaseApi'))
+      if (isDebug) console.log('检测本地缓存已有 vehiclesBaseApi 数据:')
+      if (isDebug) console.log(Keychain.get('vehiclesBaseApi'))
       console.log('handleVehiclesVIN 信息已存在，开始 bootstrap() 函数')
-      await this.bootstrap(forceRefresh)
+      await this.bootstrap(isDebug)
     }
   }
 
   /**
    * 获取车辆当前状态
    * 需要实时获取
-   * @param {boolean} forceRefresh
+   * @param {boolean} isDebug
    * @returns {Promise<string | void>}
    */
-  async handleVehiclesStatus(forceRefresh = false) {
+  async handleVehiclesStatus(isDebug = false) {
     const url = AUDI_SERVER_API.vehiclesStatus
 
     const options = {
@@ -1358,6 +1367,8 @@ class Widget extends Base {
       }
     }
     const response = await this.http(options)
+    if (isDebug) console.log('获取车辆状态信息：')
+    if (isDebug) console.log(response)
     // 判断接口状态
     if (response.error) {
       // 接口异常
@@ -1393,10 +1404,10 @@ class Widget extends Base {
   /**
    * 获取车辆当前经纬度
    * 需要实时获取
-   * @param {boolean} forceRefresh
+   * @param {boolean} isDebug
    * @returns {Promise<string>}
    */
-  async handleVehiclesPosition(forceRefresh = false) {
+  async handleVehiclesPosition(isDebug = false) {
     const url = AUDI_SERVER_API.vehiclesPosition
 
     const options = {
@@ -1420,6 +1431,8 @@ class Widget extends Base {
       return '暂无位置'
     }
 
+    if (isDebug) console.log('获取车辆位置信息：')
+    if (isDebug) console.log(response)
     // 判断接口状态
     if (response.error) {
       // 接口异常
@@ -1458,10 +1471,10 @@ class Widget extends Base {
 
   /**
    * 获取车辆地址
-   * @param {Boolean} forceRefresh
+   * @param {Boolean} isDebug
    * @returns {Promise<{simple: string, complete: string}>}
    */
-  async handleGetCarAddress(forceRefresh = false) {
+  async handleGetCarAddress(isDebug = false) {
     if (!this.settings['aMapKey']) {
       await this.notify('获取车辆位置失败', '请输入高德 key 才能获取车辆位置信息')
       return {
@@ -1490,6 +1503,8 @@ class Widget extends Base {
       method: 'GET'
     }
     const response = await this.http(options)
+    if (isDebug) console.log('车辆地理位置信息：')
+    if (isDebug) console.log(response)
     if (response.status === '1') {
       const addressComponent = response.regeocode.addressComponent
       const simpleAddress = addressComponent.district + addressComponent.township
@@ -2145,6 +2160,7 @@ class Widget extends Base {
       'carSimpleAddress',
       'carCompleteAddress',
       'vehiclesStatusResponse',
+      'vehiclesBaseApi',
       this.SETTING_KEY
     ]
     keys.forEach(key => {

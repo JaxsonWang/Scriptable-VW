@@ -427,6 +427,22 @@ class Base {
     })
     return pages
   }
+
+  /**
+   * 组件声明
+   * @returns {Promise<void>}
+   */
+  actionStatementSettings (message) {
+    return new Promise(async (resolve, reject) => {
+      const alert = new Alert()
+      alert.title = 'Joiner 组件声明'
+      alert.message = message
+      alert.addAction('同意')
+      alert.addCancelAction('不同意')
+      const id = await alert.presentAlert()
+      id === -1 ? reject() : resolve()
+    })
+  }
 }
 
 // @base.end
