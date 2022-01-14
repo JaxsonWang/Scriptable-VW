@@ -19,13 +19,6 @@ const SCRIPT_VERSION = '2.0.0_Beta1'
 const DEFAULT_MY_CAR_PHOTO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png'
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
-const REQUEST_HEADER = {
-  Accept: 'application/json',
-  'Content-Type': 'application/json',
-  'User-Agent': 'MyAuDi/3.0.2 CFNetwork/1325.0.1 Darwin/21.1.0',
-  'X-Client-ID': 'de6d8b23-792f-47b8-82f4-e4cc59c2916e'
-}
-
 class Widget extends Base {
   /**
    * 传递给组件的参数，可以是桌面 Parameter 数据，也可以是外部如 URLScheme 等传递的数据
@@ -488,6 +481,210 @@ class Widget extends Base {
   }
 
   /**
+   * 处理车辆状态信息
+   * @param {Array} data 状态数据
+   */
+  handleVehiclesData(data) {
+    // region 机油信息
+    const oilSupport = data.find(i => i.id === '0x0204FFFFFF')?.field
+    let oilMinOK = null
+    let oilLevel = null
+    // 有些车辆不一定支持机油显示，需要判断下
+    if (oilSupport) {
+      // oil.min.ok '0' = 不正常 '1' = 正常
+      oilMinOK = oilSupport.find(i => i.id === '0x0204040002').value
+      // 机油单位百分比
+      oilLevel = oilSupport.find(i => i.id === '0x0204040003').value
+    }
+    // endregion
+    const statusArr = data.find(i => i.id === '0x0301FFFFFF')?.field
+    // region 驻车灯
+    // '2' = 已关闭
+    const parkingLights = statusArr.find(i => i.id === '0x0204040003').value
+    // endregion
+    // region 室外温度
+    const kelvinTemperature = statusArr.find(i => i.id === '0x0301020001').value
+    // 开尔文单位转换成摄氏度
+    const outdoorTemperature = (parseInt(kelvinTemperature, 10) / 10 + -273.15).toFixed(1)
+    // endregion
+    // region 驻车制动
+    // '1' = 已激活 / '0' = 未激活
+    const parkingBrakeActive = data.find(i => i.id === '0x0301030001').value
+    // endregion
+    // region 续航里程
+    // 单位 km
+    const fuelRange = data.find(i => i.id === '0x0301030005').value || data.find(i => i.id === '0x0301030006').value
+    // endregion
+    // region 汽油油量
+    // 单位 %
+    const fuelLevel = data.find(i => i.id === '0x030103000A').value
+    // endregion
+    // region 电池容量
+    // 单位 %
+    const socLevel = data.find(i => i.id === '0x0301030002').value
+    // endregion
+    // region 总里程和更新时间
+    const mileageArr = data.find(i => i.id === '0x0101010002')?.field
+    const mileage = mileageArr.find(i => i.id === '0x0101010002').value
+    const updateTime = mileageArr.find(i => i.id === '0x0101010002').tsCarSentUtc
+    // endregion
+    // region 锁车状态
+    const isLocked = this.getVehiclesLocked(statusArr)
+    // endregion
+    // region 车门状态
+    const doorStatus = this.getVehiclesDoorStatus(statusArr)
+    // endregion
+    // region 车窗状态
+    const windowStatus = this.getVehiclesWindowStatus(statusArr)
+    // endregion
+
+    return {
+      oilSupport: oilSupport !== undefined,
+      oilMinOK,
+      oilLevel,
+      parkingLights,
+      outdoorTemperature,
+      parkingBrakeActive,
+      fuelRange,
+      fuelLevel,
+      socLevel,
+      mileage,
+      updateTime,
+      isLocked,
+      doorStatus,
+      windowStatus
+    }
+  }
+
+  /**
+   * 获取车辆锁车状态
+   * @param {Array} arr
+   * @returns {boolean} true = 锁车 false = 没有完全锁车
+   */
+  getVehiclesLocked(arr) {
+    // 先判断车辆是否锁定
+    const lockArr = ['0x0301040001', '0x0301040004', '0x0301040007', '0x030104000A', '0x030104000D']
+    // 筛选出对应的数组 并且过滤不支持检测状态
+    const filterArr = arr.filter(item => lockArr.some(i => i === item.id)).filter(item => item.value !== '0')
+    // 判断是否都锁门
+    // value === 0 不支持
+    // value === 2 锁门
+    // value === 3 未锁门
+    return filterArr.every(item => item.value === '2')
+  }
+
+  /**
+   * 获取车辆车门/引擎盖/后备箱状态
+   * @param {Array} arr
+   * @return Promise<[]<{
+   *   id: string
+   *   name: string
+   * }>>
+   */
+  getVehiclesDoorStatus (arr) {
+    const doorArr = [
+      {
+        id: '0x0301040002',
+        name: '左前门'
+      }, {
+        id: '0x0301040005',
+        name: '左后门'
+      }, {
+        id: '0x0301040008',
+        name: '右前门'
+      }, {
+        id: '0x030104000B',
+        name: '右后门'
+      }, {
+        id: '0x0301040011',
+        name: '引擎盖'
+      }, {
+        id: '0x030104000E',
+        name: '后备箱'
+      }
+    ]
+    // 筛选出对应的数组
+    const filterArr = arr.filter(item => doorArr.some(i => i.id === item.id))
+    // 筛选出没有关门id
+    // value === 0 不支持
+    // value === 2 关门
+    // value === 3 未关门
+    const result = filterArr.filter(item => item.value === '2').filter(item => item.value !== '0')
+    // 返回开门的数组
+    return doorArr.filter(i => result.some(x => x.id === i.id))
+  }
+
+  /**
+   * 获取车辆车窗/天窗状态
+   * @param {Array} arr
+   * @return Promise<[]<{
+   *   id: string
+   *   name: string
+   * }>>
+   */
+  getVehiclesWindowStatus (arr) {
+    const windowArr = [
+      {
+        id: '0x0301050001',
+        name: '左前窗'
+      }, {
+        id: '0x0301050003',
+        name: '左后窗'
+      }, {
+        id: '0x0301050005',
+        name: '右前窗'
+      }, {
+        id: '0x0301050007',
+        name: '右后窗'
+      }, {
+        id: '0x030105000B',
+        name: '天窗'
+      }
+    ]
+    // 筛选出对应的数组
+    const filterArr = arr.filter(item => windowArr.some(i => i.id === item.id))
+    // 筛选出没有关门id
+    const result = filterArr.filter(item => item.value === '2').filter(item => item.value !== '0')
+    // 返回开门的数组
+    return windowArr.filter(i => result.some(x => x.id === i.id))
+  }
+
+  /**
+   * 获取设备编码
+   * @returns {Promise<void>}
+   */
+  async getDeviceId() {
+    const options = {
+      url: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/register/v1',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        appId: 'com.tima.aftermarket',
+        client_brand: 'VW',
+        appName: 'MyAuDi',
+        client_name: 'Maton',
+        appVersion: '1.0',
+        platform: 'iOS'
+      })
+    }
+    try {
+      const response = await this.http(options)
+      if (response.client_id) {
+        this.settings['clientID'] = response.client_id
+        await this.saveSettings(false)
+        await this.handleLoginRequest()
+        console.log('获取设备编码成功，准备进行账户登录')
+      } else {
+        console.error('获取设备编码失败，请稍后再重试！')
+        await this.notify('系统通知', '获取设备编码失败，请稍后再重试！')
+      }
+    } catch (error) {
+    }
+  }
+
+  /**
    * 登录账户
    * @returns {Promise<void>}
    */
@@ -495,7 +692,7 @@ class Widget extends Base {
     const options = {
       url: 'https://audi2c.faw-vw.com/capi/v1/user/login',
       method: 'POST',
-      headers: REQUEST_HEADER,
+      headers: this.requestHeader(),
       body: JSON.stringify({
         loginChannelEnum: 'APP',
         loginTypeEnum: 'ACCOUNT_PASSWORD',
@@ -547,10 +744,7 @@ class Widget extends Base {
     const options = {
       url: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/oauth2/v1/token',
       method: 'POST',
-      headers: {
-        'X-Client-ID': 'de6d8b23-792f-47b8-82f4-e4cc59c2916e',
-        'User-Agent': 'MyAuDi/3.0.2 CFNetwork/1325.0.1 Darwin/21.1.0',
-      },
+      headers: this.requestHeader(),
       body: requestParams
     }
     try {
@@ -597,7 +791,7 @@ class Widget extends Base {
           'X-CHANNEL': 'IOS',
           'x-mobile': this.settings['username']
         },
-        ...REQUEST_HEADER
+        ...this.requestHeader()
       }
     }
     try {
@@ -630,7 +824,7 @@ class Widget extends Base {
       url: `https://mal-1a.prd.cn.vwg-connect.cn/api/cs/vds/v1/vehicles/${this.settings['carVIN']}/homeRegion`,
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
+        ...this.requestHeader(),
         'Authorization': 'Bearer ' + this.settings['authToken'],
       }
     }
@@ -655,7 +849,7 @@ class Widget extends Base {
 
   /**
    * 获取车辆状态
-   * @returns {Promise<void>}
+   * @returns {Promise<Object>}
    */
   async getVehiclesStatus() {
     const options = {
@@ -668,7 +862,7 @@ class Widget extends Base {
           'X-App-Version': '113',
           'Accept-Language': 'de-DE'
         },
-        ...REQUEST_HEADER
+        ...this.requestHeader()
       }
     }
     try {
@@ -695,10 +889,16 @@ class Widget extends Base {
           default:
             await this.notify('未知错误' + response.error.errorCode, '未知错误:' + response.error.description)
         }
+        return this.settings['vehicleData']
       } else {
         // 接口获取数据成功
+        const vehicleData = response.StoredVehicleDataResponse.vehicleData.data
+        this.settings['vehicleData'] = this.handleVehiclesData(vehicleData)
+        await this.saveSettings(false)
+        return this.handleVehiclesData(vehicleData)
       }
     } catch (error) {
+      return this.settings['vehicleData']
     }
   }
 
@@ -717,7 +917,7 @@ class Widget extends Base {
           'X-App-Version': '113',
           'Accept-Language': 'de-DE'
         },
-        ...REQUEST_HEADER
+        ...this.requestHeader()
       }
     }
     try {
@@ -826,9 +1026,9 @@ class Widget extends Base {
       if (id === -1) return
       this.settings['username'] = alert.textFieldValue(0)
       this.settings['password'] = alert.textFieldValue(1)
-      console.log('您已经同意协议，并且已经储存账户信息，开始进行用户登录')
+      console.log('您已经同意协议，并且已经储存账户信息，开始进行获取设备编码')
       await this.saveSettings(false)
-      await this.handleLoginRequest()
+      await this.getDeviceId()
     }).catch(() => {
     })
   }
@@ -888,6 +1088,19 @@ class Widget extends Base {
    */
   async actionAbout() {
     Safari.open( 'https://joiner.i95.me/about.html')
+  }
+
+  /**
+   * 请求头信息
+   * @returns {Object}
+   */
+  requestHeader() {
+    return {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'User-Agent': 'MyAuDi/3.0.2 CFNetwork/1325.0.1 Darwin/21.1.0',
+      'X-Client-ID': this.settings['clientID']
+    }
   }
 }
 
