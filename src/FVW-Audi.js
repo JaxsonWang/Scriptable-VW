@@ -507,11 +507,11 @@ class Widget extends Base {
       const response = await this.http(options)
       if (response.code === 0) {
         await this.notify('登录成功', '正在从服务器获取车辆数据，请耐心等待！')
-        this.settings['userBaseInfoData'] = JSON.stringify(response.data)
         // 解构数据
         const { accessToken, idToken } = response.data
         this.settings['userAccessToken'] = accessToken
         this.settings['userIDToken'] = idToken
+        await this.saveSettings(false)
         console.log('账户登录成功，存储用户 accessToken, idToken 密钥信息')
         // 准备交换验证密钥数据
         await this.getTokenRequest('refreshAuthToken')
@@ -566,12 +566,14 @@ class Widget extends Base {
       } else {
         // 获取密钥数据成功，存储数据
         if (type === 'refreshAuthToken') {
-          console.log('refreshAuthToken 密钥数据获取成功并且存储到本地')
           this.settings['refreshAuthToken'] = response.refresh_token
+          await this.saveSettings(false)
+          console.log('refreshAuthToken 密钥数据获取成功并且存储到本地')
         }
         if (type === 'authAccessToken') {
-          console.log('authToken 密钥数据获取成功并且存储到本地')
           this.settings['authToken'] = response.access_token
+          await this.saveSettings(false)
+          console.log('authToken 密钥数据获取成功并且存储到本地')
           // 设置访问接口
           await this.getApiBaseURI()
         }
@@ -602,12 +604,13 @@ class Widget extends Base {
       const response = await this.http(options)
       // 判断接口状态
       if (response.code === 0) {
-        console.log('获取用户基本信息成功')
         const { plateNo, seriesName, carModelName, vin } = response.data
         this.settings['carPlateNo'] = plateNo
         this.settings['seriesName'] = seriesName
         this.settings['carModelName'] = carModelName
         this.settings['carVIN'] = vin
+        await this.saveSettings(false)
+        console.log('获取用户基本信息成功并将存储本地')
         // 准备交换验证密钥数据
         await this.getTokenRequest('authAccessToken')
       } else {
@@ -641,6 +644,7 @@ class Widget extends Base {
         // 接口获取数据成功
         const { baseUri } = response.homeRegion
         this.settings['ApiBaseURI'] = baseUri.content
+        await this.saveSettings(false)
         console.log('根据车架号查询基础访问域成功')
         // 获取车辆信息
         // await this.bootstrap(isDebug)
@@ -749,16 +753,19 @@ class Widget extends Base {
         // 转换正常经纬度信息
         this.settings['longitude'] = parseInt(longitude, 10) / 1000000
         this.settings['latitude'] = parseInt(latitude, 10) / 1000000
+        await this.saveSettings(false)
       }
     } catch (error) {
     }
   }
 
-  async getCarAddress() {
+  /**
+   * 获取车辆地理位置信息
+   * @return {Promise<{simple: string, complete: string}>}
+   */
+  async getCarAddressInfo() {
     const longitude = this.settings['longitude']
     const latitude = this.settings['latitude']
-
-    if (longitude < 0 || latitude < 0) return { simple: '暂无位置信息', complete: '暂无位置信息' }
 
     const aMapKey = this.settings['aMapKey']
     const options = {
@@ -773,6 +780,7 @@ class Widget extends Base {
         const completeAddress = response.regeocode.formatted_address
         this.settings['simpleAddress'] = simpleAddress
         this.settings['completeAddress'] = completeAddress
+        await this.saveSettings(false)
       } else {
         console.error('获取车辆位置失败，请检查高德地图 key 是否填写正常')
       }
@@ -781,9 +789,23 @@ class Widget extends Base {
   }
 
   /**
+   * 获取车辆地址位置静态图片
+   * @return {Promise<Image>}
+   */
+  async getCarAddressImage() {
+    const longitude = this.settings['longitude']
+    const latitude = this.settings['latitude']
+
+    const aMapKey = this.settings['aMapKey']
+    const image = `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=100*60&scale=2&zoom=15&traffic=1`
+
+    return this.getImageByUrl(image)
+  }
+
+  /**
    * 账户登录
    */
-  actionAccountLogin() {
+  async actionAccountLogin() {
     const message = `
       Joiner 小组件需要使用到您的一汽大众应用的账号，首次登录请配置账号、密码进行令牌获取\n\r
       Joiner 小组件不会收集您的个人账户信息，所有账号信息将存在 iCloud 或者 iPhone 上但也请您妥善保管自己的账号\n\r
@@ -814,32 +836,59 @@ class Widget extends Base {
   /**
    * 偏好设置
    */
-  actionPreferences() {}
+  async actionPreferences() {}
 
   /**
    * 刷新数据
    */
-  actionRefreshData() {}
+  async actionRefreshData() {}
 
   /**
    * 重置登出
    */
-  actionLogOut() {}
+  async actionLogOut() {}
 
   /**
    * 检查更新
    */
-  actionCheckUpdate() {}
+  async actionCheckUpdate() {
+    const UPDATE_FILE = 'FVW-Audi-Joiner.js'
+    const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
+    const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/fvw-audi-version.json')
+    const response = await request.loadJSON()
+    console.log(`远程版本：${response?.version}`)
+    if (response?.version === AUDI_VERSION) return this.notify('无需更新', '远程版本一致，暂无更新')
+    console.log('发现新的版本')
+
+    const log = response?.changelog.join('\n')
+    const alert = new Alert()
+    alert.title = '更新提示'
+    alert.message = `是否需要升级到${response?.version.toString()}版本\n\r${log}`
+    alert.addAction('更新')
+    alert.addCancelAction('取消')
+    const id = await alert.presentAlert()
+    if (id === -1) return
+    await this.notify('正在更新中...')
+    const REMOTE_REQ = new Request(response?.download)
+    const REMOTE_RES = await REMOTE_REQ.load()
+    FILE_MGR.write(FILE_MGR.joinPath(FILE_MGR.documentsDirectory(), UPDATE_FILE), REMOTE_RES)
+
+    await this.notify('Audi 桌面组件更新完毕！')
+  }
 
   /**
    * 捐赠
    */
-  actionDonation() {}
+  async actionDonation() {
+    Safari.open( 'https://joiner.i95.me/donation.html')
+  }
 
   /**
    * 关于组件
    */
-  actionAbout() {}
+  async actionAbout() {
+    Safari.open( 'https://joiner.i95.me/about.html')
+  }
 }
 
 // @组件代码结束
