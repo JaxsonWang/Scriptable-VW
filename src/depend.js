@@ -4,6 +4,10 @@
 //
 
 class Base {
+  successColor = new Color('#67C23A', 1)
+  warningColor = new Color('#E6A23C', 1)
+  dangerColor = new Color('#F56C6C', 1)
+
   constructor(arg = '') {
     this.arg = arg
     this._actions = {}

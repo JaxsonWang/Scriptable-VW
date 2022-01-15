@@ -26,8 +26,8 @@ class Widget extends Base {
    */
   constructor(arg) {
     super(arg)
-    this.name = 'Template'
-    this.desc = 'Template'
+    this.name = 'Audi 挂件'
+    this.desc = 'Audi 车辆桌面组件展示'
 
     if (config.runsInApp) {
       this.registerAction('账户登录', this.actionAccountLogin)
@@ -46,7 +46,7 @@ class Widget extends Base {
    * @returns {Promise<ListWidget>}
    */
   async render() {
-    const data = await this.getData()
+    const data = this.getData()
     if (data) {
       switch (this.widgetFamily) {
         case 'large':
@@ -87,10 +87,11 @@ class Widget extends Base {
     rowHeader.topAlignContent()
     // 车辆名称
     const nameStack = this.addStackTo(rowHeader, 'vertical')
-    const carText = nameStack.addText('奥迪 A4L')
+    const carText = nameStack.addText(data.seriesName)
     carText.font = new Font('PingFangSC-Medium', 18)
     carText.textColor = this.dynamicTextColor()
-    const powerText = nameStack.addText('2.0 140KW B9 40TFSI S-line')
+    // 2.0 140KW B9 40TFSI S-line
+    const powerText = nameStack.addText(data.carModelName)
     powerText.font = new Font('PingFangSC-Thin', 10)
     powerText.textColor = this.dynamicTextColor()
     rowHeader.addSpacer()
@@ -101,7 +102,7 @@ class Widget extends Base {
     baseInfoStack.centerAlignContent()
     const plateNoStack = this.addStackTo(baseInfoStack, 'vertical')
     plateNoStack.centerAlignContent()
-    const plateNoText = plateNoStack.addText('苏DY38Z8')
+    const plateNoText = plateNoStack.addText(data.carPlateNo)
     plateNoText.font = new Font('PingFangSC-Regular', 12)
     plateNoText.textColor = this.dynamicTextColor()
     baseInfoStack.addSpacer(5)
@@ -115,12 +116,18 @@ class Widget extends Base {
     statusStack.addSpacer()
     const carLockStack = this.addStackTo(statusStack, 'horizontal')
     carLockStack.centerAlignContent()
-    const carDoorImage = carLockStack.addImage(this.getSFSymbolImage('lock.slash.fill'))
-    carDoorImage.imageSize = new Size(18, 18)
-    carDoorImage.tintColor = new Color('#cc0000', 1)
-    const carLockImage = carLockStack.addImage(this.getSFSymbolImage('lock.fill'))
+    // 门窗状态
+    const doorAndWindowNormal = [...data.doorStatus, ...data.windowStatus].length !== 0
+    if (doorAndWindowNormal) {
+      const carDoorImage = carLockStack.addImage(this.getSFSymbolImage('lock.slash.fill'))
+      carDoorImage.imageSize = new Size(18, 18)
+      carDoorImage.tintColor = this.dangerColor
+    }
+    // 锁车状态
+    const carLockIcon = data.isLocked ? 'lock.fill' : 'lock.open.fill'
+    const carLockImage = carLockStack.addImage(this.getSFSymbolImage(carLockIcon))
     carLockImage.imageSize = new Size(18, 18)
-    carLockImage.tintColor = this.dynamicTextColor()
+    carLockImage.tintColor = data.isLocked ? this.dynamicTextColor() : this.dangerColor
     // endregion
     // region mainStack
     const mainStack = this.addStackTo(widget, 'horizontal')
@@ -139,17 +146,21 @@ class Widget extends Base {
     carInfoStack.addSpacer(5)
     const carInfoTextStack = this.addStackTo(carInfoStack, 'horizontal')
     carInfoTextStack.bottomAlignContent()
-    const enduranceText = carInfoTextStack.addText('210km')
+    const enduranceText = carInfoTextStack.addText(data.fuelRange + 'km')
     enduranceText.font = new Font('Futura-CondensedExtraBold', 14)
     enduranceText.textColor = this.dynamicTextColor()
-    carInfoTextStack.addSpacer(3)
-    const fuelText1 = carInfoTextStack.addText('21%')
-    fuelText1.font = new Font('Futura-Medium', 12)
-    fuelText1.textColor = this.dynamicTextColor()
-    carInfoTextStack.addSpacer(1)
-    const fuelText2 = carInfoTextStack.addText('56%')
-    fuelText2.font = new Font('Futura-Medium', 8)
-    fuelText2.textColor = this.dynamicTextColor()
+    if (data.fuelLevel) {
+      carInfoTextStack.addSpacer(3)
+      const fuelText1 = carInfoTextStack.addText(data.fuelLevel + '%')
+      fuelText1.font = new Font('Futura-Medium', 12)
+      fuelText1.textColor = this.dynamicTextColor()
+      carInfoTextStack.addSpacer(1)
+    }
+    if (data.socLevel) {
+      const fuelText2 = carInfoTextStack.addText(data.socLevel + '%')
+      fuelText2.font = new Font('Futura-Medium', 8)
+      fuelText2.textColor = this.dynamicTextColor()
+    }
 
     rowLeftStack.spacing = 1
     // 总里程
@@ -163,7 +174,7 @@ class Widget extends Base {
     mileageStack.addSpacer(5)
     const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
     mileageTextStack.bottomAlignContent()
-    const mileageText = mileageTextStack.addText('22941km')
+    const mileageText = mileageTextStack.addText(data.mileage + 'km')
     mileageText.font = new Font('Futura-Medium', 12)
     mileageText.textColor = this.dynamicTextColor()
 
@@ -179,7 +190,7 @@ class Widget extends Base {
     dateTimeStack.addSpacer(5)
     const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
     dateTimeTextStack.bottomAlignContent()
-    const dateTimeText = dateTimeTextStack.addText('12-01 12:20:12')
+    const dateTimeText = dateTimeTextStack.addText(data.updateTime)
     dateTimeText.font = new Font('Futura-Medium', 12)
     dateTimeText.textColor = this.dynamicTextColor()
     // endregion
@@ -194,7 +205,7 @@ class Widget extends Base {
     const locationStack = this.addStackTo(widget, 'horizontal')
     locationStack.centerAlignContent()
     locationStack.addSpacer()
-    const locationText = locationStack.addText('江苏省苏州市工业园区斜塘街翰林苑小区')
+    const locationText = locationStack.addText(data.completeAddress)
     locationText.font = new Font('PingFangSC-Regular', 10)
     locationText.textColor = this.dynamicTextColor()
     locationText.centerAlignText()
@@ -220,12 +231,12 @@ class Widget extends Base {
     const headerLeftStack = this.addStackTo(rowHeader, 'vertical')
     // 车辆名称
     const nameStack = this.addStackTo(headerLeftStack, 'vertical')
-    const carText = nameStack.addText('奥迪 A4L')
+    const carText = nameStack.addText(data.seriesName)
     carText.font = new Font('PingFangSC-Medium', 22)
     carText.textColor = this.dynamicTextColor()
     // 功率显示
     const powerStack = this.addStackTo(headerLeftStack, 'vertical')
-    const powerText = powerStack.addText('2.0 140KW B9 40TFSI S-line')
+    const powerText = powerStack.addText(data.carModelName)
     powerText.font = new Font('PingFangSC-Thin', 14)
     powerText.textColor = this.dynamicTextColor()
     // 俩侧分割
@@ -240,7 +251,7 @@ class Widget extends Base {
     headerRightStack.addSpacer(5)
     // 车牌信息
     const plateNoStack = this.addStackTo(headerRightStack, 'horizontal')
-    const plateNoText = plateNoStack.addText('苏DY38Z8')
+    const plateNoText = plateNoStack.addText(data.carPlateNo)
     plateNoText.font = new Font('PingFangSC-Regular', 14)
     plateNoText.textColor = this.dynamicTextColor()
     // endregion
@@ -261,7 +272,7 @@ class Widget extends Base {
     enduranceStack.addSpacer(5)
     const enduranceTextStack = this.addStackTo(enduranceStack, 'horizontal')
     enduranceTextStack.bottomAlignContent()
-    const enduranceText = enduranceTextStack.addText('210km')
+    const enduranceText = enduranceTextStack.addText(data.fuelRange + 'km')
     enduranceText.font = new Font('Futura-Medium', 14)
     enduranceText.textColor = this.dynamicTextColor()
     // endregion
@@ -278,16 +289,20 @@ class Widget extends Base {
     // 汽油
     const fuelTextStack1 = this.addStackTo(fuelStack, 'horizontal')
     fuelTextStack1.bottomAlignContent()
-    const fuelText1 = fuelTextStack1.addText('57%')
-    fuelText1.font = new Font('Futura-Medium', 14)
-    fuelText1.textColor = this.dynamicTextColor()
-    fuelStack.addSpacer(5)
+    if (data.fuelLevel) {
+      const fuelText1 = fuelTextStack1.addText(data.fuelLevel + '%')
+      fuelText1.font = new Font('Futura-Medium', 14)
+      fuelText1.textColor = this.dynamicTextColor()
+      fuelStack.addSpacer(5)
+    }
     // 电池
-    const fuelTextStack2 = this.addStackTo(fuelStack, 'horizontal')
-    fuelTextStack2.bottomAlignContent()
-    const fuelText2 = fuelTextStack2.addText('44%')
-    fuelText2.font = new Font('Futura-Medium', 12)
-    fuelText2.textColor = this.dynamicTextColor()
+    if (data.socLevel) {
+      const fuelTextStack2 = this.addStackTo(fuelStack, 'horizontal')
+      fuelTextStack2.bottomAlignContent()
+      const fuelText2 = fuelTextStack2.addText(data.socLevel + '%')
+      fuelText2.font = new Font('Futura-Medium', 12)
+      fuelText2.textColor = this.dynamicTextColor()
+    }
     // endregion
     rowLeftStack.addSpacer(5)
     // region 总里程
@@ -301,27 +316,29 @@ class Widget extends Base {
     mileageStack.addSpacer(5)
     const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
     mileageTextStack.bottomAlignContent()
-    const mileageText = mileageTextStack.addText('22941km')
+    const mileageText = mileageTextStack.addText(data.mileage + 'km')
     mileageText.font = new Font('Futura-Medium', 14)
     mileageText.textColor = this.dynamicTextColor()
     // endregion
     rowLeftStack.addSpacer(5)
     // region 机油数据
-    const oilStack = this.addStackTo(rowLeftStack, 'horizontal')
-    oilStack.bottomAlignContent()
-    const oilImageStack = this.addStackTo(oilStack, 'vertical')
-    oilImageStack.bottomAlignContent()
-    const oilImage = oilImageStack.addImage(this.getSFSymbolImage('drop.circle'))
-    oilImage.imageSize = new Size(20, 20)
-    oilImage.tintColor = this.dynamicTextColor()
-    oilStack.addSpacer(5)
-    const oilTextStack = this.addStackTo(oilStack, 'horizontal')
-    oilTextStack.bottomAlignContent()
-    const oilText = oilTextStack.addText('78.87%')
-    oilText.font = new Font('Futura-Medium', 14)
-    oilText.textColor = this.dynamicTextColor()
+    if (data.oilSupport) {
+      const oilStack = this.addStackTo(rowLeftStack, 'horizontal')
+      oilStack.bottomAlignContent()
+      const oilImageStack = this.addStackTo(oilStack, 'vertical')
+      oilImageStack.bottomAlignContent()
+      const oilImage = oilImageStack.addImage(this.getSFSymbolImage('drop.circle'))
+      oilImage.imageSize = new Size(20, 20)
+      oilImage.tintColor = data.oilMinOK ? this.dynamicTextColor() : this.dangerColor
+      oilStack.addSpacer(5)
+      const oilTextStack = this.addStackTo(oilStack, 'horizontal')
+      oilTextStack.bottomAlignContent()
+      const oilText = oilTextStack.addText(data.oilLevel + '%')
+      oilText.font = new Font('Futura-Medium', 14)
+      oilText.textColor = data.oilMinOK ? this.dynamicTextColor() : this.dangerColor
+      rowLeftStack.addSpacer(5)
+    }
     // endregion
-    rowLeftStack.addSpacer(5)
     // region 锁车状态
     const lockedStack = this.addStackTo(rowLeftStack, 'horizontal')
     lockedStack.bottomAlignContent()
@@ -330,14 +347,13 @@ class Widget extends Base {
     const lockedImage = lockedImageStack.addImage(this.getSFSymbolImage('lock.circle'))
     lockedImage.imageSize = new Size(20, 20)
     lockedImage.tintColor = this.dynamicTextColor()
-    lockedImage.tintColor = new Color('#D53A2F', 1)
+    lockedImage.tintColor = data.isLocked ? this.dynamicTextColor() : this.dangerColor
     lockedStack.addSpacer(5)
     const lockedTextStack = this.addStackTo(lockedStack, 'horizontal')
     lockedTextStack.bottomAlignContent()
-    const lockedText = lockedTextStack.addText('未锁车')
+    const lockedText = lockedTextStack.addText(data.isLocked ? '已锁车' : '未锁车')
     lockedText.font = new Font('Futura-Medium', 14)
-    lockedText.textColor = this.dynamicTextColor()
-    lockedText.textColor = new Color('#EB4F3C', 1)
+    lockedText.textColor = data.isLocked ? this.dynamicTextColor() : this.dangerColor
     // endregion
     rowLeftStack.addSpacer(5)
     // region 更新日期
@@ -351,7 +367,7 @@ class Widget extends Base {
     dateTimeStack.addSpacer(5)
     const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
     dateTimeTextStack.bottomAlignContent()
-    const dateTimeText = dateTimeTextStack.addText('12:20:12')
+    const dateTimeText = dateTimeTextStack.addText(data.updateTime)
     dateTimeText.font = new Font('Futura-Medium', 14)
     dateTimeText.textColor = this.dynamicTextColor()
     // endregion
@@ -369,9 +385,7 @@ class Widget extends Base {
     const statusStack = this.addStackTo(rowRightStack, 'vertical')
     statusStack.setPadding(5, 0, 0, 0)
     statusStack.centerAlignContent()
-    // const carStatus = []
-    const carStatus = ['前左窗', '后左门', '后右门', '天窗']
-    // const carStatus = ['前左窗', '前右窗', '后左窗', '后右窗', '前左门', '前右门', '后左门', '后右门', '天窗', '后备箱', '引擎盖']
+    const carStatus = [...data.doorStatus, ...data.windowStatus]
     if (carStatus.length !== 0) {
       const statusArray = this.format2Array(carStatus, 2)
       statusArray.forEach(arr => {
@@ -384,11 +398,11 @@ class Widget extends Base {
           statusItemStack.centerAlignContent()
           const statusItemImage = statusItemStack.addImage(this.getSFSymbolImage('exclamationmark.shield.fill'))
           statusItemImage.imageSize = new Size(14, 14)
-          statusItemImage.tintColor = new Color('#EB4F3C', 1)
+          statusItemImage.tintColor = this.dangerColor
           statusItemStack.addSpacer(2)
           const statusItemText = statusItemStack.addText(item + '未关闭')
           statusItemText.font = new Font('PingFangSC-Regular', 12)
-          statusItemText.textColor = new Color('#EB4F3C', 1)
+          statusItemText.textColor = this.dangerColor
           statusItemText.centerAlignText()
           statusItemStack.addSpacer()
         })
@@ -400,7 +414,7 @@ class Widget extends Base {
       statusItemStack.centerAlignContent()
       const statusItemImage = statusItemStack.addImage(this.getSFSymbolImage('checkmark.shield.fill'))
       statusItemImage.imageSize = new Size(14, 14)
-      statusItemImage.tintColor = new Color('#65DB79', 1)
+      statusItemImage.tintColor = this.successColor
       statusItemStack.addSpacer(2)
       const statusItemText = statusItemStack.addText('当前车窗已全关闭')
       statusItemText.font = new Font('PingFangSC-Regular', 12)
@@ -411,8 +425,8 @@ class Widget extends Base {
     rowRightStack.addSpacer()
     // endregion
     // 地图/一言展示
-    let leftImage = 'https://restapi.amap.com/v3/staticmap?markers=mid,0xFF0000,0:116.37359,39.92437&size=100*60&scale=2&zoom=15&traffic=1&key=c078fb16379c25bc0aad8633d82cf1dd'
-    let rightText = '江苏省苏州市工业园区斜塘街翰林苑小区'
+    let leftImage = this.getCarAddressImage()
+    let rightText = data.completeAddress
     // leftImage = 'https://i95.me/images/audi_logo_1.png'
     // rightText = '世间美好，与您环环相扣'
     const footerWrapperStack = this.addStackTo(widget, 'horizontal')
@@ -468,16 +482,30 @@ class Widget extends Base {
    * 处理数据业务
    * @returns {{}}
    */
-  bootstrap() {
-    return {}
+  async bootstrap() {
+    // 获取车辆状态信息
+    await this.getVehiclesStatus()
+    // 获取车辆位置信息
+    await this.getVehiclesPosition()
   }
 
   /**
    * 获取数据
-   * @returns {{}}
+   * @returns {Object}
    */
   getData() {
-    return this.bootstrap()
+    this.bootstrap()
+    return {
+      carPlateNo: this.settings['carPlateNo'],
+      seriesName: this.settings['seriesName'],
+      carModelName: this.settings['carModelName'],
+      carVIN: this.settings['carVIN'],
+      longitude: this.settings['longitude'],
+      latitude: this.settings['latitude'],
+      ...this.settings['vehicleData'],
+      simpleAddress: this.settings['simpleAddress'],
+      completeAddress: this.settings['completeAddress']
+    }
   }
 
   /**
@@ -491,51 +519,54 @@ class Widget extends Base {
     let oilLevel = null
     // 有些车辆不一定支持机油显示，需要判断下
     if (oilSupport) {
-      // oil.min.ok '0' = 不正常 '1' = 正常
-      oilMinOK = oilSupport.find(i => i.id === '0x0204040002').value
+      // oil.min.ok '0' = 正常 '1' = 不正常
+      oilMinOK = oilSupport.find(i => i.id === '0x0204040002')?.value === '0'
       // 机油单位百分比
-      oilLevel = oilSupport.find(i => i.id === '0x0204040003').value
+      oilLevel = oilSupport.find(i => i.id === '0x0204040003')?.value
     }
     // endregion
     const statusArr = data.find(i => i.id === '0x0301FFFFFF')?.field
     // region 驻车灯
     // '2' = 已关闭
-    const parkingLights = statusArr.find(i => i.id === '0x0204040003').value
+    const parkingLights = statusArr.find(i => i.id === '0x0301010001')?.value
     // endregion
     // region 室外温度
-    const kelvinTemperature = statusArr.find(i => i.id === '0x0301020001').value
+    const kelvinTemperature = statusArr.find(i => i.id === '0x0301020001')?.value
     // 开尔文单位转换成摄氏度
-    const outdoorTemperature = (parseInt(kelvinTemperature, 10) / 10 + -273.15).toFixed(1)
+    const outdoorTemperature = (parseInt(kelvinTemperature, 10) / 10 + -273.15).toFixed(1) + '摄氏度'
     // endregion
     // region 驻车制动
     // '1' = 已激活 / '0' = 未激活
-    const parkingBrakeActive = data.find(i => i.id === '0x0301030001').value
+    const parkingBrakeActive = statusArr.find(i => i.id === '0x0301030001')?.value
     // endregion
     // region 续航里程
     // 单位 km
-    const fuelRange = data.find(i => i.id === '0x0301030005').value || data.find(i => i.id === '0x0301030006').value
+    const fuelRange = statusArr.find(i => i.id === '0x0301030005')?.value || data.find(i => i.id === '0x0301030006')?.value
     // endregion
     // region 汽油油量
     // 单位 %
-    const fuelLevel = data.find(i => i.id === '0x030103000A').value
+    const fuelLevel = statusArr.find(i => i.id === '0x030103000A')?.value
     // endregion
     // region 电池容量
     // 单位 %
-    const socLevel = data.find(i => i.id === '0x0301030002').value
+    const socLevel = statusArr.find(i => i.id === '0x0301030002')?.value
     // endregion
     // region 总里程和更新时间
     const mileageArr = data.find(i => i.id === '0x0101010002')?.field
-    const mileage = mileageArr.find(i => i.id === '0x0101010002').value
-    const updateTime = mileageArr.find(i => i.id === '0x0101010002').tsCarSentUtc
+    const mileage = mileageArr.find(i => i.id === '0x0101010002')?.value
+    const formatter = new DateFormatter()
+    formatter.dateFormat = 'MM-dd HH:mm'
+    const updateDate = new Date(mileageArr.find(i => i.id === '0x0101010002').tsCarSentUtc)
+    const updateTime = formatter.string(updateDate)
     // endregion
     // region 锁车状态
     const isLocked = this.getVehiclesLocked(statusArr)
     // endregion
     // region 车门状态
-    const doorStatus = this.getVehiclesDoorStatus(statusArr)
+    const doorStatus = this.getVehiclesDoorStatus(statusArr).map(i => i.name)
     // endregion
     // region 车窗状态
-    const windowStatus = this.getVehiclesWindowStatus(statusArr)
+    const windowStatus = this.getVehiclesWindowStatus(statusArr).map(i => i.name)
     // endregion
 
     return {
@@ -658,14 +689,16 @@ class Widget extends Base {
       url: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/register/v1',
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        'User-Agent': 'MyAuDi/3.0.2 CFNetwork/1325.0.1 Darwin/21.1.0'
       },
       body: JSON.stringify({
         appId: 'com.tima.aftermarket',
         client_brand: 'VW',
         appName: 'MyAuDi',
         client_name: 'Maton',
-        appVersion: '1.0',
+        appVersion: '3.0.2',
         platform: 'iOS'
       })
     }
@@ -674,8 +707,8 @@ class Widget extends Base {
       if (response.client_id) {
         this.settings['clientID'] = response.client_id
         await this.saveSettings(false)
-        await this.handleLoginRequest()
         console.log('获取设备编码成功，准备进行账户登录')
+        await this.handleLoginRequest()
       } else {
         console.error('获取设备编码失败，请稍后再重试！')
         await this.notify('系统通知', '获取设备编码失败，请稍后再重试！')
@@ -741,10 +774,15 @@ class Widget extends Base {
         break
     }
 
+    const requestHeader = JSON.parse(JSON.stringify(this.requestHeader()))
+    delete requestHeader.Accept
+    delete requestHeader['Content-Type']
+    requestHeader['X-Client-ID'] = 'de6d8b23-792f-47b8-82f4-e4cc59c2916e'
+
     const options = {
       url: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/oauth2/v1/token',
       method: 'POST',
-      headers: this.requestHeader(),
+      headers: requestHeader,
       body: requestParams
     }
     try {
@@ -754,8 +792,10 @@ class Widget extends Base {
         switch (response.error) {
           case 'invalid_grant':
             console.log('IDToken 数据过期，正在重新获取数据中，请耐心等待...')
-            await this.getTokenRequest('refreshAuthToken')
+            // await this.getTokenRequest('refreshAuthToken')
             break
+          default:
+            console.error('交换 Token 请求失败：' + response.error + ' - ' + response.error_description)
         }
       } else {
         // 获取密钥数据成功，存储数据
@@ -779,9 +819,10 @@ class Widget extends Base {
 
   /**
    * 获取用户信息
+   * @param {boolean} debug 开启日志输出
    * @returns {Promise<void>}
    */
-  async getUserMineRequest() {
+  async getUserMineRequest(debug = false) {
     const options = {
       url: 'https://audi2c.faw-vw.com/capi/v1/user/mine',
       method: 'GET',
@@ -798,13 +839,21 @@ class Widget extends Base {
       const response = await this.http(options)
       // 判断接口状态
       if (response.code === 0) {
-        const { plateNo, seriesName, carModelName, vin } = response.data
+        const { vehicleDto } = response.data
+        const { plateNo, seriesName, carModelName, vin } = vehicleDto
         this.settings['carPlateNo'] = plateNo
         this.settings['seriesName'] = seriesName
         this.settings['carModelName'] = carModelName
         this.settings['carVIN'] = vin
         await this.saveSettings(false)
         console.log('获取用户基本信息成功并将存储本地')
+        if (debug) {
+          console.log('获取个人信息：')
+          console.log('车牌号码：' + plateNo)
+          console.log('车系名称：' + seriesName)
+          console.log('车型名称：' + carModelName)
+          console.log('车架号码：' + vin)
+        }
         // 准备交换验证密钥数据
         await this.getTokenRequest('authAccessToken')
       } else {
@@ -841,7 +890,7 @@ class Widget extends Base {
         await this.saveSettings(false)
         console.log('根据车架号查询基础访问域成功')
         // 获取车辆信息
-        // await this.bootstrap(isDebug)
+        this.bootstrap()
       }
     } catch (error) {
     }
@@ -849,9 +898,10 @@ class Widget extends Base {
 
   /**
    * 获取车辆状态
-   * @returns {Promise<Object>}
+   * @param {boolean} debug 开启日志输出
+   * @returns {Promise<void>}
    */
-  async getVehiclesStatus() {
+  async getVehiclesStatus(debug = false) {
     const options = {
       url: `${this.settings['ApiBaseURI']}/bs/vsr/v1/vehicles/${this.settings['carVIN']}/status`,
       method: 'GET',
@@ -889,24 +939,27 @@ class Widget extends Base {
           default:
             await this.notify('未知错误' + response.error.errorCode, '未知错误:' + response.error.description)
         }
-        return this.settings['vehicleData']
       } else {
         // 接口获取数据成功
         const vehicleData = response.StoredVehicleDataResponse.vehicleData.data
         this.settings['vehicleData'] = this.handleVehiclesData(vehicleData)
         await this.saveSettings(false)
-        return this.handleVehiclesData(vehicleData)
+        console.log('获取车辆状态信息成功')
+        if (debug) {
+          console.log('当前车辆状态信息：')
+          console.log(this.handleVehiclesData(vehicleData))
+        }
       }
     } catch (error) {
-      return this.settings['vehicleData']
     }
   }
 
   /**
    * 获取车辆经纬度
+   * @param {boolean} debug 开启日志输出
    * @returns {Promise<void>}
    */
-  async getVehiclesPosition() {
+  async getVehiclesPosition(debug = false) {
     const options = {
       url: `${this.settings['ApiBaseURI']}/bs/cf/v1/vehicles/${this.settings['carVIN']}/position`,
       method: 'GET',
@@ -925,7 +978,6 @@ class Widget extends Base {
       // 判断接口状态
       if (response.error) {
         // 接口异常
-        console.error('获取车辆经纬度接口异常' + response.error.errorCode + ' - ' + response.error.description)
         switch (response.error.errorCode) {
           case 'gw.error.authentication':
             console.error('获取车辆经纬度失败 error: ' + response.error.errorCode)
@@ -938,6 +990,8 @@ class Widget extends Base {
           case 'mbbc.rolesandrights.servicelocallydisabled':
             console.error('请检查车辆位置是否开启')
             break
+          default:
+            console.error('获取车辆经纬度接口异常' + response.error.errorCode + ' - ' + response.error.description)
         }
       } else {
         // 接口获取数据成功储存接口数据
@@ -947,13 +1001,22 @@ class Widget extends Base {
           longitude = response.storedPositionResponse.position.carCoordinate.longitude
           latitude = response.storedPositionResponse.position.carCoordinate.latitude
         } else if (response.findCarResponse) {
-          longitude = response.findCarResponse.position.carCoordinate.longitude
-          latitude = response.findCarResponse.position.carCoordinate.latitude
+          longitude = response.findCarResponse.Position.carCoordinate.longitude
+          latitude = response.findCarResponse.Position.carCoordinate.latitude
         }
         // 转换正常经纬度信息
-        this.settings['longitude'] = parseInt(longitude, 10) / 1000000
-        this.settings['latitude'] = parseInt(latitude, 10) / 1000000
+        longitude = parseInt(longitude, 10) / 1000000
+        latitude = parseInt(latitude, 10) / 1000000
+        this.settings['longitude'] = longitude
+        this.settings['latitude'] = latitude
         await this.saveSettings(false)
+        console.log('获取车辆经纬度信息')
+        if (debug) {
+          console.log('当前车辆经纬度：')
+          console.log('经度：' + longitude)
+          console.log('纬度：' + latitude)
+        }
+        await this.getCarAddressInfo(debug)
       }
     } catch (error) {
     }
@@ -961,13 +1024,15 @@ class Widget extends Base {
 
   /**
    * 获取车辆地理位置信息
-   * @return {Promise<{simple: string, complete: string}>}
+   * @param {boolean} debug 开启日志输出
+   * @return {Promise<void>}
    */
-  async getCarAddressInfo() {
+  async getCarAddressInfo(debug = false) {
     const longitude = this.settings['longitude']
     const latitude = this.settings['latitude']
 
-    const aMapKey = this.settings['aMapKey']
+    // const aMapKey = this.settings['aMapKey']
+    const aMapKey = 'c078fb16379c25bc0aad8633d82cf1dd'
     const options = {
       url: `https://restapi.amap.com/v3/geocode/regeo?key=${aMapKey}&location=${longitude},${latitude}&radius=1000&extensions=base&batch=false&roadlevel=0`,
       method: 'GET'
@@ -981,8 +1046,15 @@ class Widget extends Base {
         this.settings['simpleAddress'] = simpleAddress
         this.settings['completeAddress'] = completeAddress
         await this.saveSettings(false)
+        console.log('获取车辆地理位置信息成功')
+        if (debug) {
+          console.log('当前车辆地理位置：')
+          console.log('简洁地址：' + simpleAddress)
+          console.log('详细地址：' + completeAddress)
+        }
       } else {
         console.error('获取车辆位置失败，请检查高德地图 key 是否填写正常')
+        await this.notify('逆编码地理位置失败', '请检查高德地图 key 是否填写正常')
       }
     } catch (error) {
     }
@@ -990,16 +1062,15 @@ class Widget extends Base {
 
   /**
    * 获取车辆地址位置静态图片
-   * @return {Promise<Image>}
+   * @return {string}
    */
-  async getCarAddressImage() {
+  getCarAddressImage() {
     const longitude = this.settings['longitude']
     const latitude = this.settings['latitude']
 
-    const aMapKey = this.settings['aMapKey']
-    const image = `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=100*60&scale=2&zoom=15&traffic=1`
-
-    return this.getImageByUrl(image)
+    // const aMapKey = this.settings['aMapKey']
+    const aMapKey = 'c078fb16379c25bc0aad8633d82cf1dd'
+    return `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=100*60&scale=2&zoom=15&traffic=1`
   }
 
   /**
@@ -1041,12 +1112,72 @@ class Widget extends Base {
   /**
    * 刷新数据
    */
-  async actionRefreshData() {}
+  async actionRefreshData() {
+    const alert = new Alert()
+    alert.title = '重载数据'
+    alert.message = '如果发现数据延迟，选择对应函数获取最新数据，同样也是获取日志分享给开发者使用。'
+
+    const menuList = [{
+      name: 'getUserMineRequest',
+      text: '用户信息数据'
+    }, {
+      name: 'getVehiclesStatus',
+      text: '当前车辆状态数据'
+    }, {
+      name: 'getVehiclesPosition',
+      text: '车辆经纬度数据'
+    }]
+
+    menuList.forEach(item => {
+      alert.addAction(item.text)
+    })
+
+    alert.addCancelAction('退出菜单')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    // 执行函数
+    await this[menuList[id].name](true)
+  }
 
   /**
    * 重置登出
    */
-  async actionLogOut() {}
+  async actionLogOut() {
+    const alert = new Alert()
+    alert.title = '退出账号'
+    alert.message = '您所登录的账号包括缓存本地的数据将全部删除，请慎重操作。'
+    alert.addAction('登出')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return
+
+    const keys = [
+      'clientID',
+      'carPlateNo',
+      'seriesName',
+      'carModelName',
+      'carVIN',
+      'longitude',
+      'latitude',
+      'vehicleData',
+      'simpleAddress',
+      'completeAddress',
+      'username',
+      'password',
+      'userAccessToken',
+      'userIDToken',
+      'refreshAuthToken',
+      'authToken',
+      'ApiBaseURI',
+      'aMapKey'
+    ]
+    keys.forEach(key => {
+      this.settings[key] = undefined
+      console.log(key + ' 缓存信息已删除')
+    })
+    await this.notify('登出成功', '敏感信息已全部删除')
+  }
 
   /**
    * 检查更新
