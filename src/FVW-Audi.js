@@ -14,12 +14,18 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.0.0_Beta1'
+const SCRIPT_VERSION = '2.0.0_beta3'
 
-const DEFAULT_MY_CAR_PHOTO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png'
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
 class Widget extends Base {
+  successColor = new Color('#67C23A', 1)
+  warningColor = new Color('#E6A23C', 1)
+  dangerColor = new Color('#F56C6C', 1)
+
+  lightDefaultBackgroundColorGradient = ['#ffffff', '#dbefff']
+  darkDefaultBackgroundColorGradient = ['#414345', '#232526']
+
   /**
    * 传递给组件的参数，可以是桌面 Parameter 数据，也可以是外部如 URLScheme 等传递的数据
    * @param {string} arg 自定义参数
@@ -31,7 +37,7 @@ class Widget extends Base {
 
     if (config.runsInApp) {
       this.registerAction('账户登录', this.actionAccountLogin)
-      this.registerAction('偏好配置', this.actionPreferences)
+      this.registerAction('偏好配置', this.actionPreferenceSettings)
       this.registerAction('刷新数据', this.actionRefreshData)
       this.registerAction('登出重置', this.actionLogOut)
       this.registerAction('检查更新', this.actionCheckUpdate)
@@ -47,7 +53,7 @@ class Widget extends Base {
    */
   async render() {
     const data = this.getData()
-    if (data) {
+    if (this.settings['authToken'] && this.settings['vehicleData']) {
       switch (this.widgetFamily) {
         case 'large':
           return await this.renderLarge(data)
@@ -79,7 +85,7 @@ class Widget extends Base {
    */
   async renderMedium(data) {
     const widget = new ListWidget()
-    widget.backgroundGradient = this.dynamicBackgroundColor()
+    await this.setWidgetDynamicBackground(widget, 'Medium')
     widget.setPadding(10, 10, 10, 10)
     // region logoStack
     const rowHeader = this.addStackTo(widget, 'horizontal')
@@ -89,28 +95,31 @@ class Widget extends Base {
     const nameStack = this.addStackTo(rowHeader, 'vertical')
     const carText = nameStack.addText(data.seriesName)
     carText.font = new Font('PingFangSC-Medium', 18)
-    carText.textColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(carText, 'textColor')
     // 2.0 140KW B9 40TFSI S-line
     const powerText = nameStack.addText(data.carModelName)
     powerText.font = new Font('PingFangSC-Thin', 10)
-    powerText.textColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(powerText, 'textColor')
     rowHeader.addSpacer()
     const headerRightStack = this.addStackTo(rowHeader, 'vertical')
     headerRightStack.centerAlignContent()
     const baseInfoStack = this.addStackTo(headerRightStack, 'horizontal')
     baseInfoStack.addSpacer()
     baseInfoStack.centerAlignContent()
-    const plateNoStack = this.addStackTo(baseInfoStack, 'vertical')
-    plateNoStack.centerAlignContent()
-    const plateNoText = plateNoStack.addText(data.carPlateNo)
-    plateNoText.font = new Font('PingFangSC-Regular', 12)
-    plateNoText.textColor = this.dynamicTextColor()
-    baseInfoStack.addSpacer(5)
+    // 车牌显示
+    if (this.settings['showPlate']) {
+      const plateNoStack = this.addStackTo(baseInfoStack, 'vertical')
+      plateNoStack.centerAlignContent()
+      const plateNoText = plateNoStack.addText(data.carPlateNo)
+      plateNoText.font = new Font('PingFangSC-Regular', 12)
+      this.setWidgetNodeColor(plateNoText, 'textColor')
+      baseInfoStack.addSpacer(5)
+    }
     const logoStack = this.addStackTo(baseInfoStack, 'vertical')
     logoStack.centerAlignContent()
     const carLogoImage = logoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
     carLogoImage.imageSize = new Size(40, 16)
-    carLogoImage.tintColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(carLogoImage, 'tintColor')
     const statusStack = this.addStackTo(headerRightStack, 'horizontal')
     statusStack.centerAlignContent()
     statusStack.addSpacer()
@@ -127,7 +136,11 @@ class Widget extends Base {
     const carLockIcon = data.isLocked ? 'lock.fill' : 'lock.open.fill'
     const carLockImage = carLockStack.addImage(this.getSFSymbolImage(carLockIcon))
     carLockImage.imageSize = new Size(18, 18)
-    carLockImage.tintColor = data.isLocked ? this.dynamicTextColor() : this.dangerColor
+    if (data.isLocked) {
+      this.setWidgetNodeColor(carLockImage, 'tintColor')
+    } else {
+      carLockImage.tintColor = this.dangerColor
+    }
     // endregion
     // region mainStack
     const mainStack = this.addStackTo(widget, 'horizontal')
@@ -142,24 +155,24 @@ class Widget extends Base {
     carInfoImageStack.bottomAlignContent()
     const carInfoImage = carInfoImageStack.addImage(this.getSFSymbolImage('timer'))
     carInfoImage.imageSize = new Size(18, 18)
-    carInfoImage.tintColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(carInfoImage, 'tintColor')
     carInfoStack.addSpacer(5)
     const carInfoTextStack = this.addStackTo(carInfoStack, 'horizontal')
     carInfoTextStack.bottomAlignContent()
     const enduranceText = carInfoTextStack.addText(data.fuelRange + 'km')
     enduranceText.font = new Font('Futura-CondensedExtraBold', 14)
-    enduranceText.textColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(enduranceText, 'textColor')
     if (data.fuelLevel) {
       carInfoTextStack.addSpacer(3)
       const fuelText1 = carInfoTextStack.addText(data.fuelLevel + '%')
       fuelText1.font = new Font('Futura-Medium', 12)
-      fuelText1.textColor = this.dynamicTextColor()
+      this.setWidgetNodeColor(fuelText1, 'textColor')
       carInfoTextStack.addSpacer(1)
     }
     if (data.socLevel) {
       const fuelText2 = carInfoTextStack.addText(data.socLevel + '%')
       fuelText2.font = new Font('Futura-Medium', 8)
-      fuelText2.textColor = this.dynamicTextColor()
+      this.setWidgetNodeColor(fuelText2, 'textColor')
     }
 
     rowLeftStack.spacing = 1
@@ -170,13 +183,13 @@ class Widget extends Base {
     mileageImageStack.bottomAlignContent()
     const mileageImage = mileageImageStack.addImage(this.getSFSymbolImage('car'))
     mileageImage.imageSize = new Size(18, 18)
-    mileageImage.tintColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(mileageImage, 'tintColor')
     mileageStack.addSpacer(5)
     const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
     mileageTextStack.bottomAlignContent()
     const mileageText = mileageTextStack.addText(data.mileage + 'km')
     mileageText.font = new Font('Futura-Medium', 12)
-    mileageText.textColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(mileageText, 'textColor')
 
     rowLeftStack.spacing = 1
     // 更新日期
@@ -186,30 +199,31 @@ class Widget extends Base {
     dateTimeImageStack.bottomAlignContent()
     const dateTimeImage = dateTimeImageStack.addImage(this.getSFSymbolImage('goforward'))
     dateTimeImage.imageSize = new Size(18, 18)
-    dateTimeImage.tintColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(dateTimeImage, 'tintColor')
     dateTimeStack.addSpacer(5)
     const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
     dateTimeTextStack.bottomAlignContent()
     const dateTimeText = dateTimeTextStack.addText(data.updateTime)
     dateTimeText.font = new Font('Futura-Medium', 12)
-    dateTimeText.textColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(dateTimeText, 'textColor')
     // endregion
     mainStack.addSpacer()
     // region 右侧车辆图片
     const rowRightStack = this.addStackTo(mainStack, 'vertical')
-    const carPhoto = await this.getImageByUrl(DEFAULT_MY_CAR_PHOTO)
+    const carPhoto = await this.getMyCarPhoto()
     const carPhotoStack = rowRightStack.addImage(carPhoto)
     carPhotoStack.centerAlignImage()
     // endregion
     // endregion
-    const locationStack = this.addStackTo(widget, 'horizontal')
-    locationStack.centerAlignContent()
-    locationStack.addSpacer()
-    const locationText = locationStack.addText(data.completeAddress)
-    locationText.font = new Font('PingFangSC-Regular', 10)
-    locationText.textColor = this.dynamicTextColor()
-    locationText.centerAlignText()
-    locationStack.addSpacer()
+    const footTextData = this.settings['showLocation'] ? data.completeAddress : (this.settings['myOne'] || '世间美好，与您环环相扣')
+    const footerStack = this.addStackTo(widget, 'horizontal')
+    footerStack.centerAlignContent()
+    footerStack.addSpacer()
+    const footerText = footerStack.addText(footTextData)
+    footerText.font = new Font('PingFangSC-Regular', 10)
+    this.setWidgetNodeColor(footerText, 'textColor')
+    footerText.centerAlignText()
+    footerStack.addSpacer()
 
     return widget
   }
@@ -221,7 +235,8 @@ class Widget extends Base {
    */
   async renderLarge(data) {
     const widget = new ListWidget()
-    widget.backgroundGradient = this.dynamicBackgroundColor()
+    await this.setWidgetDynamicBackground(widget, 'Large')
+
     widget.setPadding(10, 10, 10, 10)
     // region headerStack
     const rowHeader = this.addStackTo(widget, 'horizontal')
@@ -233,12 +248,12 @@ class Widget extends Base {
     const nameStack = this.addStackTo(headerLeftStack, 'vertical')
     const carText = nameStack.addText(data.seriesName)
     carText.font = new Font('PingFangSC-Medium', 22)
-    carText.textColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(carText, 'textColor')
     // 功率显示
     const powerStack = this.addStackTo(headerLeftStack, 'vertical')
     const powerText = powerStack.addText(data.carModelName)
     powerText.font = new Font('PingFangSC-Thin', 14)
-    powerText.textColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(powerText, 'textColor')
     // 俩侧分割
     rowHeader.addSpacer()
     // 顶部右侧
@@ -247,13 +262,15 @@ class Widget extends Base {
     const carLogoStack = this.addStackTo(headerRightStack, 'vertical')
     const carLogoImage = carLogoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
     carLogoImage.imageSize = new Size(70, 20)
-    carLogoImage.tintColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(carLogoImage, 'tintColor')
     headerRightStack.addSpacer(5)
     // 车牌信息
-    const plateNoStack = this.addStackTo(headerRightStack, 'horizontal')
-    const plateNoText = plateNoStack.addText(data.carPlateNo)
-    plateNoText.font = new Font('PingFangSC-Regular', 14)
-    plateNoText.textColor = this.dynamicTextColor()
+    if (this.settings['showPlate']) {
+      const plateNoStack = this.addStackTo(headerRightStack, 'horizontal')
+      const plateNoText = plateNoStack.addText(data.carPlateNo)
+      plateNoText.font = new Font('PingFangSC-Regular', 14)
+      this.setWidgetNodeColor(plateNoText, 'textColor')
+    }
     // endregion
     // region mainStack
     const mainStack = this.addStackTo(widget, 'horizontal')
@@ -268,13 +285,13 @@ class Widget extends Base {
     enduranceImageStack.bottomAlignContent()
     const enduranceImage = enduranceImageStack.addImage(this.getSFSymbolImage('flag.circle'))
     enduranceImage.imageSize = new Size(20, 20)
-    enduranceImage.tintColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(enduranceImage, 'tintColor')
     enduranceStack.addSpacer(5)
     const enduranceTextStack = this.addStackTo(enduranceStack, 'horizontal')
     enduranceTextStack.bottomAlignContent()
     const enduranceText = enduranceTextStack.addText(data.fuelRange + 'km')
     enduranceText.font = new Font('Futura-Medium', 14)
-    enduranceText.textColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(enduranceText, 'textColor')
     // endregion
     rowLeftStack.addSpacer(5)
     // region 燃料信息
@@ -282,9 +299,11 @@ class Widget extends Base {
     fuelStack.bottomAlignContent()
     const fuelImageStack = this.addStackTo(fuelStack, 'vertical')
     fuelImageStack.bottomAlignContent()
-    const fuelImage = fuelImageStack.addImage(this.getSFSymbolImage('bolt.circle'))
+    let fuelIcon = 'fuelpump.circle'
+    if (data.socLevel) fuelIcon = 'bolt.circle'
+    const fuelImage = fuelImageStack.addImage(this.getSFSymbolImage(fuelIcon))
     fuelImage.imageSize = new Size(20, 20)
-    fuelImage.tintColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(fuelImage, 'tintColor')
     fuelStack.addSpacer(5)
     // 汽油
     const fuelTextStack1 = this.addStackTo(fuelStack, 'horizontal')
@@ -292,7 +311,7 @@ class Widget extends Base {
     if (data.fuelLevel) {
       const fuelText1 = fuelTextStack1.addText(data.fuelLevel + '%')
       fuelText1.font = new Font('Futura-Medium', 14)
-      fuelText1.textColor = this.dynamicTextColor()
+      this.setWidgetNodeColor(fuelText1, 'textColor')
       fuelStack.addSpacer(5)
     }
     // 电池
@@ -301,7 +320,7 @@ class Widget extends Base {
       fuelTextStack2.bottomAlignContent()
       const fuelText2 = fuelTextStack2.addText(data.socLevel + '%')
       fuelText2.font = new Font('Futura-Medium', 12)
-      fuelText2.textColor = this.dynamicTextColor()
+      this.setWidgetNodeColor(fuelText2, 'textColor')
     }
     // endregion
     rowLeftStack.addSpacer(5)
@@ -312,30 +331,38 @@ class Widget extends Base {
     mileageImageStack.bottomAlignContent()
     const mileageImage = mileageImageStack.addImage(this.getSFSymbolImage('car.circle'))
     mileageImage.imageSize = new Size(20, 20)
-    mileageImage.tintColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(mileageImage, 'tintColor')
     mileageStack.addSpacer(5)
     const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
     mileageTextStack.bottomAlignContent()
     const mileageText = mileageTextStack.addText(data.mileage + 'km')
     mileageText.font = new Font('Futura-Medium', 14)
-    mileageText.textColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(mileageText, 'textColor')
     // endregion
     rowLeftStack.addSpacer(5)
     // region 机油数据
-    if (data.oilSupport) {
+    if (data.oilSupport && data.oilLevel !== '0.0') {
       const oilStack = this.addStackTo(rowLeftStack, 'horizontal')
       oilStack.bottomAlignContent()
       const oilImageStack = this.addStackTo(oilStack, 'vertical')
       oilImageStack.bottomAlignContent()
       const oilImage = oilImageStack.addImage(this.getSFSymbolImage('drop.circle'))
       oilImage.imageSize = new Size(20, 20)
-      oilImage.tintColor = data.oilMinOK ? this.dynamicTextColor() : this.dangerColor
+      if (Number(data.oilLevel) <= 12.5) {
+        this.setWidgetNodeColor(oilImage, 'tintColor')
+      } else {
+        oilImage.tintColor = this.dangerColor
+      }
       oilStack.addSpacer(5)
       const oilTextStack = this.addStackTo(oilStack, 'horizontal')
       oilTextStack.bottomAlignContent()
       const oilText = oilTextStack.addText(data.oilLevel + '%')
       oilText.font = new Font('Futura-Medium', 14)
-      oilText.textColor = data.oilMinOK ? this.dynamicTextColor() : this.dangerColor
+      if (Number(data.oilLevel) <= 12.5) {
+        this.setWidgetNodeColor(oilText, 'textColor')
+      } else {
+        oilText.textColor = this.dangerColor
+      }
       rowLeftStack.addSpacer(5)
     }
     // endregion
@@ -346,14 +373,21 @@ class Widget extends Base {
     lockedImageStack.bottomAlignContent()
     const lockedImage = lockedImageStack.addImage(this.getSFSymbolImage('lock.circle'))
     lockedImage.imageSize = new Size(20, 20)
-    lockedImage.tintColor = this.dynamicTextColor()
-    lockedImage.tintColor = data.isLocked ? this.dynamicTextColor() : this.dangerColor
+    if (data.isLocked) {
+      this.setWidgetNodeColor(lockedImage, 'tintColor')
+    } else {
+      lockedImage.tintColor = this.dangerColor
+    }
     lockedStack.addSpacer(5)
     const lockedTextStack = this.addStackTo(lockedStack, 'horizontal')
     lockedTextStack.bottomAlignContent()
     const lockedText = lockedTextStack.addText(data.isLocked ? '已锁车' : '未锁车')
     lockedText.font = new Font('Futura-Medium', 14)
-    lockedText.textColor = data.isLocked ? this.dynamicTextColor() : this.dangerColor
+    if (data.isLocked) {
+      this.setWidgetNodeColor(lockedText, 'textColor')
+    } else {
+      lockedText.textColor = this.dangerColor
+    }
     // endregion
     rowLeftStack.addSpacer(5)
     // region 更新日期
@@ -361,15 +395,15 @@ class Widget extends Base {
     dateTimeStack.bottomAlignContent()
     const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical')
     dateTimeImageStack.bottomAlignContent()
-    const dateTimeImage = dateTimeImageStack.addImage(this.getSFSymbolImage('repeat.circle'))
+    const dateTimeImage = dateTimeImageStack.addImage(this.getSFSymbolImage('clock.arrow.2.circlepath'))
     dateTimeImage.imageSize = new Size(20, 20)
-    dateTimeImage.tintColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(dateTimeImage, 'tintColor')
     dateTimeStack.addSpacer(5)
     const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
     dateTimeTextStack.bottomAlignContent()
     const dateTimeText = dateTimeTextStack.addText(data.updateTime)
     dateTimeText.font = new Font('Futura-Medium', 14)
-    dateTimeText.textColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(dateTimeText, 'textColor')
     // endregion
     // endregion
     mainStack.addSpacer()
@@ -379,7 +413,7 @@ class Widget extends Base {
     const carPhotoStack = this.addStackTo(rowRightStack, 'horizontal')
     carPhotoStack.addSpacer()
     carPhotoStack.centerAlignContent()
-    const carPhoto = await this.getImageByUrl(DEFAULT_MY_CAR_PHOTO)
+    const carPhoto = await this.getMyCarPhoto()
     const carPhotoImage = carPhotoStack.addImage(carPhoto)
     carPhotoImage.centerAlignImage()
     const statusStack = this.addStackTo(rowRightStack, 'vertical')
@@ -413,22 +447,21 @@ class Widget extends Base {
       statusItemStack.addSpacer()
       statusItemStack.centerAlignContent()
       const statusItemImage = statusItemStack.addImage(this.getSFSymbolImage('checkmark.shield.fill'))
-      statusItemImage.imageSize = new Size(14, 14)
+      statusItemImage.imageSize = new Size(18, 18)
       statusItemImage.tintColor = this.successColor
       statusItemStack.addSpacer(2)
       const statusItemText = statusItemStack.addText('当前车窗已全关闭')
       statusItemText.font = new Font('PingFangSC-Regular', 12)
-      statusItemText.textColor = this.dynamicTextColor()
+      this.setWidgetNodeColor(statusItemText, 'textColor')
       statusItemText.centerAlignText()
       statusItemStack.addSpacer()
     }
     rowRightStack.addSpacer()
     // endregion
     // 地图/一言展示
-    let leftImage = this.getCarAddressImage()
-    let rightText = data.completeAddress
-    // leftImage = 'https://i95.me/images/audi_logo_1.png'
-    // rightText = '世间美好，与您环环相扣'
+    const myOneImage = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/fvw_audi_joiner/audi_logo.png'
+    const leftImage = this.settings['showLocation'] ? this.getCarAddressImage() : myOneImage
+    const rightText = this.settings['showLocation'] ? data.completeAddress : (this.settings['myOne'] || '世间美好，与您环环相扣')
     const footerWrapperStack = this.addStackTo(widget, 'horizontal')
     footerWrapperStack.setPadding(0, 0, 0, 0)
     const footerStack = this.addStackTo(footerWrapperStack, 'horizontal')
@@ -445,6 +478,7 @@ class Widget extends Base {
     const locationImage = await this.getImageByUrl(leftImage)
     const locationImageStack = footerLeftStack.addImage(locationImage)
     locationImageStack.imageSize = new Size(100, 60)
+    if (!this.settings['showLocation']) this.setWidgetNodeColor(locationImageStack, 'tintColor')
     locationImageStack.centerAlignImage()
     footerStack.addSpacer()
     // 地理位置
@@ -452,18 +486,20 @@ class Widget extends Base {
     const locationText = footerRightStack.addText(rightText)
     locationText.font = new Font('PingFangSC-Regular', 12)
     locationText.centerAlignText()
-    locationText.textColor = this.dynamicTextColor()
+    this.setWidgetNodeColor(locationText, 'textColor')
     footerStack.addSpacer()
     // 有地理数据时候展示一言
-    const oneStack = this.addStackTo(widget, 'horizontal')
-    oneStack.setPadding(10, 0, 0, 0)
-    oneStack.addSpacer()
-    oneStack.centerAlignContent()
-    const oneText = oneStack.addText('世间美好，与您环环相扣')
-    oneText.font = new Font('PingFangSC-Regular', 12)
-    oneText.textColor = this.dynamicTextColor()
-    oneText.centerAlignText()
-    oneStack.addSpacer()
+    if (this.settings['showLocation']) {
+      const oneStack = this.addStackTo(widget, 'horizontal')
+      oneStack.setPadding(10, 0, 0, 0)
+      oneStack.addSpacer()
+      oneStack.centerAlignContent()
+      const oneText = oneStack.addText(this.settings['myOne'] || '世间美好，与您环环相扣')
+      oneText.font = new Font('PingFangSC-Regular', 12)
+      this.setWidgetNodeColor(oneText, 'textColor')
+      oneText.centerAlignText()
+      oneStack.addSpacer()
+    }
 
     return widget
   }
@@ -474,7 +510,24 @@ class Widget extends Base {
    */
   async renderEmpty() {
     const widget = new ListWidget()
-    widget.addText('Hello World').centerAlignText()
+
+    widget.backgroundImage = await this.shadowImage(await this.getImageByUrl('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png'))
+
+    const text = widget.addText('欢迎使用 Audi-Joiner iOS 桌面组件')
+    switch (this.widgetFamily) {
+      case 'large':
+        text.font = Font.blackSystemFont(18)
+        break
+      case 'medium':
+        text.font = Font.blackSystemFont(18)
+        break
+      case 'small':
+        text.font = Font.blackSystemFont(12)
+        break
+    }
+    text.centerAlignText()
+    text.textColor = Color.white()
+
     return widget
   }
 
@@ -497,14 +550,15 @@ class Widget extends Base {
     this.bootstrap()
     return {
       carPlateNo: this.settings['carPlateNo'],
-      seriesName: this.settings['seriesName'],
-      carModelName: this.settings['carModelName'],
+      seriesName: this.settings['myCarName'] || this.settings['seriesName'],
+      carModelName: this.settings['myCarModelName'] || this.settings['carModelName'],
       carVIN: this.settings['carVIN'],
       longitude: this.settings['longitude'],
       latitude: this.settings['latitude'],
       ...this.settings['vehicleData'],
       simpleAddress: this.settings['simpleAddress'],
-      completeAddress: this.settings['completeAddress']
+      completeAddress: this.settings['completeAddress'],
+      myOne: this.settings['myOne']
     }
   }
 
@@ -515,15 +569,9 @@ class Widget extends Base {
   handleVehiclesData(data) {
     // region 机油信息
     const oilSupport = data.find(i => i.id === '0x0204FFFFFF')?.field
-    let oilMinOK = null
     let oilLevel = null
-    // 有些车辆不一定支持机油显示，需要判断下
-    if (oilSupport) {
-      // oil.min.ok '0' = 正常 '1' = 不正常
-      oilMinOK = oilSupport.find(i => i.id === '0x0204040002')?.value === '0'
-      // 机油单位百分比
-      oilLevel = oilSupport.find(i => i.id === '0x0204040003')?.value
-    }
+    // 有些车辆不一定支持机油显示，需要判断下 机油单位百分比
+    if (oilSupport) oilLevel = oilSupport.find(i => i.id === '0x0204040003')?.value
     // endregion
     const statusArr = data.find(i => i.id === '0x0301FFFFFF')?.field
     // region 驻车灯
@@ -571,7 +619,6 @@ class Widget extends Base {
 
     return {
       oilSupport: oilSupport !== undefined,
-      oilMinOK,
       oilLevel,
       parkingLights,
       outdoorTemperature,
@@ -791,8 +838,13 @@ class Widget extends Base {
       if (response.error) {
         switch (response.error) {
           case 'invalid_grant':
-            console.log('IDToken 数据过期，正在重新获取数据中，请耐心等待...')
-            // await this.getTokenRequest('refreshAuthToken')
+            if (/expired/g.test(response.error_description)) {
+              console.warn('IDToken 数据过期，正在重新获取数据中，请耐心等待...')
+              await this.getTokenRequest('refreshAuthToken')
+            } else {
+              console.error('Token 授权无效，请联系开发者：')
+              console.error(`${response.error_description} - ${response.error_description}`)
+            }
             break
           default:
             console.error('交换 Token 请求失败：' + response.error + ' - ' + response.error_description)
@@ -853,6 +905,8 @@ class Widget extends Base {
           console.log('车系名称：' + seriesName)
           console.log('车型名称：' + carModelName)
           console.log('车架号码：' + vin)
+          console.log('个人中心接口数据：')
+          console.log(response)
         }
         // 准备交换验证密钥数据
         await this.getTokenRequest('authAccessToken')
@@ -920,10 +974,9 @@ class Widget extends Base {
       // 判断接口状态
       if (response.error) {
         // 接口异常
-        console.error('获取车辆状态接口异常' + response.error.errorCode + ' - ' + response.error.description)
         switch (response.error.errorCode) {
           case 'gw.error.authentication':
-            console.error('获取车辆状态失败 error: ' + response.error.errorCode)
+            console.error(`获取车辆状态失败：${response.error.errorCode} - ${response.error.description}`)
             await this.getTokenRequest('authAccessToken')
             await this.getVehiclesStatus()
             break
@@ -948,6 +1001,8 @@ class Widget extends Base {
         if (debug) {
           console.log('当前车辆状态信息：')
           console.log(this.handleVehiclesData(vehicleData))
+          console.log('车辆状态接口数据：')
+          console.log(response)
         }
       }
     } catch (error) {
@@ -980,9 +1035,9 @@ class Widget extends Base {
         // 接口异常
         switch (response.error.errorCode) {
           case 'gw.error.authentication':
-            console.error('获取车辆经纬度失败 error: ' + response.error.errorCode)
+            console.error(`获取车辆经纬度失败：${response.error.errorCode} - ${response.error.description}`)
             await this.getTokenRequest('authAccessToken')
-            await this.getVehiclesPosition()
+            await this.getVehiclesPosition(debug)
             break
           case 'CF.technical.9031':
             console.error('获取数据超时，稍后再重试')
@@ -1015,6 +1070,8 @@ class Widget extends Base {
           console.log('当前车辆经纬度：')
           console.log('经度：' + longitude)
           console.log('纬度：' + latitude)
+          console.log('车辆经纬度接口数据：')
+          console.log(response)
         }
         await this.getCarAddressInfo(debug)
       }
@@ -1031,8 +1088,7 @@ class Widget extends Base {
     const longitude = this.settings['longitude']
     const latitude = this.settings['latitude']
 
-    // const aMapKey = this.settings['aMapKey']
-    const aMapKey = 'c078fb16379c25bc0aad8633d82cf1dd'
+    const aMapKey = this.settings['aMapKey']
     const options = {
       url: `https://restapi.amap.com/v3/geocode/regeo?key=${aMapKey}&location=${longitude},${latitude}&radius=1000&extensions=base&batch=false&roadlevel=0`,
       method: 'GET'
@@ -1051,6 +1107,8 @@ class Widget extends Base {
           console.log('当前车辆地理位置：')
           console.log('简洁地址：' + simpleAddress)
           console.log('详细地址：' + completeAddress)
+          console.log('车辆地理位置接口数据：')
+          console.log(response)
         }
       } else {
         console.error('获取车辆位置失败，请检查高德地图 key 是否填写正常')
@@ -1068,9 +1126,8 @@ class Widget extends Base {
     const longitude = this.settings['longitude']
     const latitude = this.settings['latitude']
 
-    // const aMapKey = this.settings['aMapKey']
-    const aMapKey = 'c078fb16379c25bc0aad8633d82cf1dd'
-    return `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=100*60&scale=2&zoom=15&traffic=1`
+    const aMapKey = this.settings['aMapKey']
+    return `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=100*60&scale=2&zoom=12&traffic=1`
   }
 
   /**
@@ -1106,8 +1163,543 @@ class Widget extends Base {
 
   /**
    * 偏好设置
+   * @returns {Promise<void>}
    */
-  async actionPreferences() {}
+  async actionPreferenceSettings() {
+    const alert = new Alert()
+    alert.title = '组件个性化配置'
+    alert.message = '根据您的喜好设置，更好展示组件数据'
+
+    const menuList = [
+      {
+        name: 'setMyCarName',
+        text: '自定义车辆名称',
+        icon: '💡'
+      }, {
+        name: 'setMyCarModelName',
+        text: '自定义车辆功率',
+        icon: '🛻'
+      }, {
+        name: 'setMyCarPhoto',
+        text: '自定义车辆照片',
+        icon: '🚙'
+      }, {
+        name: 'setBackgroundConfig',
+        text: '自定义组件背景',
+        icon: '🎨'
+      }, {
+        name: 'setMyOne',
+        text: '自定义一言一句',
+        icon: '📝'
+      }, {
+        name: 'setAMapKey',
+        text: '高德地图密钥',
+        icon: '🎯'
+      }, {
+        name: 'showLocation',
+        text: '设置车辆位置',
+        icon: '✈️'
+      }, {
+        name: 'showPlate',
+        text: '设置车牌显示',
+        icon: '🚘'
+      }
+    ]
+
+    menuList.forEach(item => {
+      alert.addAction(item.icon + ' ' +item.text)
+    })
+
+    alert.addCancelAction('取消设置')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    await this[menuList[id].name]()
+  }
+
+  /**
+   * 自定义车辆名称
+   * @returns {Promise<void>}
+   */
+  async setMyCarName() {
+    const alert = new Alert()
+    alert.title = '车辆名称'
+    alert.message = '如果您不喜欢系统返回的名称可以自己定义名称'
+    alert.addTextField('请输入自定义名称', this.settings['myCarName'] || this.settings['seriesName'])
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.actionPreferenceSettings()
+    this.settings['myCarName'] = alert.textFieldValue(0) || this.settings['seriesName']
+    await this.saveSettings()
+
+    return await this.actionPreferenceSettings()
+  }
+
+  /**
+   * 自定义车辆功率
+   * @returns {Promise<void>}
+   */
+  async setMyCarModelName() {
+    const alert = new Alert()
+    alert.title = '车辆功率'
+    alert.message = '根据车辆实际情况可自定义功率类型，不填为系统默认'
+    alert.addTextField('请输入自定义功率', this.settings['myCarModelName'] || this.settings['carModelName'])
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.actionPreferenceSettings()
+    this.settings['myCarModelName'] = alert.textFieldValue(0) || this.settings['carModelName']
+    await this.saveSettings()
+
+    return await this.actionPreferenceSettings()
+  }
+
+  /**
+   * 自定义车辆图片
+   * @returns {Promise<void>}
+   */
+  async setMyCarPhoto() {
+    const alert = new Alert()
+    alert.title = '车辆图片'
+    alert.message = '请在相册选择您最喜欢的车辆图片以便展示到小组件上，最好是全透明背景PNG图。'
+    alert.addAction('选择照片')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.actionPreferenceSettings()
+    try {
+      const image = await Photos.fromLibrary()
+      const imagePath = this.localFile.joinPath(this.localFile.documentsDirectory(), `myCarPhoto_${this.SETTING_KEY}`)
+      await this.localFile.writeImage(imagePath, image)
+      this.settings['myCarPhoto'] = imagePath
+      await this.saveSettings()
+    } catch (error) {
+      // 取消图片会异常 暂时不用管
+    }
+  }
+
+  /**
+   * 自定义组件背景
+   * @returns {Promise<void>}
+   */
+  async setBackgroundConfig() {
+    const alert = new Alert()
+    alert.title = '自定义组件背景'
+    alert.message = '颜色背景和图片背景共同存存在时，图片背景设置优先级更高，将会加载图片背景\n' +
+      '只有清除组件背景图片时候颜色背景才能生效！'
+
+    const menuList = [{
+      name: 'setColorBackground',
+      text: '设置颜色背景',
+      icon: '🖍'
+    }, {
+      name: 'setImageBackground',
+      text: '设置图片背景',
+      icon: '🏞'
+    }, {
+      name: 'actionPreferenceSettings',
+      text: '返回上一级',
+      icon: '👈'
+    }]
+
+    menuList.forEach(item => {
+      alert.addAction(item.icon + ' ' +item.text)
+    })
+
+    alert.addCancelAction('取消设置')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    await this[menuList[id].name]()
+  }
+
+  /**
+   * 设置组件颜色背景
+   * @returns {Promise<void>}
+   */
+  async setColorBackground() {
+    const alert = new Alert()
+    alert.title = '自定义颜色背景'
+    alert.message = '系统浅色模式适用于白天情景\n' +
+      '系统深色模式适用于晚上情景\n' +
+      '请根据自己的偏好进行设置，请确保您的手机「设置 - 显示与亮度」外观「自动」选项已打开'
+
+    const menuList = [{
+      name: 'setColorBackgroundLightMode',
+      text: '系统浅色模式',
+      icon: '🌕'
+    }, {
+      name: 'setColorBackgroundDarkMode',
+      text: '系统深色模式',
+      icon: '🌑'
+    }, {
+      name: 'setBackgroundConfig',
+      text: '返回上一级',
+      icon: '👈'
+    }]
+
+    menuList.forEach(item => {
+      alert.addAction(item.icon + ' ' +item.text)
+    })
+
+    alert.addCancelAction('取消设置')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    await this[menuList[id].name]()
+  }
+
+  /**
+   * 设置组件图片背景
+   * @returns {Promise<void>}
+   */
+  async setImageBackground() {
+    const alert = new Alert()
+    alert.title = '自定义图片背景'
+    alert.message = '目前自定义图片背景可以设置下列俩种场景\n' +
+      '透明背景：因为组件限制无法实现，目前使用桌面图片裁剪实现所谓对透明组件，设置之前需要先对桌面壁纸进行裁剪哦，请选择「裁剪壁纸」菜单进行获取透明背景图片\n' +
+      '图片背景：选择您最喜欢的图片作为背景'
+
+    const menuList = [{
+      name: 'setTransparentBackground',
+      text: '透明壁纸',
+      icon: '🌅'
+    }, {
+      name: 'setPhotoBackground',
+      text: '自选图片',
+      icon: '🌄'
+    }, {
+      name: 'setColorBackgroundTextColor',
+      text: '字体颜色',
+      icon: '✍️'
+    }, {
+      name: 'removeImageBackground',
+      text: '移除图片',
+      icon: '🪣'
+    }, {
+      name: 'setBackgroundConfig',
+      text: '返回上一级',
+      icon: '👈'
+    }]
+
+    menuList.forEach(item => {
+      alert.addAction(item.icon + ' ' +item.text)
+    })
+
+    alert.addCancelAction('取消设置')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    await this[menuList[id].name]()
+  }
+
+  /**
+   * 浅色模式背景
+   * @returns {Promise<void>}
+   */
+  async setColorBackgroundLightMode() {
+    const alert = new Alert()
+    alert.title = '浅色模式颜色代码'
+    alert.message = '如果都输入相同的颜色代码小组件则是纯色背景色，如果是不同的代码则是渐变背景色，不填写采取默认背景色\n\r' +
+      '默认背景颜色代码：' + this.lightDefaultBackgroundColorGradient[0] + ' 和 ' + this.lightDefaultBackgroundColorGradient[1] + '\n\r' +
+      '默认字体颜色代码：#000000'
+    alert.addTextField('背景颜色代码一', this.settings['lightBgColor1'] || this.lightDefaultBackgroundColorGradient[0])
+    alert.addTextField('背景颜色代码二', this.settings['lightBgColor2'] || this.lightDefaultBackgroundColorGradient[1])
+    alert.addTextField('字体颜色', this.settings['lightTextColor'] || '#000000')
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.setColorBackground()
+    const lightBgColor1 = alert.textFieldValue(0)
+    const lightBgColor2 = alert.textFieldValue(1)
+    const lightTextColor = alert.textFieldValue(2)
+
+    this.settings['lightBgColor1'] = lightBgColor1
+    this.settings['lightBgColor2'] = lightBgColor2
+    this.settings['lightTextColor'] = lightTextColor
+    await this.saveSettings()
+
+    return await this.setColorBackground()
+  }
+
+  /**
+   * 深色模式背景
+   * @returns {Promise<void>}
+   */
+  async setColorBackgroundDarkMode() {
+    const alert = new Alert()
+    alert.title = '深色模式颜色代码'
+    alert.message = '如果都输入相同的颜色代码小组件则是纯色背景色，如果是不同的代码则是渐变背景色，不填写采取默认背景色\n\r' +
+      '默认背景颜色代码：' + this.darkDefaultBackgroundColorGradient[0] + ' 和 ' + this.darkDefaultBackgroundColorGradient[1] + '\n\r' +
+      '默认字体颜色代码：#ffffff'
+    alert.addTextField('颜色代码一', this.settings['darkBgColor1'] || this.darkDefaultBackgroundColorGradient[0])
+    alert.addTextField('颜色代码二', this.settings['darkBgColor2'] || this.darkDefaultBackgroundColorGradient[1])
+    alert.addTextField('字体颜色', this.settings['darkTextColor'] || '#ffffff')
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.setColorBackground()
+    const darkBgColor1 = alert.textFieldValue(0)
+    const darkBgColor2 = alert.textFieldValue(1)
+    const darkTextColor = alert.textFieldValue(2)
+
+    this.settings['darkBgColor1'] = darkBgColor1
+    this.settings['darkBgColor2'] = darkBgColor2
+    this.settings['darkTextColor'] = darkTextColor
+    await this.saveSettings()
+
+    return await this.setColorBackground()
+  }
+
+  /**
+   * 透明（剪裁）壁纸
+   * @returns {Promise<void>}
+   */
+  async setTransparentBackground() {
+    let message = '开始之前，请转到主屏幕并进入桌面编辑模式，滚动到最右边的空页面，然后截图！'
+    const exitOptions = ['前去截图', '继续']
+    const shouldExit = await this.generateAlert(message, exitOptions)
+    if (!shouldExit) return
+
+    // Get screenshot and determine phone size.
+    try {
+      const img = await Photos.fromLibrary()
+      const height = img.size.height
+      const phone = this.phoneSizes()[height]
+      if (!phone) {
+        message = '您选择的照片好像不是正确的截图，或者您的机型暂时不支持。'
+        await this.generateAlert(message,['OK'])
+        return await this.setImageBackground()
+      }
+
+      // Prompt for widget size and position.
+      message = '您创建组件的是什么规格？'
+      const sizes = ['小组件', '中组件', '大组件']
+      const _sizes = ['Small', 'Medium', 'Large']
+      const size = await this.generateAlert(message, sizes)
+      const widgetSize = _sizes[size]
+
+      message = '在桌面上组件存在什么位置？'
+      message += (height === 1136 ? ' （备注：当前设备只支持两行小组件，所以下边选项中的「中间」和「底部」的选项是一致的）' : '')
+
+      // Determine image crop based on phone size.
+      const crop = { w: '', h: '', x: '', y: '' }
+      let positions = ''
+      let _positions = ''
+      let position = ''
+      switch (widgetSize) {
+        case 'Small':
+          crop.w = phone.small
+          crop.h = phone.small
+          positions = ['Top left', 'Top right', 'Middle left', 'Middle right', 'Bottom left', 'Bottom right']
+          _positions = ['左上角', '右上角', '中间左', '中间右', '左下角', '右下角']
+          position = await this.generateAlert(message, _positions)
+
+          // Convert the two words into two keys for the phone size dictionary.
+          const keys = positions[position].toLowerCase().split(' ')
+          crop.y = phone[keys[0]]
+          crop.x = phone[keys[1]]
+          break
+        case 'Medium':
+          crop.w = phone.medium
+          crop.h = phone.small
+
+          // Medium and large widgets have a fixed x-value.
+          crop.x = phone.left
+          positions = ['Top', 'Middle', 'Bottom']
+          _positions = ['顶部', '中部', '底部']
+          position = await this.generateAlert(message, _positions)
+          const key = positions[position].toLowerCase()
+          crop.y = phone[key]
+          break
+        case 'Large':
+          crop.w = phone.medium
+          crop.h = phone.large
+          crop.x = phone.left
+          positions = ['Top', 'Bottom']
+          _positions = ['顶部', '底部']
+          position = await this.generateAlert(message, _positions)
+
+          // Large widgets at the bottom have the 'middle' y-value.
+          crop.y = position ? phone.middle : phone.top
+          break
+      }
+
+      // 系统外观模式
+      message = '您要在系统外观设置什么模式？'
+      const _modes = ['浅色模式', '深色模式']
+      const modes = ['Light', 'Dark']
+      const mode = await this.generateAlert(message, _modes)
+      const widgetMode = modes[mode]
+
+      // Crop image and finalize the widget.
+      const imgCrop = this.cropImage(img, new Rect(crop.x, crop.y, crop.w, crop.h))
+
+      const imagePath = this.localFile.joinPath(this.localFile.documentsDirectory(), `backgroundPhoto${widgetSize}${widgetMode}_${this.SETTING_KEY}`)
+      await this.localFile.writeImage(imagePath, imgCrop)
+      this.settings['backgroundPhoto' + widgetSize + widgetMode] = imagePath
+      await this.saveSettings()
+      await this.setImageBackground()
+    } catch (error) {
+      // 取消图片会异常 暂时不用管
+      console.error(error)
+    }
+  }
+
+  /**
+   * 自选图片
+   * @returns {Promise<void>}
+   */
+  async setPhotoBackground() {
+    try {
+      let message = '您创建组件的是什么规格？'
+      const sizes = ['小组件', '中组件', '大组件']
+      const _sizes = ['Small','Medium','Large']
+      const size = await this.generateAlert(message, sizes)
+      const widgetSize = _sizes[size]
+
+      // 系统外观模式
+      message = '您要在系统外观设置什么模式？'
+      const modes = ['浅色模式', '深色模式']
+      const _modes = ['Light', 'Dark']
+      const mode = await this.generateAlert(message, modes)
+      const widgetMode = _modes[mode]
+      const image = await Photos.fromLibrary()
+      const imagePath = this.localFile.joinPath(this.localFile.documentsDirectory(), `backgroundPhoto${widgetSize}${widgetMode}_${this.SETTING_KEY}`)
+      await this.localFile.writeImage(imagePath, image)
+      this.settings['backgroundPhoto' + widgetSize + widgetMode] = imagePath
+      await this.saveSettings()
+      await this.setImageBackground()
+    } catch (error) {
+      // 取消图片会异常 暂时不用管
+    }
+  }
+
+  /**
+   * 设置图片背景下的字体颜色
+   * @return {Promise<void>}
+   */
+  async setColorBackgroundTextColor() {
+    const alert = new Alert()
+    alert.title = '字体颜色'
+    alert.message = '仅在设置图片背景情境下进行对字体颜色更改，字体规格：#ffffff'
+    alert.addTextField('请输入浅色模式字体颜色值', this.settings['backgroundImageLightTextColor'] || '#ffffff')
+    alert.addTextField('请输入深色模式字体颜色值', this.settings['backgroundImageDarkTextColor'] || '#000000')
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.setImageBackground()
+    this.settings['backgroundImageLightTextColor'] = alert.textFieldValue(0)
+    this.settings['backgroundImageDarkTextColor'] = alert.textFieldValue(1)
+    await this.saveSettings()
+
+    return await this.setImageBackground()
+  }
+
+  /**
+   * 移除背景图片
+   * @return {Promise<void>}
+   */
+  async removeImageBackground() {
+    this.settings['backgroundPhotoSmallLight'] = undefined
+    this.settings['backgroundPhotoSmallDark'] = undefined
+    this.settings['backgroundPhotoMediumLight'] = undefined
+    this.settings['backgroundPhotoMediumDark'] = undefined
+    this.settings['backgroundPhotoLargeLight'] = undefined
+    this.settings['backgroundPhotoLargeDark'] = undefined
+    await this.saveSettings()
+    await this.setImageBackground()
+  }
+
+  /**
+   * 输入一言
+   * @returns {Promise<void>}
+   */
+  async setMyOne() {
+    const alert = new Alert()
+    alert.title = '输入一言'
+    alert.message = '请输入一言，将会在桌面展示语句，不填则显示 "世间美好，与您环环相扣"'
+    alert.addTextField('请输入一言', this.settings['myOne'] || '世间美好，与您环环相扣')
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.actionPreferenceSettings()
+    this.settings['myOne'] = alert.textFieldValue(0) ? alert.textFieldValue(0) : '世间美好，与您环环相扣'
+    await this.saveSettings()
+
+    return await this.actionPreferenceSettings()
+  }
+
+  /**
+   * 高德地图Key
+   * @returns {Promise<void>}
+   */
+  async setAMapKey() {
+    const alert = new Alert()
+    alert.title = '高德地图密钥'
+    alert.message = '请输入组件所需要的高德地图 key 用于车辆逆地理编码以及地图资源'
+    alert.addTextField('key 密钥', this.settings['aMapKey'])
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.actionPreferenceSettings()
+    this.settings['aMapKey'] = alert.textFieldValue(0)
+    await this.saveSettings()
+
+    return await this.actionPreferenceSettings()
+  }
+
+  /**
+   * 车辆位置显示
+   * @returns {Promise<void>}
+   */
+  async showLocation() {
+    const alert = new Alert()
+    alert.title = '是否显示车辆地理位置'
+    alert.message = this.settings['showLocation'] ? '当前地理位置状态已开启' : '当前地理位置状态已关闭'
+    alert.addAction('开启')
+    alert.addCancelAction('关闭')
+
+    const id = await alert.presentAlert()
+    if (id === -1) {
+      // 关闭显示位置
+      this.settings['showLocation'] = false
+      await this.saveSettings()
+      return await this.actionPreferenceSettings()
+    }
+    // 开启显示位置
+    this.settings['showLocation'] = true
+    await this.saveSettings()
+    return await this.actionPreferenceSettings()
+  }
+
+  /**
+   * 车牌显示
+   * @returns {Promise<void>}
+   */
+  async showPlate() {
+    const alert = new Alert()
+    alert.title = '是否显示车牌显示'
+    alert.message = this.settings['showPlate'] ? '当前车牌显示状态已开启' : '当前车牌显示状态已关闭'
+    alert.addAction('开启')
+    alert.addCancelAction('关闭')
+
+    const id = await alert.presentAlert()
+    if (id === -1) {
+      // 关闭车牌显示
+      this.settings['showPlate'] = false
+      await this.saveSettings()
+      return await this.actionPreferenceSettings()
+    }
+    // 开启车牌显示
+    this.settings['showPlate'] = true
+    await this.saveSettings()
+    return await this.actionPreferenceSettings()
+  }
 
   /**
    * 刷新数据
@@ -1174,8 +1766,10 @@ class Widget extends Base {
     ]
     keys.forEach(key => {
       this.settings[key] = undefined
+      delete this.settings[key]
       console.log(key + ' 缓存信息已删除')
     })
+    if (Keychain.contains(this.SETTING_KEY)) Keychain.remove(this.SETTING_KEY)
     await this.notify('登出成功', '敏感信息已全部删除')
   }
 
@@ -1188,7 +1782,7 @@ class Widget extends Base {
     const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/fvw-audi-version.json')
     const response = await request.loadJSON()
     console.log(`远程版本：${response?.version}`)
-    if (response?.version === AUDI_VERSION) return this.notify('无需更新', '远程版本一致，暂无更新')
+    if (response?.version === SCRIPT_VERSION) return this.notify('无需更新', '远程版本一致，暂无更新')
     console.log('发现新的版本')
 
     const log = response?.changelog.join('\n')
@@ -1219,6 +1813,85 @@ class Widget extends Base {
    */
   async actionAbout() {
     Safari.open( 'https://joiner.i95.me/about.html')
+  }
+
+  /**
+   * 获取动态字体颜色
+   * @returns {Color}
+   */
+  dynamicTextColor() {
+    const lightTextColor = this.settings['lightTextColor'] ? this.settings['lightTextColor'] : '#000000'
+    const darkTextColor = this.settings['darkTextColor'] ? this.settings['darkTextColor'] : '#ffffff'
+    return Color.dynamic(new Color(lightTextColor, 1), new Color(darkTextColor, 1))
+  }
+
+  /**
+   * 动态背景色
+   * @returns {LinearGradient}
+   */
+  dynamicBackgroundColor() {
+    const bgColor = new LinearGradient()
+
+    const lightBgColor1 = this.settings['lightBgColor1'] ? this.settings['lightBgColor1'] : this.lightDefaultBackgroundColorGradient[0]
+    const lightBgColor2 = this.settings['lightBgColor2'] ? this.settings['lightBgColor2'] : this.lightDefaultBackgroundColorGradient[1]
+    const darkBgColor1 = this.settings['darkBgColor1'] ? this.settings['darkBgColor1'] : this.darkDefaultBackgroundColorGradient[0]
+    const darkBgColor2 = this.settings['darkBgColor2'] ? this.settings['darkBgColor2'] : this.darkDefaultBackgroundColorGradient[1]
+
+    const startColor = Color.dynamic(new Color(lightBgColor1, 1), new Color(darkBgColor1, 1))
+    const endColor = Color.dynamic(new Color(lightBgColor2, 1), new Color(darkBgColor2, 1))
+
+    bgColor.colors = [startColor, endColor]
+
+    bgColor.locations = [0.0, 1.0]
+
+    return bgColor
+  }
+
+  /**
+   * 动态设置组件字体或者图片颜色
+   * @param {WidgetText || WidgetImage} widget
+   * @param {'textColor' || 'tintColor'} type
+   */
+  setWidgetNodeColor(widget, type = 'textColor') {
+    if (
+      this.settings['backgroundPhotoSmallLight'] ||
+      this.settings['backgroundPhotoSmallDark'] ||
+      this.settings['backgroundPhotoMediumLight'] ||
+      this.settings['backgroundPhotoMediumDark'] ||
+      this.settings['backgroundPhotoLargeLight'] ||
+      this.settings['backgroundPhotoLargeDark']
+    ) {
+      const lightTextColor = this.settings['backgroundImageLightTextColor'] || '#ffffff'
+      const darkTextColor = this.settings['backgroundImageDarkTextColor'] || '#000000'
+      widget[type] = Color.dynamic(new Color(lightTextColor, 1), new Color(darkTextColor, 1))
+    } else {
+      widget[type] = this.dynamicTextColor()
+    }
+  }
+
+  /**
+   * 动态设置组件字体或者图片颜色
+   * @param {ListWidget} widget
+   * @param {'Small' || 'Medium' || 'Large'} widgetFamily
+   */
+  async setWidgetDynamicBackground(widget, widgetFamily) {
+    if (await this.isUsingDarkAppearance() === false && this.settings['backgroundPhoto' + widgetFamily + 'Light']) {
+      widget.backgroundImage = await this.localFile.readImage(this.settings['backgroundPhoto' + widgetFamily + 'Light'])
+    } else if (await this.isUsingDarkAppearance() === true && this.settings['backgroundPhoto' + widgetFamily + 'Dark']) {
+      widget.backgroundImage = await this.localFile.readImage(this.settings['backgroundPhoto' + widgetFamily + 'Dark'])
+    } else {
+      widget.backgroundGradient = this.dynamicBackgroundColor()
+    }
+  }
+
+  /**
+   * 获取用户车辆照片
+   * @returns {Promise<Image|*>}
+   */
+  async getMyCarPhoto() {
+    let myCarPhoto = await this.getImageByUrl('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png')
+    if (this.settings['myCarPhoto']) myCarPhoto = await FileManager.local().readImage(this.settings['myCarPhoto'])
+    return myCarPhoto
   }
 
   /**

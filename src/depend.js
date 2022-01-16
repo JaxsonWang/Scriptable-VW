@@ -4,9 +4,7 @@
 //
 
 class Base {
-  successColor = new Color('#67C23A', 1)
-  warningColor = new Color('#E6A23C', 1)
-  dangerColor = new Color('#F56C6C', 1)
+  localFile = FileManager.local()
 
   constructor(arg = '') {
     this.arg = arg
@@ -150,6 +148,29 @@ class Base {
     const result = (typeof this.settings === 'object') ? JSON.stringify(this.settings) : String(this.settings)
     Keychain.set(this.SETTING_KEY, result)
     if (notify) await this.notify('设置成功', '桌面组件稍后将自动刷新')
+  }
+
+  /**
+   * Alert 弹窗封装
+   * @param message
+   * @param options
+   * @returns {Promise<number>}
+   */
+  async generateAlert(message, options) {
+    const alert = new Alert()
+    alert.message = message
+    for (const option of options) {
+      alert.addAction(option)
+    }
+    return await alert.presentAlert()
+  }
+
+  /**
+   * 判断系统外观模式
+   * @return {Promise<boolean>}
+   */
+  async isUsingDarkAppearance() {
+    return !(Color.dynamic(Color.white(), Color.black()).red)
   }
 
   /**
@@ -383,38 +404,6 @@ class Base {
   }
 
   /**
-   * 获取动态字体颜色
-   * @returns {Color}
-   */
-  dynamicTextColor() {
-    const lightTextColor = this.settings['lightTextColor'] ? this.settings['lightTextColor'] : '#000000'
-    const darkTextColor = this.settings['darkTextColor'] ? this.settings['darkTextColor'] : '#ffffff'
-    return Color.dynamic(new Color(lightTextColor, 1), new Color(darkTextColor, 1))
-  }
-
-  /**
-   * 动态背景色
-   * @returns {LinearGradient}
-   */
-  dynamicBackgroundColor() {
-    const bgColor = new LinearGradient()
-
-    const lightBgColor1 = this.settings['lightBgColor1'] ? this.settings['lightBgColor1'] : '#ffffff'
-    const lightBgColor2 = this.settings['lightBgColor2'] ? this.settings['lightBgColor2'] : '#dbefff'
-    const darkBgColor1 = this.settings['darkBgColor1'] ? this.settings['darkBgColor1'] : '#414345'
-    const darkBgColor2 = this.settings['darkBgColor2'] ? this.settings['darkBgColor2'] : '#232526'
-
-    const startColor = Color.dynamic(new Color(lightBgColor1, 1), new Color(darkBgColor1, 1))
-    const endColor = Color.dynamic(new Color(lightBgColor2, 1), new Color(darkBgColor2, 1))
-
-    bgColor.colors = [startColor, endColor]
-
-    bgColor.locations = [0.0, 1.0]
-
-    return bgColor
-  }
-
-  /**
    * 一维数组转换二维数组
    * @param arr
    * @param num
@@ -436,7 +425,7 @@ class Base {
    * 组件声明
    * @returns {Promise<void>}
    */
-  actionStatementSettings (message) {
+  actionStatementSettings(message) {
     return new Promise(async (resolve, reject) => {
       const alert = new Alert()
       alert.title = 'Joiner 组件声明'
@@ -444,8 +433,149 @@ class Base {
       alert.addAction('同意')
       alert.addCancelAction('不同意')
       const id = await alert.presentAlert()
-      id === -1 ? reject() : resolve()
+      id === -1 ? reject('fail') : resolve('success')
     })
+  }
+
+  /**
+   * 将图像裁剪到指定的 rect 中
+   * @param img
+   * @param rect
+   * @returns {Image}
+   */
+  cropImage(img, rect) {
+    const draw = new DrawContext()
+    draw.size = new Size(rect.width, rect.height)
+
+    draw.drawImageAtPoint(img,new Point(-rect.x, -rect.y))
+    return draw.getImage()
+  }
+
+  /**
+   * 手机分辨率
+   * @returns Object
+   */
+  phoneSizes() {
+    return {
+      '2778': {
+        small: 510,
+        medium: 1092,
+        large: 1146,
+        left: 96,
+        right: 678,
+        top: 246,
+        middle: 882,
+        bottom: 1518
+      },
+
+      // 12 and 12 Pro
+      '2532': {
+        small: 474,
+        medium: 1014,
+        large: 1062,
+        left: 78,
+        right: 618,
+        top: 231,
+        middle: 819,
+        bottom: 1407
+      },
+
+      // 11 Pro Max, XS Max
+      '2688': {
+        small: 507,
+        medium: 1080,
+        large: 1137,
+        left: 81,
+        right: 654,
+        top: 228,
+        middle: 858,
+        bottom: 1488
+      },
+
+      // 11, XR
+      '1792': {
+        small: 338,
+        medium: 720,
+        large: 758,
+        left: 54,
+        right: 436,
+        top: 160,
+        middle: 580,
+        bottom: 1000
+      },
+
+      // 11 Pro, XS, X
+      '2436': {
+        small: 465,
+        medium: 987,
+        large: 1035,
+        left: 69,
+        right: 591,
+        top: 213,
+        middle: 783,
+        bottom: 1353
+      },
+
+      // Plus phones
+      '2208': {
+        small: 471,
+        medium: 1044,
+        large: 1071,
+        left: 99,
+        right: 672,
+        top: 114,
+        middle: 696,
+        bottom: 1278
+      },
+
+      // SE2 and 6/6S/7/8
+      '1334': {
+        small: 296,
+        medium: 642,
+        large: 648,
+        left: 54,
+        right: 400,
+        top: 60,
+        middle: 412,
+        bottom: 764
+      },
+
+      // SE1
+      '1136': {
+        small: 282,
+        medium: 584,
+        large: 622,
+        left: 30,
+        right: 332,
+        top: 59,
+        middle: 399,
+        bottom: 399
+      },
+
+      // 11 and XR in Display Zoom mode
+      '1624': {
+        small: 310,
+        medium: 658,
+        large: 690,
+        left: 46,
+        right: 394,
+        top: 142,
+        middle: 522,
+        bottom: 902
+      },
+
+      // Plus in Display Zoom mode
+      '2001': {
+        small: 444,
+        medium: 963,
+        large: 972,
+        left: 81,
+        right: 600,
+        top: 90,
+        middle: 618,
+        bottom: 1146
+      }
+    }
   }
 }
 
