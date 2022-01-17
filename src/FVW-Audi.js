@@ -86,7 +86,7 @@ class Widget extends Base {
   async renderMedium(data) {
     const widget = new ListWidget()
     await this.setWidgetDynamicBackground(widget, 'Medium')
-    widget.setPadding(10, 10, 10, 10)
+    widget.setPadding(15, 15, 15, 15)
     // region logoStack
     const rowHeader = this.addStackTo(widget, 'horizontal')
     rowHeader.setPadding(0, 0, 0, 0)
@@ -237,7 +237,7 @@ class Widget extends Base {
     const widget = new ListWidget()
     await this.setWidgetDynamicBackground(widget, 'Large')
 
-    widget.setPadding(10, 10, 10, 10)
+    widget.setPadding(15, 15, 15, 15)
     // region headerStack
     const rowHeader = this.addStackTo(widget, 'horizontal')
     rowHeader.setPadding(0, 0, 10, 0)
@@ -533,13 +533,14 @@ class Widget extends Base {
 
   /**
    * 处理数据业务
-   * @returns {{}}
+   * @param {boolean} debug 开启日志输出
+   * @returns {void}
    */
-  async bootstrap() {
+  async bootstrap(debug = false) {
     // 获取车辆状态信息
-    await this.getVehiclesStatus()
+    await this.getVehiclesStatus(debug)
     // 获取车辆位置信息
-    await this.getVehiclesPosition()
+    await this.getVehiclesPosition(debug)
   }
 
   /**
@@ -766,9 +767,10 @@ class Widget extends Base {
 
   /**
    * 登录账户
+   * @param {boolean} debug 开启日志输出
    * @returns {Promise<void>}
    */
-  async handleLoginRequest() {
+  async handleLoginRequest(debug = false) {
     const options = {
       url: 'https://audi2c.faw-vw.com/capi/v1/user/login',
       method: 'POST',
@@ -789,9 +791,13 @@ class Widget extends Base {
         this.settings['userAccessToken'] = accessToken
         this.settings['userIDToken'] = idToken
         await this.saveSettings(false)
-        console.log('账户登录成功，存储用户 accessToken, idToken 密钥信息')
+        console.log('账户登录成功，存储用户 accessToken, idToken 密钥信息，准备交换验证密钥数据和获取个人基础信息')
+        if (debug) {
+          console.log('登录接口返回数据：')
+          console.log(response)
+        }
         // 准备交换验证密钥数据
-        await this.getTokenRequest('refreshAuthToken')
+        await this.getTokenRequest('refreshAuthToken', debug)
         // 获取个人中心数据
         await this.getUserMineRequest()
       } else {
@@ -807,9 +813,10 @@ class Widget extends Base {
   /**
    * 获取密钥数据
    * @param {'refreshAuthToken' | 'authAccessToken'} type
+   * @param {boolean} debug 开启日志输出
    * @returns {Promise<void>}
    */
-  async getTokenRequest(type) {
+  async getTokenRequest(type, debug = false) {
     // 根据交换token请求参数不同
     let requestParams = ''
     switch (type) {
@@ -861,7 +868,12 @@ class Widget extends Base {
           await this.saveSettings(false)
           console.log('authToken 密钥数据获取成功并且存储到本地')
           // 设置访问接口
-          await this.getApiBaseURI()
+          await this.getApiBaseURI(debug)
+        }
+        if (debug) {
+          console.log(`${type} 密钥接口返回数据：`)
+          console.log(response)
+          console.warn('请注意不要公开此密钥信息，否则会有被丢车、被盗窃等的风险！')
         }
       }
     } catch (error) {
@@ -905,7 +917,7 @@ class Widget extends Base {
           console.log('车系名称：' + seriesName)
           console.log('车型名称：' + carModelName)
           console.log('车架号码：' + vin)
-          console.log('个人中心接口数据：')
+          console.log('个人中心接口返回数据：')
           console.log(response)
         }
         // 准备交换验证密钥数据
@@ -920,9 +932,10 @@ class Widget extends Base {
 
   /**
    * 根据车架号查询基础访问域
+   * @param {boolean} debug 开启日志输出
    * @returns {Promise<void>}
    */
-  async getApiBaseURI() {
+  async getApiBaseURI(debug = false) {
     const options = {
       url: `https://mal-1a.prd.cn.vwg-connect.cn/api/cs/vds/v1/vehicles/${this.settings['carVIN']}/homeRegion`,
       method: 'GET',
@@ -942,9 +955,13 @@ class Widget extends Base {
         const { baseUri } = response.homeRegion
         this.settings['ApiBaseURI'] = baseUri.content
         await this.saveSettings(false)
-        console.log('根据车架号查询基础访问域成功')
+        console.log(`根据车架号查询基础访问域成功：${baseUri.content}`)
+        if (debug) {
+          console.log('基础访问域接口返回数据：')
+          console.log(response)
+        }
         // 获取车辆信息
-        this.bootstrap()
+        this.bootstrap(debug)
       }
     } catch (error) {
     }
@@ -1001,7 +1018,7 @@ class Widget extends Base {
         if (debug) {
           console.log('当前车辆状态信息：')
           console.log(this.handleVehiclesData(vehicleData))
-          console.log('车辆状态接口数据：')
+          console.log('当前车辆状态接口返回数据：')
           console.log(response)
         }
       }
@@ -1070,7 +1087,7 @@ class Widget extends Base {
           console.log('当前车辆经纬度：')
           console.log('经度：' + longitude)
           console.log('纬度：' + latitude)
-          console.log('车辆经纬度接口数据：')
+          console.log('车辆经纬度接口返回数据：')
           console.log(response)
         }
         await this.getCarAddressInfo(debug)
@@ -1107,7 +1124,7 @@ class Widget extends Base {
           console.log('当前车辆地理位置：')
           console.log('简洁地址：' + simpleAddress)
           console.log('详细地址：' + completeAddress)
-          console.log('车辆地理位置接口数据：')
+          console.log('车辆地理位置返回数据：')
           console.log(response)
         }
       } else {
@@ -1710,6 +1727,9 @@ class Widget extends Base {
     alert.message = '如果发现数据延迟，选择对应函数获取最新数据，同样也是获取日志分享给开发者使用。'
 
     const menuList = [{
+      name: 'handleLoginRequest',
+      text: '全部信息'
+    }, {
       name: 'getUserMineRequest',
       text: '用户信息数据'
     }, {
