@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.0.0_beta3'
+const SCRIPT_VERSION = '2.0.3'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
@@ -120,6 +120,7 @@ class Widget extends Base {
     const carLogoImage = logoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
     carLogoImage.imageSize = new Size(40, 16)
     this.setWidgetNodeColor(carLogoImage, 'tintColor')
+    headerRightStack.spacing = 4
     const statusStack = this.addStackTo(headerRightStack, 'horizontal')
     statusStack.centerAlignContent()
     statusStack.addSpacer()
@@ -127,20 +128,17 @@ class Widget extends Base {
     carLockStack.centerAlignContent()
     // 门窗状态
     const doorAndWindowNormal = [...data.doorStatus, ...data.windowStatus].length !== 0
+    // const doorAndWindowNormal = true
     if (doorAndWindowNormal) {
-      const carDoorImage = carLockStack.addImage(this.getSFSymbolImage('lock.slash.fill'))
-      carDoorImage.imageSize = new Size(18, 18)
-      carDoorImage.tintColor = this.dangerColor
+      const carDoorImage = carLockStack.addImage(await this.getSFSymbolImage('xmark.shield.fill'))
+      carDoorImage.imageSize = new Size(12, 12)
+      carDoorImage.tintColor = this.warningColor
     }
+    carLockStack.spacing = 5
     // 锁车状态
-    const carLockIcon = data.isLocked ? 'lock.fill' : 'lock.open.fill'
-    const carLockImage = carLockStack.addImage(this.getSFSymbolImage(carLockIcon))
-    carLockImage.imageSize = new Size(18, 18)
-    if (data.isLocked) {
-      this.setWidgetNodeColor(carLockImage, 'tintColor')
-    } else {
-      carLockImage.tintColor = this.dangerColor
-    }
+    const carLockImage = carLockStack.addImage(await this.getSFSymbolImage('lock.shield.fill'))
+    carLockImage.imageSize = new Size(12, 12)
+    carLockImage.tintColor = data.isLocked ? this.successColor : this.dangerColor
     // endregion
     // region mainStack
     const mainStack = this.addStackTo(widget, 'horizontal')
@@ -153,8 +151,8 @@ class Widget extends Base {
     carInfoStack.bottomAlignContent()
     const carInfoImageStack = this.addStackTo(carInfoStack, 'vertical')
     carInfoImageStack.bottomAlignContent()
-    const carInfoImage = carInfoImageStack.addImage(this.getSFSymbolImage('timer'))
-    carInfoImage.imageSize = new Size(18, 18)
+    const carInfoImage = carInfoImageStack.addImage(await this.getSFSymbolImage('timer'))
+    carInfoImage.imageSize = new Size(15, 15)
     this.setWidgetNodeColor(carInfoImage, 'tintColor')
     carInfoStack.addSpacer(5)
     const carInfoTextStack = this.addStackTo(carInfoStack, 'horizontal')
@@ -175,14 +173,14 @@ class Widget extends Base {
       this.setWidgetNodeColor(fuelText2, 'textColor')
     }
 
-    rowLeftStack.spacing = 1
+    rowLeftStack.spacing = 5
     // 总里程
     const mileageStack = this.addStackTo(rowLeftStack, 'horizontal')
     mileageStack.bottomAlignContent()
     const mileageImageStack = this.addStackTo(mileageStack, 'vertical')
     mileageImageStack.bottomAlignContent()
-    const mileageImage = mileageImageStack.addImage(this.getSFSymbolImage('car'))
-    mileageImage.imageSize = new Size(18, 18)
+    const mileageImage = mileageImageStack.addImage(await this.getSFSymbolImage('car'))
+    mileageImage.imageSize = new Size(15, 15)
     this.setWidgetNodeColor(mileageImage, 'tintColor')
     mileageStack.addSpacer(5)
     const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
@@ -191,14 +189,14 @@ class Widget extends Base {
     mileageText.font = new Font('Futura-Medium', 12)
     this.setWidgetNodeColor(mileageText, 'textColor')
 
-    rowLeftStack.spacing = 1
+    rowLeftStack.spacing = 5
     // 更新日期
     const dateTimeStack = this.addStackTo(rowLeftStack, 'horizontal')
     dateTimeStack.bottomAlignContent()
     const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical')
     dateTimeImageStack.bottomAlignContent()
-    const dateTimeImage = dateTimeImageStack.addImage(this.getSFSymbolImage('goforward'))
-    dateTimeImage.imageSize = new Size(18, 18)
+    const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('goforward'))
+    dateTimeImage.imageSize = new Size(15, 15)
     this.setWidgetNodeColor(dateTimeImage, 'tintColor')
     dateTimeStack.addSpacer(5)
     const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
@@ -283,8 +281,8 @@ class Widget extends Base {
     enduranceStack.bottomAlignContent()
     const enduranceImageStack = this.addStackTo(enduranceStack, 'vertical')
     enduranceImageStack.bottomAlignContent()
-    const enduranceImage = enduranceImageStack.addImage(this.getSFSymbolImage('flag.circle'))
-    enduranceImage.imageSize = new Size(20, 20)
+    const enduranceImage = enduranceImageStack.addImage(await this.getSFSymbolImage('flag.circle'))
+    enduranceImage.imageSize = new Size(18, 18)
     this.setWidgetNodeColor(enduranceImage, 'tintColor')
     enduranceStack.addSpacer(5)
     const enduranceTextStack = this.addStackTo(enduranceStack, 'horizontal')
@@ -301,8 +299,8 @@ class Widget extends Base {
     fuelImageStack.bottomAlignContent()
     let fuelIcon = 'fuelpump.circle'
     if (data.socLevel) fuelIcon = 'bolt.circle'
-    const fuelImage = fuelImageStack.addImage(this.getSFSymbolImage(fuelIcon))
-    fuelImage.imageSize = new Size(20, 20)
+    const fuelImage = fuelImageStack.addImage(await this.getSFSymbolImage(fuelIcon))
+    fuelImage.imageSize = new Size(18, 18)
     this.setWidgetNodeColor(fuelImage, 'tintColor')
     fuelStack.addSpacer(5)
     // 汽油
@@ -329,8 +327,8 @@ class Widget extends Base {
     mileageStack.bottomAlignContent()
     const mileageImageStack = this.addStackTo(mileageStack, 'vertical')
     mileageImageStack.bottomAlignContent()
-    const mileageImage = mileageImageStack.addImage(this.getSFSymbolImage('car.circle'))
-    mileageImage.imageSize = new Size(20, 20)
+    const mileageImage = mileageImageStack.addImage(await this.getSFSymbolImage('car.circle'))
+    mileageImage.imageSize = new Size(18, 18)
     this.setWidgetNodeColor(mileageImage, 'tintColor')
     mileageStack.addSpacer(5)
     const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
@@ -346,12 +344,12 @@ class Widget extends Base {
       oilStack.bottomAlignContent()
       const oilImageStack = this.addStackTo(oilStack, 'vertical')
       oilImageStack.bottomAlignContent()
-      const oilImage = oilImageStack.addImage(this.getSFSymbolImage('drop.circle'))
-      oilImage.imageSize = new Size(20, 20)
+      const oilImage = oilImageStack.addImage(await this.getSFSymbolImage('drop.circle'))
+      oilImage.imageSize = new Size(18, 18)
       if (Number(data.oilLevel) <= 12.5) {
-        this.setWidgetNodeColor(oilImage, 'tintColor')
-      } else {
         oilImage.tintColor = this.dangerColor
+      } else {
+        this.setWidgetNodeColor(oilImage, 'tintColor')
       }
       oilStack.addSpacer(5)
       const oilTextStack = this.addStackTo(oilStack, 'horizontal')
@@ -359,9 +357,9 @@ class Widget extends Base {
       const oilText = oilTextStack.addText(data.oilLevel + '%')
       oilText.font = new Font('Futura-Medium', 14)
       if (Number(data.oilLevel) <= 12.5) {
-        this.setWidgetNodeColor(oilText, 'textColor')
-      } else {
         oilText.textColor = this.dangerColor
+      } else {
+        this.setWidgetNodeColor(oilText, 'textColor')
       }
       rowLeftStack.addSpacer(5)
     }
@@ -371,8 +369,8 @@ class Widget extends Base {
     lockedStack.bottomAlignContent()
     const lockedImageStack = this.addStackTo(lockedStack, 'vertical')
     lockedImageStack.bottomAlignContent()
-    const lockedImage = lockedImageStack.addImage(this.getSFSymbolImage('lock.circle'))
-    lockedImage.imageSize = new Size(20, 20)
+    const lockedImage = lockedImageStack.addImage(await this.getSFSymbolImage('lock.circle'))
+    lockedImage.imageSize = new Size(18, 18)
     if (data.isLocked) {
       this.setWidgetNodeColor(lockedImage, 'tintColor')
     } else {
@@ -395,8 +393,8 @@ class Widget extends Base {
     dateTimeStack.bottomAlignContent()
     const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical')
     dateTimeImageStack.bottomAlignContent()
-    const dateTimeImage = dateTimeImageStack.addImage(this.getSFSymbolImage('clock.arrow.2.circlepath'))
-    dateTimeImage.imageSize = new Size(20, 20)
+    const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('clock.arrow.2.circlepath'))
+    dateTimeImage.imageSize = new Size(18, 18)
     this.setWidgetNodeColor(dateTimeImage, 'tintColor')
     dateTimeStack.addSpacer(5)
     const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
@@ -420,23 +418,25 @@ class Widget extends Base {
     statusStack.setPadding(5, 0, 0, 0)
     statusStack.centerAlignContent()
     const carStatus = [...data.doorStatus, ...data.windowStatus]
+    // const carStatus = ['左前门', '后备箱', '右前窗', '右后窗', '天窗']
     if (carStatus.length !== 0) {
-      const statusArray = this.format2Array(carStatus, 2)
+      const statusArray = this.format2Array(carStatus, 3)
       statusArray.forEach(arr => {
         const statusRowStack = this.addStackTo(statusStack, 'horizontal')
         statusRowStack.setPadding(2, 0, 2, 0)
         statusRowStack.centerAlignContent()
-        arr.forEach(item => {
+        arr.forEach(async (item) => {
           const statusItemStack = this.addStackTo(statusRowStack, 'horizontal')
           statusItemStack.addSpacer()
           statusItemStack.centerAlignContent()
-          const statusItemImage = statusItemStack.addImage(this.getSFSymbolImage('exclamationmark.shield.fill'))
-          statusItemImage.imageSize = new Size(14, 14)
-          statusItemImage.tintColor = this.dangerColor
+          const image = await this.getSFSymbolImage('exclamationmark.shield.fill')
+          const statusItemImage = statusItemStack.addImage(image)
+          statusItemImage.imageSize = new Size(12, 12)
+          statusItemImage.tintColor = this.warningColor
           statusItemStack.addSpacer(2)
-          const statusItemText = statusItemStack.addText(item + '未关闭')
+          const statusItemText = statusItemStack.addText(item)
           statusItemText.font = new Font('PingFangSC-Regular', 12)
-          statusItemText.textColor = this.dangerColor
+          statusItemText.textColor = this.warningColor
           statusItemText.centerAlignText()
           statusItemStack.addSpacer()
         })
@@ -446,8 +446,8 @@ class Widget extends Base {
       statusItemStack.setPadding(5, 0, 5, 0)
       statusItemStack.addSpacer()
       statusItemStack.centerAlignContent()
-      const statusItemImage = statusItemStack.addImage(this.getSFSymbolImage('checkmark.shield.fill'))
-      statusItemImage.imageSize = new Size(18, 18)
+      const statusItemImage = statusItemStack.addImage(await this.getSFSymbolImage('checkmark.shield.fill'))
+      statusItemImage.imageSize = new Size(12, 12)
       statusItemImage.tintColor = this.successColor
       statusItemStack.addSpacer(2)
       const statusItemText = statusItemStack.addText('当前车窗已全关闭')
@@ -540,7 +540,9 @@ class Widget extends Base {
     // 获取车辆状态信息
     await this.getVehiclesStatus(debug)
     // 获取车辆位置信息
-    await this.getVehiclesPosition(debug)
+    if (this.settings['showLocation']) {
+      await this.getVehiclesPosition(debug)
+    }
   }
 
   /**
@@ -557,10 +559,18 @@ class Widget extends Base {
       longitude: this.settings['longitude'],
       latitude: this.settings['latitude'],
       ...this.settings['vehicleData'],
-      simpleAddress: this.settings['simpleAddress'],
-      completeAddress: this.settings['completeAddress'],
+      simpleAddress: this.settings['simpleAddress'] || '暂无位置信息，请检查高德地图密钥是否已填写正确！',
+      completeAddress: this.settings['completeAddress'] || '暂无位置信息，请检查高德地图密钥是否已填写正确！',
       myOne: this.settings['myOne']
     }
+  }
+
+  /**
+   * 传送给 Siri 快捷指令车辆信息数据
+   * @returns {Object}
+   */
+  siriShortcutData() {
+    return this.getData()
   }
 
   /**
@@ -582,7 +592,7 @@ class Widget extends Base {
     // region 室外温度
     const kelvinTemperature = statusArr.find(i => i.id === '0x0301020001')?.value
     // 开尔文单位转换成摄氏度
-    const outdoorTemperature = (parseInt(kelvinTemperature, 10) / 10 + -273.15).toFixed(1) + '摄氏度'
+    const outdoorTemperature = (parseInt(kelvinTemperature, 10) / 10 + -273.15).toFixed(1)
     // endregion
     // region 驻车制动
     // '1' = 已激活 / '0' = 未激活
@@ -1093,6 +1103,8 @@ class Widget extends Base {
         await this.getCarAddressInfo(debug)
       }
     } catch (error) {
+      console.warn(error)
+      console.warn('请确保车辆隐私模式关闭，并且开启使用车辆位置和分享车辆位置选项！')
     }
   }
 
@@ -1912,6 +1924,15 @@ class Widget extends Base {
     let myCarPhoto = await this.getImageByUrl('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png')
     if (this.settings['myCarPhoto']) myCarPhoto = await FileManager.local().readImage(this.settings['myCarPhoto'])
     return myCarPhoto
+  }
+
+  /**
+   * SFSymbol 图标
+   * @param sfSymbolName
+   * @returns {Promise<Image>}
+   */
+  async getSFSymbolImage(sfSymbolName) {
+    return await this.getImageByUrl(`https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/fvw_audi_joiner/sf_icons/${sfSymbolName}@2x.png`)
   }
 
   /**

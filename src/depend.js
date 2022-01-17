@@ -362,15 +362,6 @@ class Base {
   }
 
   /**
-   * SFSymbol 图标
-   * @param {string} sfSymbolName
-   * @returns {Image}
-   */
-  getSFSymbolImage(sfSymbolName) {
-    return SFSymbol.named(sfSymbolName).image
-  }
-
-  /**
    * 根据百分比输出 hex 颜色
    * @param {number} pct
    * @returns {Color}
