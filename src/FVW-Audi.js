@@ -772,6 +772,8 @@ class Widget extends Base {
         await this.notify('系统通知', '获取设备编码失败，请稍后再重试！')
       }
     } catch (error) {
+      await this.notify('请求失败', error)
+      console.error(error)
     }
   }
 
@@ -816,7 +818,8 @@ class Widget extends Base {
       }
     } catch (error) {
       // Error: 似乎已断开与互联网到连接。
-      console.warn(error)
+      await this.notify('请求失败', error)
+      console.error(error)
     }
   }
 
@@ -887,7 +890,8 @@ class Widget extends Base {
         }
       }
     } catch (error) {
-      console.warn(error)
+      await this.notify('请求失败', error)
+      console.error(error)
     }
   }
 
@@ -937,6 +941,8 @@ class Widget extends Base {
         await this.notify('个人信息获取失败', '获取个人信息失败，请登出重置后再进行小组件登录！')
       }
     } catch (error) {
+      await this.notify('请求失败', error)
+      console.error(error)
     }
   }
 
@@ -974,6 +980,8 @@ class Widget extends Base {
         this.bootstrap(debug)
       }
     } catch (error) {
+      await this.notify('请求失败', error)
+      console.error(error)
     }
   }
 
@@ -1033,6 +1041,8 @@ class Widget extends Base {
         }
       }
     } catch (error) {
+      await this.notify('请求失败', error)
+      console.error(error)
     }
   }
 
@@ -1103,8 +1113,8 @@ class Widget extends Base {
         await this.getCarAddressInfo(debug)
       }
     } catch (error) {
-      console.warn(error)
-      console.warn('请确保车辆隐私模式关闭，并且开启使用车辆位置和分享车辆位置选项！')
+      await this.notify('请求失败', error + ' - ' + '请确保车辆隐私模式关闭，并且开启使用车辆位置和分享车辆位置选项！')
+      console.error(error)
     }
   }
 
@@ -1144,6 +1154,8 @@ class Widget extends Base {
         await this.notify('逆编码地理位置失败', '请检查高德地图 key 是否填写正常')
       }
     } catch (error) {
+      await this.notify('请求失败', error)
+      console.error(error)
     }
   }
 
