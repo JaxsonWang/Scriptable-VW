@@ -98,7 +98,7 @@ class Widget extends Base {
     this.setWidgetNodeColor(carText, 'textColor')
     // 2.0 140KW B9 40TFSI S-line
     const powerText = nameStack.addText(data.carModelName)
-    powerText.font = new Font('PingFangSC-Thin', 10)
+    powerText.font = new Font('PingFangSC-Regular', 10)
     this.setWidgetNodeColor(powerText, 'textColor')
     rowHeader.addSpacer()
     const headerRightStack = this.addStackTo(rowHeader, 'vertical')
@@ -250,7 +250,7 @@ class Widget extends Base {
     // 功率显示
     const powerStack = this.addStackTo(headerLeftStack, 'vertical')
     const powerText = powerStack.addText(data.carModelName)
-    powerText.font = new Font('PingFangSC-Thin', 14)
+    powerText.font = new Font('PingFangSC-Regular', 14)
     this.setWidgetNodeColor(powerText, 'textColor')
     // 俩侧分割
     rowHeader.addSpacer()
