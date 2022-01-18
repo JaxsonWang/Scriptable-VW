@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.0.3'
+const SCRIPT_VERSION = '2.0.4'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
@@ -36,12 +36,12 @@ class Widget extends Base {
     this.desc = 'Audi 车辆桌面组件展示'
 
     if (config.runsInApp) {
-      this.registerAction('账户登录', this.actionAccountLogin)
-      this.registerAction('偏好配置', this.actionPreferenceSettings)
-      this.registerAction('刷新数据', this.actionRefreshData)
-      this.registerAction('登出重置', this.actionLogOut)
+      if (!this.settings['isLogin']) this.registerAction('账户登录', this.actionAccountLogin)
+      if (this.settings['isLogin']) this.registerAction('偏好配置', this.actionPreferenceSettings)
+      if (this.settings['isLogin']) this.registerAction('刷新数据', this.actionRefreshData)
+      if (this.settings['isLogin']) this.registerAction('登出重置', this.actionLogOut)
+      if (this.settings['isLogin']) this.registerAction('调试日志', this.actionDebug)
       this.registerAction('检查更新', this.actionCheckUpdate)
-      this.registerAction('打赏作者', this.actionDonation)
       this.registerAction('当前版本: v' + SCRIPT_VERSION, this.actionAbout)
     }
   }
@@ -52,8 +52,8 @@ class Widget extends Base {
    * @returns {Promise<ListWidget>}
    */
   async render() {
-    const data = this.getData()
-    if (this.settings['authToken'] && this.settings['vehicleData']) {
+    if (this.settings['isLogin']) {
+      const data = this.getData()
       switch (this.widgetFamily) {
         case 'large':
           return await this.renderLarge(data)
@@ -543,6 +543,18 @@ class Widget extends Base {
     if (this.settings['showLocation']) {
       await this.getVehiclesPosition(debug)
     }
+
+    // 日志追踪
+    if (this.settings['trackingLogEnabled']) {
+      const formatter = new DateFormatter()
+      formatter.dateFormat = 'yyyy年MM月dd日 HH:mm:ss 更新一次数据\n'
+      if (this.settings['debug_bootstrap_date_time']) {
+        this.settings['debug_bootstrap_date_time'] += formatter.string(new Date())
+      } else {
+        this.settings['debug_bootstrap_date_time'] = '\n' + formatter.string(new Date())
+      }
+      await this.saveSettings(false)
+    }
   }
 
   /**
@@ -972,6 +984,7 @@ class Widget extends Base {
         this.settings['ApiBaseURI'] = baseUri.content
         await this.saveSettings(false)
         console.log(`根据车架号查询基础访问域成功：${baseUri.content}`)
+        this.settings['isLogin'] = true
         if (debug) {
           console.log('基础访问域接口返回数据：')
           console.log(response)
@@ -1170,6 +1183,11 @@ class Widget extends Base {
     const aMapKey = this.settings['aMapKey']
     return `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=100*60&scale=2&zoom=12&traffic=1`
   }
+
+  /**
+   * 获取数据更新最近时间
+   */
+  getDataForDate() {}
 
   /**
    * 账户登录
@@ -1747,7 +1765,7 @@ class Widget extends Base {
    */
   async actionRefreshData() {
     const alert = new Alert()
-    alert.title = '重载数据'
+    alert.title = '刷新数据'
     alert.message = '如果发现数据延迟，选择对应函数获取最新数据，同样也是获取日志分享给开发者使用。'
 
     const menuList = [{
@@ -1762,6 +1780,9 @@ class Widget extends Base {
     }, {
       name: 'getVehiclesPosition',
       text: '车辆经纬度数据'
+    }, {
+      name: 'getDataForDate',
+      text: '获取数据更新时间'
     }]
 
     menuList.forEach(item => {
@@ -1806,7 +1827,8 @@ class Widget extends Base {
       'refreshAuthToken',
       'authToken',
       'ApiBaseURI',
-      'aMapKey'
+      'aMapKey',
+      'isLogin'
     ]
     keys.forEach(key => {
       this.settings[key] = undefined
@@ -1846,10 +1868,72 @@ class Widget extends Base {
   }
 
   /**
-   * 捐赠
+   * 调试日志
    */
-  async actionDonation() {
-    Safari.open( 'https://joiner.i95.me/donation.html')
+  async actionDebug() {
+    const alert = new Alert()
+    alert.title = '组件调试日志'
+    alert.message = '用于调试一些奇怪的问题，配合开发者调试数据'
+
+    const menuList = [{
+      name: 'setTrackingLog',
+      text: '数据追踪日志'
+    }, {
+      name: 'viewTrackingLog',
+      text: '查阅追踪日志'
+    }, {
+      name: 'clearTrackingLog',
+      text: '清除追踪日志'
+    }]
+
+    menuList.forEach(item => {
+      alert.addAction(item.text)
+    })
+
+    alert.addCancelAction('取消设置')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    await this[menuList[id].name]()
+  }
+
+  /**
+   * 开启日志追踪
+   * @returns {Promise<void>}
+   */
+  async setTrackingLog() {
+    const alert = new Alert()
+    alert.title = '是否开启数据更新日志追踪'
+    alert.message = this.settings['trackingLogEnabled'] ? '当前日志追踪状态已开启' : '当前日志追踪状态已关闭'
+    alert.addAction('开启')
+    alert.addCancelAction('关闭')
+
+    const id = await alert.presentAlert()
+    this.settings['trackingLogEnabled'] = id !== -1;
+    await this.saveSettings(false)
+    return await this.actionDebug()
+  }
+
+  /**
+   * 查阅日志
+   * @returns {Promise<void>}
+   */
+  async viewTrackingLog() {
+    console.log(this.settings['debug_bootstrap_date_time'])
+
+    const alert = new Alert()
+    alert.title = '查阅跟踪日志'
+    alert.message = this.settings['debug_bootstrap_date_time']
+    alert.addAction('关闭')
+    await alert.presentAlert()
+  }
+
+  /**
+   * 清除日志
+   * @returns {Promise<void>}
+   */
+  async clearTrackingLog() {
+    this.settings['debug_bootstrap_date_time'] = undefined
+    await this.saveSettings(false)
   }
 
   /**
