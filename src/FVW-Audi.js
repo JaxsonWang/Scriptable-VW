@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.0.6'
+const SCRIPT_VERSION = '2.0.8'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
@@ -547,7 +547,7 @@ class Widget extends Base {
       await this.saveSettings(false)
     }
 
-    const showLocation = this.settings['showLocation'] || false
+    const showLocation = this.settings['aMapKey'] !== '' && this.settings['aMapKey'] !== undefined
     const showPlate = this.settings['showPlate'] || false
 
     const data = {
@@ -781,7 +781,7 @@ class Widget extends Base {
         await this.notify('系统通知', '获取设备编码失败，请稍后再重试！')
       }
     } catch (error) {
-      await this.notify('请求失败', error)
+      await this.notify('请求失败', '提示：' + error)
       console.error(error)
     }
   }
@@ -827,7 +827,7 @@ class Widget extends Base {
       }
     } catch (error) {
       // Error: 似乎已断开与互联网到连接。
-      await this.notify('请求失败', error)
+      await this.notify('请求失败', '提示：' + error)
       console.error(error)
     }
   }
@@ -899,7 +899,7 @@ class Widget extends Base {
         }
       }
     } catch (error) {
-      await this.notify('请求失败', error)
+      await this.notify('请求失败', '提示：' + error)
       console.error(error)
     }
   }
@@ -950,7 +950,7 @@ class Widget extends Base {
         await this.notify('个人信息获取失败', '获取个人信息失败，请登出重置后再进行小组件登录！')
       }
     } catch (error) {
-      await this.notify('请求失败', error)
+      await this.notify('请求失败', '提示：' + error)
       console.error(error)
     }
   }
@@ -988,7 +988,7 @@ class Widget extends Base {
         }
       }
     } catch (error) {
-      await this.notify('请求失败', error)
+      await this.notify('请求失败', '提示：' + error)
       console.error(error)
     }
   }
@@ -1047,7 +1047,7 @@ class Widget extends Base {
         return this.handleVehiclesData(vehicleData)
       }
     } catch (error) {
-      await this.notify('请求失败', error)
+      await this.notify('请求失败', '提示：' + error)
       console.error(error)
       return this.settings['vehicleData']
     }
@@ -1094,8 +1094,8 @@ class Widget extends Base {
         }
       } else {
         // 接口获取数据成功储存接口数据
-        let longitude = -1
-        let latitude = -1
+        let longitude = 0
+        let latitude = 0
         if (response.storedPositionResponse) {
           longitude = response.storedPositionResponse.position.carCoordinate.longitude
           latitude = response.storedPositionResponse.position.carCoordinate.latitude
@@ -1124,7 +1124,6 @@ class Widget extends Base {
         }
       }
     } catch (error) {
-      await this.notify('请求失败', error)
       console.error(error)
       return {
         longitude: this.settings['longitude'] || 0,
@@ -1141,6 +1140,19 @@ class Widget extends Base {
   async getCarAddressInfo(debug = false) {
     const longitude = this.settings['longitude']
     const latitude = this.settings['latitude']
+
+    // 经纬度异常判断
+    if (
+      longitude === undefined ||
+      latitude === undefined ||
+      longitude === 0 ||
+      latitude === 0
+    ) {
+      return {
+        simpleAddress: '暂无位置信息',
+        completeAddress: '暂无位置信息'
+      }
+    }
 
     const aMapKey = this.settings['aMapKey']
     const options = {
@@ -1177,7 +1189,7 @@ class Widget extends Base {
         }
       }
     } catch (error) {
-      await this.notify('请求失败', error)
+      await this.notify('请求失败', '提示：' + error)
       console.error(error)
       return {
         simpleAddress: this.settings['simpleAddress'] || '暂无位置信息',
@@ -1266,12 +1278,8 @@ class Widget extends Base {
         icon: '📝'
       }, {
         name: 'setAMapKey',
-        text: '高德地图密钥',
-        icon: '🎯'
-      }, {
-        name: 'showLocation',
         text: '设置车辆位置',
-        icon: '✈️'
+        icon: '🎯'
       }, {
         name: 'showPlate',
         text: '设置车牌显示',
@@ -1707,14 +1715,14 @@ class Widget extends Base {
   }
 
   /**
-   * 高德地图Key
+   * 设置车辆位置
    * @returns {Promise<void>}
    */
   async setAMapKey() {
     const alert = new Alert()
-    alert.title = '高德地图密钥'
-    alert.message = '请输入组件所需要的高德地图 key 用于车辆逆地理编码以及地图资源'
-    alert.addTextField('key 密钥', this.settings['aMapKey'])
+    alert.title = '设置车辆位置'
+    alert.message = '请输入组件所需要的高德地图密钥，用于车辆逆地理编码以及地图资源'
+    alert.addTextField('高德地图密钥', this.settings['aMapKey'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
@@ -1723,30 +1731,6 @@ class Widget extends Base {
     this.settings['aMapKey'] = alert.textFieldValue(0)
     await this.saveSettings()
 
-    return await this.actionPreferenceSettings()
-  }
-
-  /**
-   * 车辆位置显示
-   * @returns {Promise<void>}
-   */
-  async showLocation() {
-    const alert = new Alert()
-    alert.title = '是否显示车辆地理位置'
-    alert.message = this.settings['showLocation'] ? '当前地理位置状态已开启' : '当前地理位置状态已关闭'
-    alert.addAction('开启')
-    alert.addCancelAction('关闭')
-
-    const id = await alert.presentAlert()
-    if (id === -1) {
-      // 关闭显示位置
-      this.settings['showLocation'] = false
-      await this.saveSettings()
-      return await this.actionPreferenceSettings()
-    }
-    // 开启显示位置
-    this.settings['showLocation'] = true
-    await this.saveSettings()
     return await this.actionPreferenceSettings()
   }
 
@@ -1842,7 +1826,8 @@ class Widget extends Base {
       'authToken',
       'ApiBaseURI',
       'aMapKey',
-      'isLogin'
+      'isLogin',
+      'showPlate'
     ]
     keys.forEach(key => {
       this.settings[key] = undefined
@@ -2060,7 +2045,4 @@ class Widget extends Base {
 }
 
 // @组件代码结束
-// await Testing(Widget)
-(async function() {
-  await Testing(Widget)
-})()
+await Testing(Widget)
