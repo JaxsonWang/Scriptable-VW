@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.0.4'
+const SCRIPT_VERSION = '2.0.5.beta1'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
@@ -53,7 +53,7 @@ class Widget extends Base {
    */
   async render() {
     if (this.settings['isLogin']) {
-      const data = this.getData()
+      const data = await this.getData()
       switch (this.widgetFamily) {
         case 'large':
           return await this.renderLarge(data)
@@ -534,7 +534,7 @@ class Widget extends Base {
   /**
    * 处理数据业务
    * @param {boolean} debug 开启日志输出
-   * @returns {void}
+   * @returns {Promise<void>}
    */
   async bootstrap(debug = false) {
     // 获取车辆状态信息
@@ -559,10 +559,10 @@ class Widget extends Base {
 
   /**
    * 获取数据
-   * @returns {Object}
+   * @return {Promise<Object>}
    */
-  getData() {
-    this.bootstrap()
+  async getData() {
+    await this.bootstrap()
     return {
       carPlateNo: this.settings['carPlateNo'],
       seriesName: this.settings['myCarName'] || this.settings['seriesName'],
@@ -581,8 +581,8 @@ class Widget extends Base {
    * 传送给 Siri 快捷指令车辆信息数据
    * @returns {Object}
    */
-  siriShortcutData() {
-    return this.getData()
+  async siriShortcutData() {
+    return await this.getData()
   }
 
   /**
@@ -990,7 +990,7 @@ class Widget extends Base {
           console.log(response)
         }
         // 获取车辆信息
-        this.bootstrap(debug)
+        await this.bootstrap(debug)
       }
     } catch (error) {
       await this.notify('请求失败', error)
@@ -1109,6 +1109,7 @@ class Widget extends Base {
           longitude = response.findCarResponse.Position.carCoordinate.longitude
           latitude = response.findCarResponse.Position.carCoordinate.latitude
         }
+        // todo 当 longitude 和 latitude 都返回 0 的时候做一下处理
         // 转换正常经纬度信息
         longitude = parseInt(longitude, 10) / 1000000
         latitude = parseInt(latitude, 10) / 1000000
@@ -1185,11 +1186,6 @@ class Widget extends Base {
   }
 
   /**
-   * 获取数据更新最近时间
-   */
-  getDataForDate() {}
-
-  /**
    * 账户登录
    */
   async actionAccountLogin() {
@@ -1200,7 +1196,9 @@ class Widget extends Base {
       开发者: 淮城一只猫\n\r
       温馨提示：由于一汽奥迪应用支持单点登录，即不支持多终端应用登录，建议在一汽奥迪应用「用车 - 更多功能 - 用户管理」进行添加用户，这样 Joiner 组件和应用独立执行。
     `
-    this.actionStatementSettings(message).then(async () => {
+    const present = await this.actionStatementSettings(message)
+    console.log(present)
+    if (present !== -1) {
       const alert = new Alert()
       alert.title = 'Joiner 登录'
       alert.message = '使用一汽奥迪账号登录进行展示数据'
@@ -1216,8 +1214,7 @@ class Widget extends Base {
       console.log('您已经同意协议，并且已经储存账户信息，开始进行获取设备编码')
       await this.saveSettings(false)
       await this.getDeviceId()
-    }).catch(() => {
-    })
+    }
   }
 
   /**
@@ -1780,9 +1777,6 @@ class Widget extends Base {
     }, {
       name: 'getVehiclesPosition',
       text: '车辆经纬度数据'
-    }, {
-      name: 'getDataForDate',
-      text: '获取数据更新时间'
     }]
 
     menuList.forEach(item => {
@@ -1908,7 +1902,7 @@ class Widget extends Base {
     alert.addCancelAction('关闭')
 
     const id = await alert.presentAlert()
-    this.settings['trackingLogEnabled'] = id !== -1;
+    this.settings['trackingLogEnabled'] = id !== -1
     await this.saveSettings(false)
     return await this.actionDebug()
   }
@@ -2046,4 +2040,6 @@ class Widget extends Base {
 }
 
 // @组件代码结束
-await Testing(Widget)
+(async function bootstrap() {
+  await Testing(Widget)
+})()

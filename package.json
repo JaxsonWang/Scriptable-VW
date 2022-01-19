@@ -5,16 +5,19 @@
   "main": "app.js",
   "scripts": {
     "start": "node app",
-    "build:FVW-Audi": "node pack.js src/FVW-Audi.js FVW-Audi-Joiner",
-    "build:FVW": "node pack.js src/FVW.js FVW-Joiner",
-    "build:SVW": "node pack.js src/SVW.js SVW-Joiner",
+    "build:FVW-Audi": "npm run lint && node pack.js src/FVW-Audi.js FVW-Audi-Joiner",
+    "build:FVW": "npm run lint && node pack.js src/FVW.js FVW-Joiner",
+    "build:SVW": "npm run lint && node pack.js src/SVW.js SVW-Joiner",
+    "lint": "eslint src/**",
     "ncu": "npx npm-check-updates -u"
   },
   "author": "淮城一只猫",
   "license": "MIT",
   "devDependencies": {
-    "@types/scriptable-ios": "^1.6.3",
+    "@scriptable-ios/eslint-config": "^1.6.4",
+    "@types/scriptable-ios": "^1.6.4",
     "body-parser": "^1.19.0",
+    "eslint": "^8.7.0",
     "express": "^4.17.1",
     "javascript-obfuscator": "^3.0.0",
     "multer": "^1.4.3"

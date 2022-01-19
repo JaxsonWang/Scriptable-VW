@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const AUDI_VERSION = 20211127.2
+const SCRIPT_VERSION = 20211127.2
 
 class Widget extends Base {
   /**
@@ -105,4 +105,6 @@ class Widget extends Base {
 }
 
 // @组件代码结束
-await Testing(Widget)
+(async function bootstrap() {
+  await Testing(Widget)
+})()

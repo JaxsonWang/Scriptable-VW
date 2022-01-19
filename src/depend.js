@@ -174,6 +174,19 @@ class Base {
   }
 
   /**
+   * 组件声明
+   * @returns {Promise<number>}
+   */
+  async actionStatementSettings(message) {
+    const alert = new Alert()
+    alert.title = 'Joiner 组件声明'
+    alert.message = message
+    alert.addAction('同意')
+    alert.addCancelAction('不同意')
+    return await alert.presentAlert()
+  }
+
+  /**
    * 获取当前插件的设置
    * @param {boolean} json 是否为json格式
    */
@@ -333,7 +346,7 @@ class Base {
     const rstrMD5 = string => binl2rstr(binlMD5(rstr2binl(string), string.length * 8))
     const rstr2hex = input => {
       const hexTab = (pos) => '0123456789abcdef'.charAt(pos)
-      return Array.from(input).map(c => c.charCodeAt(0)).reduce((output, x, i) => output + hexTab((x >>> 4) & 0x0F) + hexTab(x & 0x0F), '')
+      return Array.from(input).map(c => c.charCodeAt(0)).reduce((output, x) => output + hexTab((x >>> 4) & 0x0F) + hexTab(x & 0x0F), '')
     }
     const str2rstrUTF8 = unicodeString => {
       if (typeof unicodeString !== 'string') throw new TypeError('parameter ‘unicodeString’ is not a string')
@@ -410,22 +423,6 @@ class Base {
       pages[page].push(item)
     })
     return pages
-  }
-
-  /**
-   * 组件声明
-   * @returns {Promise<void>}
-   */
-  actionStatementSettings(message) {
-    return new Promise(async (resolve, reject) => {
-      const alert = new Alert()
-      alert.title = 'Joiner 组件声明'
-      alert.message = message
-      alert.addAction('同意')
-      alert.addCancelAction('不同意')
-      const id = await alert.presentAlert()
-      id === -1 ? reject('fail') : resolve('success')
-    })
   }
 
   /**
@@ -701,6 +698,7 @@ const Testing = async (Widget, default_args = '') => {
             rconsole_log(d, 'error')
           }
           // 3. 同步
+          // eslint-disable-next-line no-constant-condition
           while (1) {
             let _res = ''
             try {
@@ -790,8 +788,7 @@ const Testing = async (Widget, default_args = '') => {
               await w.presentLarge()
               break
             default:
-              const func = funcs[i - 4]
-              if (func) await func()
+              if (funcs[i - 4]) await funcs[i - 4]()
               break
           }
 
