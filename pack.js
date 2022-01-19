@@ -39,9 +39,7 @@ let result_code = `// Variables used by Scriptable.
 // icon-color:${widget_header}
 ${runtime_code}
 ${widget_class}
-(async function bootstrap() {
-  await Running(Widget)
-})()`
+await Running(Widget)`
 
 // 写入文件
 fs.writeFileSync(path.join(__dirname, out_name), result_code)

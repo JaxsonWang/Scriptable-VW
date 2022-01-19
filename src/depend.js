@@ -698,7 +698,6 @@ const Testing = async (Widget, default_args = '') => {
             rconsole_log(d, 'error')
           }
           // 3. 同步
-          // eslint-disable-next-line no-constant-condition
           while (1) {
             let _res = ''
             try {
@@ -788,7 +787,8 @@ const Testing = async (Widget, default_args = '') => {
               await w.presentLarge()
               break
             default:
-              if (funcs[i - 4]) await funcs[i - 4]()
+              const func = funcs[i - 4]
+              if (func) await func()
               break
           }
 

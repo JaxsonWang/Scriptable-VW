@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.0.5.beta1'
+const SCRIPT_VERSION = '2.0.5'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
@@ -107,7 +107,7 @@ class Widget extends Base {
     baseInfoStack.addSpacer()
     baseInfoStack.centerAlignContent()
     // 车牌显示
-    if (this.settings['showPlate']) {
+    if (data.showPlate) {
       const plateNoStack = this.addStackTo(baseInfoStack, 'vertical')
       plateNoStack.centerAlignContent()
       const plateNoText = plateNoStack.addText(data.carPlateNo)
@@ -213,7 +213,7 @@ class Widget extends Base {
     carPhotoStack.centerAlignImage()
     // endregion
     // endregion
-    const footTextData = this.settings['showLocation'] ? data.completeAddress : (this.settings['myOne'] || '世间美好，与您环环相扣')
+    const footTextData = data.showLocation ? data.completeAddress : data.myOne
     const footerStack = this.addStackTo(widget, 'horizontal')
     footerStack.centerAlignContent()
     footerStack.addSpacer()
@@ -263,7 +263,7 @@ class Widget extends Base {
     this.setWidgetNodeColor(carLogoImage, 'tintColor')
     headerRightStack.addSpacer(5)
     // 车牌信息
-    if (this.settings['showPlate']) {
+    if (data.showPlate) {
       const plateNoStack = this.addStackTo(headerRightStack, 'horizontal')
       const plateNoText = plateNoStack.addText(data.carPlateNo)
       plateNoText.font = new Font('PingFangSC-Regular', 14)
@@ -459,9 +459,8 @@ class Widget extends Base {
     rowRightStack.addSpacer()
     // endregion
     // 地图/一言展示
-    const myOneImage = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/fvw_audi_joiner/audi_logo.png'
-    const leftImage = this.settings['showLocation'] ? this.getCarAddressImage() : myOneImage
-    const rightText = this.settings['showLocation'] ? data.completeAddress : (this.settings['myOne'] || '世间美好，与您环环相扣')
+    const leftImage = data.largeLocationPicture
+    const rightText = data.showLocation ? data.completeAddress : data.myOne
     const footerWrapperStack = this.addStackTo(widget, 'horizontal')
     footerWrapperStack.setPadding(0, 0, 0, 0)
     const footerStack = this.addStackTo(footerWrapperStack, 'horizontal')
@@ -472,13 +471,12 @@ class Widget extends Base {
     footerStack.centerAlignContent()
     // 地图图片
     const footerLeftStack = this.addStackTo(footerStack, 'vertical')
-    footerLeftStack.cornerRadius = 25
     footerLeftStack.borderWidth = 2
     footerLeftStack.borderColor = Color.dynamic(new Color('#000000', 0.25), new Color('#ffffff', 0.25))
-    const locationImage = await this.getImageByUrl(leftImage)
+    const locationImage = await this.getImageByUrl(leftImage, !data.showLocation)
     const locationImageStack = footerLeftStack.addImage(locationImage)
     locationImageStack.imageSize = new Size(100, 60)
-    if (!this.settings['showLocation']) this.setWidgetNodeColor(locationImageStack, 'tintColor')
+    if (!data.showLocation) this.setWidgetNodeColor(locationImageStack, 'tintColor')
     locationImageStack.centerAlignImage()
     footerStack.addSpacer()
     // 地理位置
@@ -489,12 +487,12 @@ class Widget extends Base {
     this.setWidgetNodeColor(locationText, 'textColor')
     footerStack.addSpacer()
     // 有地理数据时候展示一言
-    if (this.settings['showLocation']) {
+    if (data.showLocation) {
       const oneStack = this.addStackTo(widget, 'horizontal')
       oneStack.setPadding(10, 0, 0, 0)
       oneStack.addSpacer()
       oneStack.centerAlignContent()
-      const oneText = oneStack.addText(this.settings['myOne'] || '世间美好，与您环环相扣')
+      const oneText = oneStack.addText(data.myOne)
       oneText.font = new Font('PingFangSC-Regular', 12)
       this.setWidgetNodeColor(oneText, 'textColor')
       oneText.centerAlignText()
@@ -532,22 +530,15 @@ class Widget extends Base {
   }
 
   /**
-   * 处理数据业务
+   * 获取数据
    * @param {boolean} debug 开启日志输出
-   * @returns {Promise<void>}
+   * @return {Promise<Object>}
    */
-  async bootstrap(debug = false) {
-    // 获取车辆状态信息
-    await this.getVehiclesStatus(debug)
-    // 获取车辆位置信息
-    if (this.settings['showLocation']) {
-      await this.getVehiclesPosition(debug)
-    }
-
+  async getData(debug = false) {
     // 日志追踪
     if (this.settings['trackingLogEnabled']) {
       const formatter = new DateFormatter()
-      formatter.dateFormat = 'yyyy年MM月dd日 HH:mm:ss 更新一次数据\n'
+      formatter.dateFormat = 'yyyy年MM月dd日 HH:mm:ss 更新\n'
       if (this.settings['debug_bootstrap_date_time']) {
         this.settings['debug_bootstrap_date_time'] += formatter.string(new Date())
       } else {
@@ -555,26 +546,32 @@ class Widget extends Base {
       }
       await this.saveSettings(false)
     }
-  }
 
-  /**
-   * 获取数据
-   * @return {Promise<Object>}
-   */
-  async getData() {
-    await this.bootstrap()
-    return {
+    const showLocation = this.settings['showLocation'] || false
+    const showPlate = this.settings['showPlate'] || false
+
+    const data = {
       carPlateNo: this.settings['carPlateNo'],
       seriesName: this.settings['myCarName'] || this.settings['seriesName'],
       carModelName: this.settings['myCarModelName'] || this.settings['carModelName'],
       carVIN: this.settings['carVIN'],
-      longitude: this.settings['longitude'],
-      latitude: this.settings['latitude'],
-      ...this.settings['vehicleData'],
-      simpleAddress: this.settings['simpleAddress'] || '暂无位置信息，请检查高德地图密钥是否已填写正确！',
-      completeAddress: this.settings['completeAddress'] || '暂无位置信息，请检查高德地图密钥是否已填写正确！',
-      myOne: this.settings['myOne']
+      myOne: this.settings['myOne'] || '世间美好，与您环环相扣',
+      showLocation,
+      showPlate,
+      // 获取车辆状态信息
+      ...await this.getVehiclesStatus(debug),
+      // 获取车辆经纬度
+      ...(showLocation ? await this.getVehiclesPosition(debug) : {}),
+      // 获取车辆位置信息
+      ...(showLocation ? await this.getCarAddressInfo(debug) : {}),
+      // 获取静态位置图片
+      largeLocationPicture: showLocation ? this.getCarAddressImage(debug) : 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/fvw_audi_joiner/audi_logo.png',
     }
+    if (debug) {
+      console.log('获取组件所需数据')
+      console.log(data)
+    }
+    return data
   }
 
   /**
@@ -982,15 +979,13 @@ class Widget extends Base {
         // 接口获取数据成功
         const { baseUri } = response.homeRegion
         this.settings['ApiBaseURI'] = baseUri.content
+        this.settings['isLogin'] = true
         await this.saveSettings(false)
         console.log(`根据车架号查询基础访问域成功：${baseUri.content}`)
-        this.settings['isLogin'] = true
         if (debug) {
           console.log('基础访问域接口返回数据：')
           console.log(response)
         }
-        // 获取车辆信息
-        await this.bootstrap(debug)
       }
     } catch (error) {
       await this.notify('请求失败', error)
@@ -1001,7 +996,7 @@ class Widget extends Base {
   /**
    * 获取车辆状态
    * @param {boolean} debug 开启日志输出
-   * @returns {Promise<void>}
+   * @returns {Promise<Object>}
    */
   async getVehiclesStatus(debug = false) {
     const options = {
@@ -1045,24 +1040,23 @@ class Widget extends Base {
         const vehicleData = response.StoredVehicleDataResponse.vehicleData.data
         this.settings['vehicleData'] = this.handleVehiclesData(vehicleData)
         await this.saveSettings(false)
-        console.log('获取车辆状态信息成功')
         if (debug) {
-          console.log('当前车辆状态信息：')
-          console.log(this.handleVehiclesData(vehicleData))
           console.log('当前车辆状态接口返回数据：')
           console.log(response)
         }
+        return this.handleVehiclesData(vehicleData)
       }
     } catch (error) {
       await this.notify('请求失败', error)
       console.error(error)
+      return this.settings['vehicleData']
     }
   }
 
   /**
    * 获取车辆经纬度
    * @param {boolean} debug 开启日志输出
-   * @returns {Promise<void>}
+   * @return {Promise<{latitude: number, longitude: number}>}
    */
   async getVehiclesPosition(debug = false) {
     const options = {
@@ -1124,18 +1118,25 @@ class Widget extends Base {
           console.log('车辆经纬度接口返回数据：')
           console.log(response)
         }
-        await this.getCarAddressInfo(debug)
+        return {
+          longitude,
+          latitude
+        }
       }
     } catch (error) {
-      await this.notify('请求失败', error + ' - ' + '请确保车辆隐私模式关闭，并且开启使用车辆位置和分享车辆位置选项！')
+      await this.notify('请求失败', error)
       console.error(error)
+      return {
+        longitude: this.settings['longitude'] || 0,
+        latitude: this.settings['latitude'] || 0
+      }
     }
   }
 
   /**
    * 获取车辆地理位置信息
    * @param {boolean} debug 开启日志输出
-   * @return {Promise<void>}
+   * @return {Promise<{simpleAddress, completeAddress}|{simpleAddress: *, completeAddress: *}>}
    */
   async getCarAddressInfo(debug = false) {
     const longitude = this.settings['longitude']
@@ -1150,8 +1151,8 @@ class Widget extends Base {
       const response = await this.http(options)
       if (response.status === '1') {
         const addressComponent = response.regeocode.addressComponent
-        const simpleAddress = addressComponent.district + addressComponent.township
-        const completeAddress = response.regeocode.formatted_address
+        const simpleAddress = addressComponent.district + addressComponent.township || '暂无位置信息'
+        const completeAddress = response.regeocode.formatted_address || '暂无位置信息'
         this.settings['simpleAddress'] = simpleAddress
         this.settings['completeAddress'] = completeAddress
         await this.saveSettings(false)
@@ -1163,26 +1164,43 @@ class Widget extends Base {
           console.log('车辆地理位置返回数据：')
           console.log(response)
         }
+        return {
+          simpleAddress,
+          completeAddress
+        }
       } else {
         console.error('获取车辆位置失败，请检查高德地图 key 是否填写正常')
         await this.notify('逆编码地理位置失败', '请检查高德地图 key 是否填写正常')
+        return {
+          simpleAddress: this.settings['simpleAddress'] || '暂无位置信息',
+          completeAddress: this.settings['completeAddress'] || '暂无位置信息'
+        }
       }
     } catch (error) {
       await this.notify('请求失败', error)
       console.error(error)
+      return {
+        simpleAddress: this.settings['simpleAddress'] || '暂无位置信息',
+        completeAddress: this.settings['completeAddress'] || '暂无位置信息'
+      }
     }
   }
 
   /**
    * 获取车辆地址位置静态图片
+   * @param {boolean} debug 开启日志输出
    * @return {string}
    */
-  getCarAddressImage() {
+  getCarAddressImage(debug = false) {
     const longitude = this.settings['longitude']
     const latitude = this.settings['latitude']
-
     const aMapKey = this.settings['aMapKey']
-    return `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=100*60&scale=2&zoom=12&traffic=1`
+    const aMapUrl = `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=100*60&scale=2&zoom=12&traffic=1`
+    if (debug) {
+      console.log('位置图片请求地址：')
+      console.log(aMapUrl)
+    }
+    return aMapUrl
   }
 
   /**
@@ -1197,7 +1215,6 @@ class Widget extends Base {
       温馨提示：由于一汽奥迪应用支持单点登录，即不支持多终端应用登录，建议在一汽奥迪应用「用车 - 更多功能 - 用户管理」进行添加用户，这样 Joiner 组件和应用独立执行。
     `
     const present = await this.actionStatementSettings(message)
-    console.log(present)
     if (present !== -1) {
       const alert = new Alert()
       alert.title = 'Joiner 登录'
@@ -1766,10 +1783,10 @@ class Widget extends Base {
     alert.message = '如果发现数据延迟，选择对应函数获取最新数据，同样也是获取日志分享给开发者使用。'
 
     const menuList = [{
-      name: 'handleLoginRequest',
+      name: 'getData',
       text: '全部信息'
     }, {
-      name: 'getUserMineRequest',
+      name: 'handleLoginRequest',
       text: '用户信息数据'
     }, {
       name: 'getVehiclesStatus',
@@ -1777,6 +1794,9 @@ class Widget extends Base {
     }, {
       name: 'getVehiclesPosition',
       text: '车辆经纬度数据'
+    }, {
+      name: 'getCarAddressInfo',
+      text: '车辆位置数据'
     }]
 
     menuList.forEach(item => {
@@ -2040,6 +2060,7 @@ class Widget extends Base {
 }
 
 // @组件代码结束
-(async function bootstrap() {
+// await Testing(Widget)
+(async function() {
   await Testing(Widget)
 })()

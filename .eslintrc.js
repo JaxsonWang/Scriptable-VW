@@ -8,9 +8,11 @@ module.exports = {
     '@scriptable-ios'
   ],
   parserOptions: {
-    ecmaVersion: 'latest',
-    globalReturn: true,
-    impliedStrict: true
+    ecmaVersion: 'latest'
+  },
+  globals: {
+    Testing: 'writable',
+    Running: 'writable'
   },
   rules: {
     'linebreak-style': ['error', 'unix'],

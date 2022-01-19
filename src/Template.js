@@ -105,6 +105,4 @@ class Widget extends Base {
 }
 
 // @组件代码结束
-(async function bootstrap() {
-  await Testing(Widget)
-})()
+await Testing(Widget)
