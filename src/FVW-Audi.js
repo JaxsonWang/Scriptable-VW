@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.0.5'
+const SCRIPT_VERSION = '2.0.6'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
@@ -609,7 +609,7 @@ class Widget extends Base {
     // endregion
     // region 续航里程
     // 单位 km
-    const fuelRange = statusArr.find(i => i.id === '0x0301030005')?.value || data.find(i => i.id === '0x0301030006')?.value
+    const fuelRange = statusArr.find(i => i.id === '0x0301030005')?.value || statusArr.find(i => i.id === '0x0301030006')?.value
     // endregion
     // region 汽油油量
     // 单位 %
