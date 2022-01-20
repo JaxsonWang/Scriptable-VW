@@ -14,18 +14,11 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.1.2.beta5'
+const SCRIPT_VERSION = '2.1.2'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
 class Widget extends Base {
-  successColor = new Color('#67C23A', 1)
-  warningColor = new Color('#E6A23C', 1)
-  dangerColor = new Color('#F56C6C', 1)
-
-  lightDefaultBackgroundColorGradient = ['#ffffff', '#dbefff']
-  darkDefaultBackgroundColorGradient = ['#414345', '#232526']
-
   /**
    * 传递给组件的参数，可以是桌面 Parameter 数据，也可以是外部如 URLScheme 等传递的数据
    * @param {string} arg 自定义参数
@@ -34,6 +27,12 @@ class Widget extends Base {
     super(arg)
     this.name = 'Audi 挂件'
     this.desc = 'Audi 车辆桌面组件展示'
+
+    this.successColor = new Color('#67C23A', 1)
+    this.warningColor = new Color('#E6A23C', 1)
+    this.dangerColor = new Color('#F56C6C', 1)
+    this.lightDefaultBackgroundColorGradient = ['#ffffff', '#dbefff']
+    this.darkDefaultBackgroundColorGradient = ['#414345', '#232526']
 
     if (config.runsInApp) {
       if (!this.settings['isLogin']) this.registerAction('账户登录', this.actionAccountLogin)
@@ -474,7 +473,7 @@ class Widget extends Base {
       const footerWrapperStack = this.addStackTo(widget, 'horizontal')
       footerWrapperStack.setPadding(0, 0, 0, 0)
       const footerStack = this.addStackTo(footerWrapperStack, 'horizontal')
-      footerStack.cornerRadius = 25
+      footerStack.cornerRadius = 15
       footerStack.borderColor = Color.dynamic(new Color('#000000', 0.25), new Color('#ffffff', 0.25))
       footerStack.borderWidth = 2
       footerStack.setPadding(0, 0, 0, 20)
@@ -560,6 +559,7 @@ class Widget extends Base {
 
     const showLocation = this.settings['aMapKey'] !== '' && this.settings['aMapKey'] !== undefined
     const showPlate = this.settings['showPlate'] || false
+    const showOil = this.settings['showOil'] || false
 
     const getVehiclesStatusData = await this.getVehiclesStatus(debug)
 
@@ -569,7 +569,7 @@ class Widget extends Base {
       carModelName: this.settings['myCarModelName'] || this.settings['carModelName'],
       carVIN: this.settings['carVIN'],
       myOne: this.settings['myOne'] || '世间美好，与您环环相扣',
-      oilSupport: getVehiclesStatusData.oilSupport || false,
+      oilSupport: showOil ? getVehiclesStatusData.oilSupport : false,
       oilLevel: getVehiclesStatusData.oilLevel || false,
       parkingLights: getVehiclesStatusData.parkingLights || '0',
       outdoorTemperature: getVehiclesStatusData.outdoorTemperature || '0',
@@ -584,8 +584,6 @@ class Widget extends Base {
       windowStatus: getVehiclesStatusData.windowStatus || [],
       showLocation,
       showPlate,
-      // 获取车辆状态信息
-      ...await this.getVehiclesStatus(debug),
       // 获取车辆经纬度
       ...(showLocation ? await this.getVehiclesPosition(debug) : {}),
       // 获取车辆位置信息
@@ -1317,6 +1315,10 @@ class Widget extends Base {
         name: 'showPlate',
         text: '设置车牌显示',
         icon: '🚘'
+      }, {
+        name: 'showOil',
+        text: '设置机油显示',
+        icon: '⛽️'
       }
     ]
 
@@ -1385,8 +1387,8 @@ class Widget extends Base {
     if (id === -1) return await this.actionPreferenceSettings()
     try {
       const image = await Photos.fromLibrary()
-      const imagePath = this.localFile.joinPath(this.localFile.documentsDirectory(), `myCarPhoto_${this.SETTING_KEY}`)
-      await this.localFile.writeImage(imagePath, image)
+      const imagePath = FileManager.local().joinPath(FileManager.local().documentsDirectory(), `myCarPhoto_${this.SETTING_KEY}`)
+      await FileManager.local().writeImage(imagePath, image)
       this.settings['myCarPhoto'] = imagePath
       await this.saveSettings()
     } catch (error) {
@@ -1650,8 +1652,8 @@ class Widget extends Base {
       // Crop image and finalize the widget.
       const imgCrop = this.cropImage(img, new Rect(crop.x, crop.y, crop.w, crop.h))
 
-      const imagePath = this.localFile.joinPath(this.localFile.documentsDirectory(), `backgroundPhoto${widgetSize}${widgetMode}_${this.SETTING_KEY}`)
-      await this.localFile.writeImage(imagePath, imgCrop)
+      const imagePath = FileManager.local().joinPath(FileManager.local().documentsDirectory(), `backgroundPhoto${widgetSize}${widgetMode}_${this.SETTING_KEY}`)
+      await FileManager.local().writeImage(imagePath, imgCrop)
       this.settings['backgroundPhoto' + widgetSize + widgetMode] = imagePath
       await this.saveSettings()
       await this.setImageBackground()
@@ -1680,8 +1682,8 @@ class Widget extends Base {
       const mode = await this.generateAlert(message, modes)
       const widgetMode = _modes[mode]
       const image = await Photos.fromLibrary()
-      const imagePath = this.localFile.joinPath(this.localFile.documentsDirectory(), `backgroundPhoto${widgetSize}${widgetMode}_${this.SETTING_KEY}`)
-      await this.localFile.writeImage(imagePath, image)
+      const imagePath = FileManager.local().joinPath(FileManager.local().documentsDirectory(), `backgroundPhoto${widgetSize}${widgetMode}_${this.SETTING_KEY}`)
+      await FileManager.local().writeImage(imagePath, image)
       this.settings['backgroundPhoto' + widgetSize + widgetMode] = imagePath
       await this.saveSettings()
       await this.setImageBackground()
@@ -1787,6 +1789,30 @@ class Widget extends Base {
     }
     // 开启车牌显示
     this.settings['showPlate'] = true
+    await this.saveSettings()
+    return await this.actionPreferenceSettings()
+  }
+
+  /**
+   * 机油显示
+   * @returns {Promise<void>}
+   */
+  async showOil() {
+    const alert = new Alert()
+    alert.title = '是否显示机油数据'
+    alert.message = (this.settings['showOil'] ? '当前机油显示状态已开启' : '当前机油显示状态已关闭') + '，机油数据仅供参考，长时间停车会造成机油数据不准确，请悉知！'
+    alert.addAction('开启')
+    alert.addCancelAction('关闭')
+
+    const id = await alert.presentAlert()
+    if (id === -1) {
+      // 关闭车牌显示
+      this.settings['showOil'] = false
+      await this.saveSettings()
+      return await this.actionPreferenceSettings()
+    }
+    // 开启车牌显示
+    this.settings['showOil'] = true
     await this.saveSettings()
     return await this.actionPreferenceSettings()
   }
@@ -1909,7 +1935,7 @@ class Widget extends Base {
 
     const menuList = [{
       name: 'setTrackingLog',
-      text: '数据追踪日志'
+      text: `${this.settings['trackingLogEnabled'] ? '开启' : '关闭'}追踪日志`
     }, {
       name: 'viewTrackingLog',
       text: '查阅追踪日志'
@@ -1956,11 +1982,12 @@ class Widget extends Base {
    * @returns {Promise<void>}
    */
   async viewTrackingLog() {
+    console.log('数据更新日志：')
     console.log(this.settings['debug_bootstrap_date_time'])
 
     const alert = new Alert()
     alert.title = '查阅跟踪日志'
-    alert.message = this.settings['debug_bootstrap_date_time']
+    alert.message = this.settings['debug_bootstrap_date_time'] || '暂无日志'
     alert.addAction('关闭')
     await alert.presentAlert()
     return await this.actionDebug()
@@ -1981,11 +2008,12 @@ class Widget extends Base {
    * @return {Promise<void>}
    */
   async viewErrorLog() {
-    console.log(this.settings['error_bootstrap_date_time'])
+    console.log('错误日志：')
+    console.log(this.settings['error_bootstrap_date_time'] || '暂无日志')
 
     const alert = new Alert()
     alert.title = '查阅错误日志'
-    alert.message = this.settings['error_bootstrap_date_time']
+    alert.message = this.settings['error_bootstrap_date_time'] || '暂无日志'
     alert.addAction('关闭')
     await alert.presentAlert()
     return await this.actionDebug()
@@ -2084,9 +2112,9 @@ class Widget extends Base {
    */
   async setWidgetDynamicBackground(widget, widgetFamily) {
     if (await this.isUsingDarkAppearance() === false && this.settings['backgroundPhoto' + widgetFamily + 'Light']) {
-      widget.backgroundImage = await this.localFile.readImage(this.settings['backgroundPhoto' + widgetFamily + 'Light'])
+      widget.backgroundImage = await FileManager.local().readImage(this.settings['backgroundPhoto' + widgetFamily + 'Light'])
     } else if (await this.isUsingDarkAppearance() === true && this.settings['backgroundPhoto' + widgetFamily + 'Dark']) {
-      widget.backgroundImage = await this.localFile.readImage(this.settings['backgroundPhoto' + widgetFamily + 'Dark'])
+      widget.backgroundImage = await FileManager.local().readImage(this.settings['backgroundPhoto' + widgetFamily + 'Dark'])
     } else {
       widget.backgroundGradient = this.dynamicBackgroundColor()
     }

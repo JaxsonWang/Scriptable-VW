@@ -4,8 +4,6 @@
 //
 
 class Base {
-  localFile = FileManager.local()
-
   constructor(arg = '') {
     this.arg = arg
     this._actions = {}
