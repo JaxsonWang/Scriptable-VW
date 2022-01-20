@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.0.8'
+const SCRIPT_VERSION = '2.1.2.beta5'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
@@ -84,146 +84,152 @@ class Widget extends Base {
    * @returns {Promise<ListWidget>}
    */
   async renderMedium(data) {
-    const widget = new ListWidget()
-    await this.setWidgetDynamicBackground(widget, 'Medium')
-    widget.setPadding(15, 15, 15, 15)
-    // region logoStack
-    const rowHeader = this.addStackTo(widget, 'horizontal')
-    rowHeader.setPadding(0, 0, 0, 0)
-    rowHeader.topAlignContent()
-    // 车辆名称
-    const nameStack = this.addStackTo(rowHeader, 'vertical')
-    const carText = nameStack.addText(data.seriesName)
-    carText.font = new Font('PingFangSC-Medium', 18)
-    this.setWidgetNodeColor(carText, 'textColor')
-    // 2.0 140KW B9 40TFSI S-line
-    const powerText = nameStack.addText(data.carModelName)
-    powerText.font = new Font('PingFangSC-Regular', 10)
-    this.setWidgetNodeColor(powerText, 'textColor')
-    rowHeader.addSpacer()
-    const headerRightStack = this.addStackTo(rowHeader, 'vertical')
-    headerRightStack.centerAlignContent()
-    const baseInfoStack = this.addStackTo(headerRightStack, 'horizontal')
-    baseInfoStack.addSpacer()
-    baseInfoStack.centerAlignContent()
-    // 车牌显示
-    if (data.showPlate) {
-      const plateNoStack = this.addStackTo(baseInfoStack, 'vertical')
-      plateNoStack.centerAlignContent()
-      const plateNoText = plateNoStack.addText(data.carPlateNo)
-      plateNoText.font = new Font('PingFangSC-Regular', 12)
-      this.setWidgetNodeColor(plateNoText, 'textColor')
-      baseInfoStack.addSpacer(5)
-    }
-    const logoStack = this.addStackTo(baseInfoStack, 'vertical')
-    logoStack.centerAlignContent()
-    const carLogoImage = logoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
-    carLogoImage.imageSize = new Size(40, 16)
-    this.setWidgetNodeColor(carLogoImage, 'tintColor')
-    headerRightStack.spacing = 4
-    const statusStack = this.addStackTo(headerRightStack, 'horizontal')
-    statusStack.centerAlignContent()
-    statusStack.addSpacer()
-    const carLockStack = this.addStackTo(statusStack, 'horizontal')
-    carLockStack.centerAlignContent()
-    // 门窗状态
-    const doorAndWindowNormal = [...data.doorStatus, ...data.windowStatus].length !== 0
-    // const doorAndWindowNormal = true
-    if (doorAndWindowNormal) {
-      const carDoorImage = carLockStack.addImage(await this.getSFSymbolImage('xmark.shield.fill'))
-      carDoorImage.imageSize = new Size(12, 12)
-      carDoorImage.tintColor = this.warningColor
-    }
-    carLockStack.spacing = 5
-    // 锁车状态
-    const carLockImage = carLockStack.addImage(await this.getSFSymbolImage('lock.shield.fill'))
-    carLockImage.imageSize = new Size(12, 12)
-    carLockImage.tintColor = data.isLocked ? this.successColor : this.dangerColor
-    // endregion
-    // region mainStack
-    const mainStack = this.addStackTo(widget, 'horizontal')
-    mainStack.setPadding(0, 0, 0, 0)
-    mainStack.centerAlignContent()
-    // region 状态信息展示
-    const rowLeftStack = this.addStackTo(mainStack, 'vertical')
-    // 续航/燃料信息
-    const carInfoStack = this.addStackTo(rowLeftStack, 'horizontal')
-    carInfoStack.bottomAlignContent()
-    const carInfoImageStack = this.addStackTo(carInfoStack, 'vertical')
-    carInfoImageStack.bottomAlignContent()
-    const carInfoImage = carInfoImageStack.addImage(await this.getSFSymbolImage('timer'))
-    carInfoImage.imageSize = new Size(15, 15)
-    this.setWidgetNodeColor(carInfoImage, 'tintColor')
-    carInfoStack.addSpacer(5)
-    const carInfoTextStack = this.addStackTo(carInfoStack, 'horizontal')
-    carInfoTextStack.bottomAlignContent()
-    const enduranceText = carInfoTextStack.addText(data.fuelRange + 'km')
-    enduranceText.font = new Font('Futura-CondensedExtraBold', 14)
-    this.setWidgetNodeColor(enduranceText, 'textColor')
-    if (data.fuelLevel) {
-      carInfoTextStack.addSpacer(3)
-      const fuelText1 = carInfoTextStack.addText(data.fuelLevel + '%')
-      fuelText1.font = new Font('Futura-Medium', 12)
-      this.setWidgetNodeColor(fuelText1, 'textColor')
-      carInfoTextStack.addSpacer(1)
-    }
-    if (data.socLevel) {
-      const fuelText2 = carInfoTextStack.addText(data.socLevel + '%')
-      fuelText2.font = new Font('Futura-Medium', 8)
-      this.setWidgetNodeColor(fuelText2, 'textColor')
-    }
+    try {
+      const widget = new ListWidget()
+      await this.setWidgetDynamicBackground(widget, 'Medium')
+      widget.setPadding(15, 15, 15, 15)
+      // region logoStack
+      const rowHeader = this.addStackTo(widget, 'horizontal')
+      rowHeader.setPadding(0, 0, 0, 0)
+      rowHeader.topAlignContent()
+      // 车辆名称
+      const nameStack = this.addStackTo(rowHeader, 'vertical')
+      const carText = nameStack.addText(data.seriesName)
+      carText.font = new Font('PingFangSC-Medium', 18)
+      this.setWidgetNodeColor(carText, 'textColor')
+      // 2.0 140KW B9 40TFSI S-line
+      const powerText = nameStack.addText(data.carModelName)
+      powerText.font = new Font('PingFangSC-Regular', 10)
+      this.setWidgetNodeColor(powerText, 'textColor')
+      rowHeader.addSpacer()
+      const headerRightStack = this.addStackTo(rowHeader, 'vertical')
+      headerRightStack.centerAlignContent()
+      const baseInfoStack = this.addStackTo(headerRightStack, 'horizontal')
+      baseInfoStack.addSpacer()
+      baseInfoStack.centerAlignContent()
+      // 车牌显示
+      if (data.showPlate) {
+        const plateNoStack = this.addStackTo(baseInfoStack, 'vertical')
+        plateNoStack.centerAlignContent()
+        const plateNoText = plateNoStack.addText(data.carPlateNo)
+        plateNoText.font = new Font('PingFangSC-Regular', 12)
+        this.setWidgetNodeColor(plateNoText, 'textColor')
+        baseInfoStack.addSpacer(5)
+      }
+      const logoStack = this.addStackTo(baseInfoStack, 'vertical')
+      logoStack.centerAlignContent()
+      const carLogoImage = logoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
+      carLogoImage.imageSize = new Size(40, 16)
+      this.setWidgetNodeColor(carLogoImage, 'tintColor')
+      headerRightStack.spacing = 4
+      const statusStack = this.addStackTo(headerRightStack, 'horizontal')
+      statusStack.centerAlignContent()
+      statusStack.addSpacer()
+      const carLockStack = this.addStackTo(statusStack, 'horizontal')
+      carLockStack.centerAlignContent()
+      // 门窗状态
+      const doorStatus = data.doorStatus || []
+      const windowStatus = data.windowStatus || []
+      const doorAndWindowNormal = doorStatus.concat(windowStatus).length !== 0
+      // const doorAndWindowNormal = true
+      if (doorAndWindowNormal) {
+        const carDoorImage = carLockStack.addImage(await this.getSFSymbolImage('xmark.shield.fill'))
+        carDoorImage.imageSize = new Size(12, 12)
+        carDoorImage.tintColor = this.warningColor
+      }
+      carLockStack.spacing = 5
+      // 锁车状态
+      const carLockImage = carLockStack.addImage(await this.getSFSymbolImage('lock.shield.fill'))
+      carLockImage.imageSize = new Size(12, 12)
+      carLockImage.tintColor = data.isLocked ? this.successColor : this.dangerColor
+      // endregion
+      // region mainStack
+      const mainStack = this.addStackTo(widget, 'horizontal')
+      mainStack.setPadding(0, 0, 0, 0)
+      mainStack.centerAlignContent()
+      // region 状态信息展示
+      const rowLeftStack = this.addStackTo(mainStack, 'vertical')
+      // 续航/燃料信息
+      const carInfoStack = this.addStackTo(rowLeftStack, 'horizontal')
+      carInfoStack.bottomAlignContent()
+      const carInfoImageStack = this.addStackTo(carInfoStack, 'vertical')
+      carInfoImageStack.bottomAlignContent()
+      const carInfoImage = carInfoImageStack.addImage(await this.getSFSymbolImage('timer'))
+      carInfoImage.imageSize = new Size(15, 15)
+      this.setWidgetNodeColor(carInfoImage, 'tintColor')
+      carInfoStack.addSpacer(5)
+      const carInfoTextStack = this.addStackTo(carInfoStack, 'horizontal')
+      carInfoTextStack.bottomAlignContent()
+      const enduranceText = carInfoTextStack.addText(data.fuelRange + 'km')
+      enduranceText.font = new Font('Futura-CondensedExtraBold', 14)
+      this.setWidgetNodeColor(enduranceText, 'textColor')
+      if (data.fuelLevel) {
+        carInfoTextStack.addSpacer(3)
+        const fuelText1 = carInfoTextStack.addText(data.fuelLevel + '%')
+        fuelText1.font = new Font('Futura-Medium', 12)
+        this.setWidgetNodeColor(fuelText1, 'textColor')
+        carInfoTextStack.addSpacer(1)
+      }
+      if (data.socLevel) {
+        const fuelText2 = carInfoTextStack.addText(data.socLevel + '%')
+        fuelText2.font = new Font('Futura-Medium', 8)
+        this.setWidgetNodeColor(fuelText2, 'textColor')
+      }
 
-    rowLeftStack.spacing = 5
-    // 总里程
-    const mileageStack = this.addStackTo(rowLeftStack, 'horizontal')
-    mileageStack.bottomAlignContent()
-    const mileageImageStack = this.addStackTo(mileageStack, 'vertical')
-    mileageImageStack.bottomAlignContent()
-    const mileageImage = mileageImageStack.addImage(await this.getSFSymbolImage('car'))
-    mileageImage.imageSize = new Size(15, 15)
-    this.setWidgetNodeColor(mileageImage, 'tintColor')
-    mileageStack.addSpacer(5)
-    const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
-    mileageTextStack.bottomAlignContent()
-    const mileageText = mileageTextStack.addText(data.mileage + 'km')
-    mileageText.font = new Font('Futura-Medium', 12)
-    this.setWidgetNodeColor(mileageText, 'textColor')
+      rowLeftStack.spacing = 5
+      // 总里程
+      const mileageStack = this.addStackTo(rowLeftStack, 'horizontal')
+      mileageStack.bottomAlignContent()
+      const mileageImageStack = this.addStackTo(mileageStack, 'vertical')
+      mileageImageStack.bottomAlignContent()
+      const mileageImage = mileageImageStack.addImage(await this.getSFSymbolImage('car'))
+      mileageImage.imageSize = new Size(15, 15)
+      this.setWidgetNodeColor(mileageImage, 'tintColor')
+      mileageStack.addSpacer(5)
+      const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
+      mileageTextStack.bottomAlignContent()
+      const mileageText = mileageTextStack.addText(data.mileage + 'km')
+      mileageText.font = new Font('Futura-Medium', 12)
+      this.setWidgetNodeColor(mileageText, 'textColor')
 
-    rowLeftStack.spacing = 5
-    // 更新日期
-    const dateTimeStack = this.addStackTo(rowLeftStack, 'horizontal')
-    dateTimeStack.bottomAlignContent()
-    const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical')
-    dateTimeImageStack.bottomAlignContent()
-    const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('goforward'))
-    dateTimeImage.imageSize = new Size(15, 15)
-    this.setWidgetNodeColor(dateTimeImage, 'tintColor')
-    dateTimeStack.addSpacer(5)
-    const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
-    dateTimeTextStack.bottomAlignContent()
-    const dateTimeText = dateTimeTextStack.addText(data.updateTime)
-    dateTimeText.font = new Font('Futura-Medium', 12)
-    this.setWidgetNodeColor(dateTimeText, 'textColor')
-    // endregion
-    mainStack.addSpacer()
-    // region 右侧车辆图片
-    const rowRightStack = this.addStackTo(mainStack, 'vertical')
-    const carPhoto = await this.getMyCarPhoto()
-    const carPhotoStack = rowRightStack.addImage(carPhoto)
-    carPhotoStack.centerAlignImage()
-    // endregion
-    // endregion
-    const footTextData = data.showLocation ? data.completeAddress : data.myOne
-    const footerStack = this.addStackTo(widget, 'horizontal')
-    footerStack.centerAlignContent()
-    footerStack.addSpacer()
-    const footerText = footerStack.addText(footTextData)
-    footerText.font = new Font('PingFangSC-Regular', 10)
-    this.setWidgetNodeColor(footerText, 'textColor')
-    footerText.centerAlignText()
-    footerStack.addSpacer()
+      rowLeftStack.spacing = 5
+      // 更新日期
+      const dateTimeStack = this.addStackTo(rowLeftStack, 'horizontal')
+      dateTimeStack.bottomAlignContent()
+      const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical')
+      dateTimeImageStack.bottomAlignContent()
+      const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('goforward'))
+      dateTimeImage.imageSize = new Size(15, 15)
+      this.setWidgetNodeColor(dateTimeImage, 'tintColor')
+      dateTimeStack.addSpacer(5)
+      const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
+      dateTimeTextStack.bottomAlignContent()
+      const dateTimeText = dateTimeTextStack.addText(data.updateTime)
+      dateTimeText.font = new Font('Futura-Medium', 12)
+      this.setWidgetNodeColor(dateTimeText, 'textColor')
+      // endregion
+      mainStack.addSpacer()
+      // region 右侧车辆图片
+      const rowRightStack = this.addStackTo(mainStack, 'vertical')
+      const carPhoto = await this.getMyCarPhoto()
+      const carPhotoStack = rowRightStack.addImage(carPhoto)
+      carPhotoStack.centerAlignImage()
+      // endregion
+      // endregion
+      const footTextData = data.showLocation ? data.completeAddress : data.myOne
+      const footerStack = this.addStackTo(widget, 'horizontal')
+      footerStack.centerAlignContent()
+      footerStack.addSpacer()
+      const footerText = footerStack.addText(footTextData)
+      footerText.font = new Font('PingFangSC-Regular', 10)
+      this.setWidgetNodeColor(footerText, 'textColor')
+      footerText.centerAlignText()
+      footerStack.addSpacer()
 
-    return widget
+      return widget
+    } catch (error) {
+      await this.writeErrorLog(data)
+    }
   }
 
   /**
@@ -232,274 +238,281 @@ class Widget extends Base {
    * @returns {Promise<ListWidget>}
    */
   async renderLarge(data) {
-    const widget = new ListWidget()
-    await this.setWidgetDynamicBackground(widget, 'Large')
+    try {
+      const widget = new ListWidget()
+      await this.setWidgetDynamicBackground(widget, 'Large')
 
-    widget.setPadding(15, 15, 15, 15)
-    // region headerStack
-    const rowHeader = this.addStackTo(widget, 'horizontal')
-    rowHeader.setPadding(0, 0, 10, 0)
-    rowHeader.topAlignContent()
-    // 顶部左侧
-    const headerLeftStack = this.addStackTo(rowHeader, 'vertical')
-    // 车辆名称
-    const nameStack = this.addStackTo(headerLeftStack, 'vertical')
-    const carText = nameStack.addText(data.seriesName)
-    carText.font = new Font('PingFangSC-Medium', 22)
-    this.setWidgetNodeColor(carText, 'textColor')
-    // 功率显示
-    const powerStack = this.addStackTo(headerLeftStack, 'vertical')
-    const powerText = powerStack.addText(data.carModelName)
-    powerText.font = new Font('PingFangSC-Regular', 14)
-    this.setWidgetNodeColor(powerText, 'textColor')
-    // 俩侧分割
-    rowHeader.addSpacer()
-    // 顶部右侧
-    const headerRightStack = this.addStackTo(rowHeader, 'vertical')
-    // Logo
-    const carLogoStack = this.addStackTo(headerRightStack, 'vertical')
-    const carLogoImage = carLogoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
-    carLogoImage.imageSize = new Size(70, 20)
-    this.setWidgetNodeColor(carLogoImage, 'tintColor')
-    headerRightStack.addSpacer(5)
-    // 车牌信息
-    if (data.showPlate) {
-      const plateNoStack = this.addStackTo(headerRightStack, 'horizontal')
-      const plateNoText = plateNoStack.addText(data.carPlateNo)
-      plateNoText.font = new Font('PingFangSC-Regular', 14)
-      this.setWidgetNodeColor(plateNoText, 'textColor')
-    }
-    // endregion
-    // region mainStack
-    const mainStack = this.addStackTo(widget, 'horizontal')
-    mainStack.centerAlignContent()
-    mainStack.setPadding(0, 0, 0, 0)
-    // region 状态信息展示
-    const rowLeftStack = this.addStackTo(mainStack, 'vertical')
-    // region 续航里程
-    const enduranceStack = this.addStackTo(rowLeftStack, 'horizontal')
-    enduranceStack.bottomAlignContent()
-    const enduranceImageStack = this.addStackTo(enduranceStack, 'vertical')
-    enduranceImageStack.bottomAlignContent()
-    const enduranceImage = enduranceImageStack.addImage(await this.getSFSymbolImage('flag.circle'))
-    enduranceImage.imageSize = new Size(18, 18)
-    this.setWidgetNodeColor(enduranceImage, 'tintColor')
-    enduranceStack.addSpacer(5)
-    const enduranceTextStack = this.addStackTo(enduranceStack, 'horizontal')
-    enduranceTextStack.bottomAlignContent()
-    const enduranceText = enduranceTextStack.addText(data.fuelRange + 'km')
-    enduranceText.font = new Font('Futura-Medium', 14)
-    this.setWidgetNodeColor(enduranceText, 'textColor')
-    // endregion
-    rowLeftStack.addSpacer(5)
-    // region 燃料信息
-    const fuelStack = this.addStackTo(rowLeftStack, 'horizontal')
-    fuelStack.bottomAlignContent()
-    const fuelImageStack = this.addStackTo(fuelStack, 'vertical')
-    fuelImageStack.bottomAlignContent()
-    let fuelIcon = 'fuelpump.circle'
-    if (data.socLevel) fuelIcon = 'bolt.circle'
-    const fuelImage = fuelImageStack.addImage(await this.getSFSymbolImage(fuelIcon))
-    fuelImage.imageSize = new Size(18, 18)
-    this.setWidgetNodeColor(fuelImage, 'tintColor')
-    fuelStack.addSpacer(5)
-    // 汽油
-    const fuelTextStack1 = this.addStackTo(fuelStack, 'horizontal')
-    fuelTextStack1.bottomAlignContent()
-    if (data.fuelLevel) {
-      const fuelText1 = fuelTextStack1.addText(data.fuelLevel + '%')
-      fuelText1.font = new Font('Futura-Medium', 14)
-      this.setWidgetNodeColor(fuelText1, 'textColor')
-      fuelStack.addSpacer(5)
-    }
-    // 电池
-    if (data.socLevel) {
-      const fuelTextStack2 = this.addStackTo(fuelStack, 'horizontal')
-      fuelTextStack2.bottomAlignContent()
-      const fuelText2 = fuelTextStack2.addText(data.socLevel + '%')
-      fuelText2.font = new Font('Futura-Medium', 12)
-      this.setWidgetNodeColor(fuelText2, 'textColor')
-    }
-    // endregion
-    rowLeftStack.addSpacer(5)
-    // region 总里程
-    const mileageStack = this.addStackTo(rowLeftStack, 'horizontal')
-    mileageStack.bottomAlignContent()
-    const mileageImageStack = this.addStackTo(mileageStack, 'vertical')
-    mileageImageStack.bottomAlignContent()
-    const mileageImage = mileageImageStack.addImage(await this.getSFSymbolImage('car.circle'))
-    mileageImage.imageSize = new Size(18, 18)
-    this.setWidgetNodeColor(mileageImage, 'tintColor')
-    mileageStack.addSpacer(5)
-    const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
-    mileageTextStack.bottomAlignContent()
-    const mileageText = mileageTextStack.addText(data.mileage + 'km')
-    mileageText.font = new Font('Futura-Medium', 14)
-    this.setWidgetNodeColor(mileageText, 'textColor')
-    // endregion
-    rowLeftStack.addSpacer(5)
-    // region 机油数据
-    if (data.oilSupport && data.oilLevel !== '0.0') {
-      const oilStack = this.addStackTo(rowLeftStack, 'horizontal')
-      oilStack.bottomAlignContent()
-      const oilImageStack = this.addStackTo(oilStack, 'vertical')
-      oilImageStack.bottomAlignContent()
-      const oilImage = oilImageStack.addImage(await this.getSFSymbolImage('drop.circle'))
-      oilImage.imageSize = new Size(18, 18)
-      if (Number(data.oilLevel) <= 12.5) {
-        oilImage.tintColor = this.dangerColor
-      } else {
-        this.setWidgetNodeColor(oilImage, 'tintColor')
+      widget.setPadding(15, 15, 15, 15)
+      // region headerStack
+      const rowHeader = this.addStackTo(widget, 'horizontal')
+      rowHeader.setPadding(0, 0, 10, 0)
+      rowHeader.topAlignContent()
+      // 顶部左侧
+      const headerLeftStack = this.addStackTo(rowHeader, 'vertical')
+      // 车辆名称
+      const nameStack = this.addStackTo(headerLeftStack, 'vertical')
+      const carText = nameStack.addText(data.seriesName)
+      carText.font = new Font('PingFangSC-Medium', 22)
+      this.setWidgetNodeColor(carText, 'textColor')
+      // 功率显示
+      const powerStack = this.addStackTo(headerLeftStack, 'vertical')
+      const powerText = powerStack.addText(data.carModelName)
+      powerText.font = new Font('PingFangSC-Regular', 14)
+      this.setWidgetNodeColor(powerText, 'textColor')
+      // 俩侧分割
+      rowHeader.addSpacer()
+      // 顶部右侧
+      const headerRightStack = this.addStackTo(rowHeader, 'vertical')
+      // Logo
+      const carLogoStack = this.addStackTo(headerRightStack, 'vertical')
+      const carLogoImage = carLogoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
+      carLogoImage.imageSize = new Size(70, 20)
+      this.setWidgetNodeColor(carLogoImage, 'tintColor')
+      headerRightStack.addSpacer(5)
+      // 车牌信息
+      if (data.showPlate) {
+        const plateNoStack = this.addStackTo(headerRightStack, 'horizontal')
+        const plateNoText = plateNoStack.addText(data.carPlateNo)
+        plateNoText.font = new Font('PingFangSC-Regular', 14)
+        this.setWidgetNodeColor(plateNoText, 'textColor')
       }
-      oilStack.addSpacer(5)
-      const oilTextStack = this.addStackTo(oilStack, 'horizontal')
-      oilTextStack.bottomAlignContent()
-      const oilText = oilTextStack.addText(data.oilLevel + '%')
-      oilText.font = new Font('Futura-Medium', 14)
-      if (Number(data.oilLevel) <= 12.5) {
-        oilText.textColor = this.dangerColor
-      } else {
-        this.setWidgetNodeColor(oilText, 'textColor')
-      }
+      // endregion
+      // region mainStack
+      const mainStack = this.addStackTo(widget, 'horizontal')
+      mainStack.centerAlignContent()
+      mainStack.setPadding(0, 0, 0, 0)
+      // region 状态信息展示
+      const rowLeftStack = this.addStackTo(mainStack, 'vertical')
+      // region 续航里程
+      const enduranceStack = this.addStackTo(rowLeftStack, 'horizontal')
+      enduranceStack.bottomAlignContent()
+      const enduranceImageStack = this.addStackTo(enduranceStack, 'vertical')
+      enduranceImageStack.bottomAlignContent()
+      const enduranceImage = enduranceImageStack.addImage(await this.getSFSymbolImage('flag.circle'))
+      enduranceImage.imageSize = new Size(18, 18)
+      this.setWidgetNodeColor(enduranceImage, 'tintColor')
+      enduranceStack.addSpacer(5)
+      const enduranceTextStack = this.addStackTo(enduranceStack, 'horizontal')
+      enduranceTextStack.bottomAlignContent()
+      const enduranceText = enduranceTextStack.addText(data.fuelRange + 'km')
+      enduranceText.font = new Font('Futura-Medium', 14)
+      this.setWidgetNodeColor(enduranceText, 'textColor')
+      // endregion
       rowLeftStack.addSpacer(5)
-    }
-    // endregion
-    // region 锁车状态
-    const lockedStack = this.addStackTo(rowLeftStack, 'horizontal')
-    lockedStack.bottomAlignContent()
-    const lockedImageStack = this.addStackTo(lockedStack, 'vertical')
-    lockedImageStack.bottomAlignContent()
-    const lockedImage = lockedImageStack.addImage(await this.getSFSymbolImage('lock.circle'))
-    lockedImage.imageSize = new Size(18, 18)
-    if (data.isLocked) {
-      this.setWidgetNodeColor(lockedImage, 'tintColor')
-    } else {
-      lockedImage.tintColor = this.dangerColor
-    }
-    lockedStack.addSpacer(5)
-    const lockedTextStack = this.addStackTo(lockedStack, 'horizontal')
-    lockedTextStack.bottomAlignContent()
-    const lockedText = lockedTextStack.addText(data.isLocked ? '已锁车' : '未锁车')
-    lockedText.font = new Font('Futura-Medium', 14)
-    if (data.isLocked) {
-      this.setWidgetNodeColor(lockedText, 'textColor')
-    } else {
-      lockedText.textColor = this.dangerColor
-    }
-    // endregion
-    rowLeftStack.addSpacer(5)
-    // region 更新日期
-    const dateTimeStack = this.addStackTo(rowLeftStack, 'horizontal')
-    dateTimeStack.bottomAlignContent()
-    const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical')
-    dateTimeImageStack.bottomAlignContent()
-    const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('clock.arrow.2.circlepath'))
-    dateTimeImage.imageSize = new Size(18, 18)
-    this.setWidgetNodeColor(dateTimeImage, 'tintColor')
-    dateTimeStack.addSpacer(5)
-    const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
-    dateTimeTextStack.bottomAlignContent()
-    const dateTimeText = dateTimeTextStack.addText(data.updateTime)
-    dateTimeText.font = new Font('Futura-Medium', 14)
-    this.setWidgetNodeColor(dateTimeText, 'textColor')
-    // endregion
-    // endregion
-    mainStack.addSpacer()
-    // region 右侧车辆图片
-    const rowRightStack = this.addStackTo(mainStack, 'vertical')
-    rowRightStack.addSpacer()
-    const carPhotoStack = this.addStackTo(rowRightStack, 'horizontal')
-    carPhotoStack.addSpacer()
-    carPhotoStack.centerAlignContent()
-    const carPhoto = await this.getMyCarPhoto()
-    const carPhotoImage = carPhotoStack.addImage(carPhoto)
-    carPhotoImage.centerAlignImage()
-    const statusStack = this.addStackTo(rowRightStack, 'vertical')
-    statusStack.setPadding(5, 0, 0, 0)
-    statusStack.centerAlignContent()
-    const carStatus = [...data.doorStatus, ...data.windowStatus]
-    // const carStatus = ['左前门', '后备箱', '右前窗', '右后窗', '天窗']
-    if (carStatus.length !== 0) {
-      const statusArray = this.format2Array(carStatus, 3)
-      statusArray.forEach(arr => {
-        const statusRowStack = this.addStackTo(statusStack, 'horizontal')
-        statusRowStack.setPadding(2, 0, 2, 0)
-        statusRowStack.centerAlignContent()
-        arr.forEach(async (item) => {
-          const statusItemStack = this.addStackTo(statusRowStack, 'horizontal')
-          statusItemStack.addSpacer()
-          statusItemStack.centerAlignContent()
-          const image = await this.getSFSymbolImage('exclamationmark.shield.fill')
-          const statusItemImage = statusItemStack.addImage(image)
-          statusItemImage.imageSize = new Size(12, 12)
-          statusItemImage.tintColor = this.warningColor
-          statusItemStack.addSpacer(2)
-          const statusItemText = statusItemStack.addText(item)
-          statusItemText.font = new Font('PingFangSC-Regular', 12)
-          statusItemText.textColor = this.warningColor
-          statusItemText.centerAlignText()
-          statusItemStack.addSpacer()
-        })
-      })
-    } else {
-      const statusItemStack = this.addStackTo(statusStack, 'horizontal')
-      statusItemStack.setPadding(5, 0, 5, 0)
-      statusItemStack.addSpacer()
-      statusItemStack.centerAlignContent()
-      const statusItemImage = statusItemStack.addImage(await this.getSFSymbolImage('checkmark.shield.fill'))
-      statusItemImage.imageSize = new Size(12, 12)
-      statusItemImage.tintColor = this.successColor
-      statusItemStack.addSpacer(2)
-      const statusItemText = statusItemStack.addText('当前车窗已全关闭')
-      statusItemText.font = new Font('PingFangSC-Regular', 12)
-      this.setWidgetNodeColor(statusItemText, 'textColor')
-      statusItemText.centerAlignText()
-      statusItemStack.addSpacer()
-    }
-    rowRightStack.addSpacer()
-    // endregion
-    // 地图/一言展示
-    const leftImage = data.largeLocationPicture
-    const rightText = data.showLocation ? data.completeAddress : data.myOne
-    const footerWrapperStack = this.addStackTo(widget, 'horizontal')
-    footerWrapperStack.setPadding(0, 0, 0, 0)
-    const footerStack = this.addStackTo(footerWrapperStack, 'horizontal')
-    footerStack.cornerRadius = 25
-    footerStack.borderColor = Color.dynamic(new Color('#000000', 0.25), new Color('#ffffff', 0.25))
-    footerStack.borderWidth = 2
-    footerStack.setPadding(0, 0, 0, 20)
-    footerStack.centerAlignContent()
-    // 地图图片
-    const footerLeftStack = this.addStackTo(footerStack, 'vertical')
-    footerLeftStack.borderWidth = 2
-    footerLeftStack.borderColor = Color.dynamic(new Color('#000000', 0.25), new Color('#ffffff', 0.25))
-    const locationImage = await this.getImageByUrl(leftImage, !data.showLocation)
-    const locationImageStack = footerLeftStack.addImage(locationImage)
-    locationImageStack.imageSize = new Size(100, 60)
-    if (!data.showLocation) this.setWidgetNodeColor(locationImageStack, 'tintColor')
-    locationImageStack.centerAlignImage()
-    footerStack.addSpacer()
-    // 地理位置
-    const footerRightStack = this.addStackTo(footerStack, 'vertical')
-    const locationText = footerRightStack.addText(rightText)
-    locationText.font = new Font('PingFangSC-Regular', 12)
-    locationText.centerAlignText()
-    this.setWidgetNodeColor(locationText, 'textColor')
-    footerStack.addSpacer()
-    // 有地理数据时候展示一言
-    if (data.showLocation) {
-      const oneStack = this.addStackTo(widget, 'horizontal')
-      oneStack.setPadding(10, 0, 0, 0)
-      oneStack.addSpacer()
-      oneStack.centerAlignContent()
-      const oneText = oneStack.addText(data.myOne)
-      oneText.font = new Font('PingFangSC-Regular', 12)
-      this.setWidgetNodeColor(oneText, 'textColor')
-      oneText.centerAlignText()
-      oneStack.addSpacer()
-    }
+      // region 燃料信息
+      const fuelStack = this.addStackTo(rowLeftStack, 'horizontal')
+      fuelStack.bottomAlignContent()
+      const fuelImageStack = this.addStackTo(fuelStack, 'vertical')
+      fuelImageStack.bottomAlignContent()
+      let fuelIcon = 'fuelpump.circle'
+      if (data.socLevel) fuelIcon = 'bolt.circle'
+      const fuelImage = fuelImageStack.addImage(await this.getSFSymbolImage(fuelIcon))
+      fuelImage.imageSize = new Size(18, 18)
+      this.setWidgetNodeColor(fuelImage, 'tintColor')
+      fuelStack.addSpacer(5)
+      // 汽油
+      const fuelTextStack1 = this.addStackTo(fuelStack, 'horizontal')
+      fuelTextStack1.bottomAlignContent()
+      if (data.fuelLevel) {
+        const fuelText1 = fuelTextStack1.addText(data.fuelLevel + '%')
+        fuelText1.font = new Font('Futura-Medium', 14)
+        this.setWidgetNodeColor(fuelText1, 'textColor')
+        fuelStack.addSpacer(5)
+      }
+      // 电池
+      if (data.socLevel) {
+        const fuelTextStack2 = this.addStackTo(fuelStack, 'horizontal')
+        fuelTextStack2.bottomAlignContent()
+        const fuelText2 = fuelTextStack2.addText(data.socLevel + '%')
+        fuelText2.font = new Font('Futura-Medium', 12)
+        this.setWidgetNodeColor(fuelText2, 'textColor')
+      }
+      // endregion
+      rowLeftStack.addSpacer(5)
+      // region 总里程
+      const mileageStack = this.addStackTo(rowLeftStack, 'horizontal')
+      mileageStack.bottomAlignContent()
+      const mileageImageStack = this.addStackTo(mileageStack, 'vertical')
+      mileageImageStack.bottomAlignContent()
+      const mileageImage = mileageImageStack.addImage(await this.getSFSymbolImage('car.circle'))
+      mileageImage.imageSize = new Size(18, 18)
+      this.setWidgetNodeColor(mileageImage, 'tintColor')
+      mileageStack.addSpacer(5)
+      const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
+      mileageTextStack.bottomAlignContent()
+      const mileageText = mileageTextStack.addText(data.mileage + 'km')
+      mileageText.font = new Font('Futura-Medium', 14)
+      this.setWidgetNodeColor(mileageText, 'textColor')
+      // endregion
+      rowLeftStack.addSpacer(5)
+      // region 机油数据
+      if (data.oilSupport && data.oilLevel !== '0.0') {
+        const oilStack = this.addStackTo(rowLeftStack, 'horizontal')
+        oilStack.bottomAlignContent()
+        const oilImageStack = this.addStackTo(oilStack, 'vertical')
+        oilImageStack.bottomAlignContent()
+        const oilImage = oilImageStack.addImage(await this.getSFSymbolImage('drop.circle'))
+        oilImage.imageSize = new Size(18, 18)
+        if (Number(data.oilLevel) <= 12.5) {
+          oilImage.tintColor = this.dangerColor
+        } else {
+          this.setWidgetNodeColor(oilImage, 'tintColor')
+        }
+        oilStack.addSpacer(5)
+        const oilTextStack = this.addStackTo(oilStack, 'horizontal')
+        oilTextStack.bottomAlignContent()
+        const oilText = oilTextStack.addText(data.oilLevel + '%')
+        oilText.font = new Font('Futura-Medium', 14)
+        if (Number(data.oilLevel) <= 12.5) {
+          oilText.textColor = this.dangerColor
+        } else {
+          this.setWidgetNodeColor(oilText, 'textColor')
+        }
+        rowLeftStack.addSpacer(5)
+      }
+      // endregion
+      // region 锁车状态
+      const lockedStack = this.addStackTo(rowLeftStack, 'horizontal')
+      lockedStack.bottomAlignContent()
+      const lockedImageStack = this.addStackTo(lockedStack, 'vertical')
+      lockedImageStack.bottomAlignContent()
+      const lockedImage = lockedImageStack.addImage(await this.getSFSymbolImage('lock.circle'))
+      lockedImage.imageSize = new Size(18, 18)
+      if (data.isLocked) {
+        this.setWidgetNodeColor(lockedImage, 'tintColor')
+      } else {
+        lockedImage.tintColor = this.dangerColor
+      }
+      lockedStack.addSpacer(5)
+      const lockedTextStack = this.addStackTo(lockedStack, 'horizontal')
+      lockedTextStack.bottomAlignContent()
+      const lockedText = lockedTextStack.addText(data.isLocked ? '已锁车' : '未锁车')
+      lockedText.font = new Font('Futura-Medium', 14)
+      if (data.isLocked) {
+        this.setWidgetNodeColor(lockedText, 'textColor')
+      } else {
+        lockedText.textColor = this.dangerColor
+      }
+      // endregion
+      rowLeftStack.addSpacer(5)
+      // region 更新日期
+      const dateTimeStack = this.addStackTo(rowLeftStack, 'horizontal')
+      dateTimeStack.bottomAlignContent()
+      const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical')
+      dateTimeImageStack.bottomAlignContent()
+      const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('clock.arrow.2.circlepath'))
+      dateTimeImage.imageSize = new Size(18, 18)
+      this.setWidgetNodeColor(dateTimeImage, 'tintColor')
+      dateTimeStack.addSpacer(5)
+      const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
+      dateTimeTextStack.bottomAlignContent()
+      const dateTimeText = dateTimeTextStack.addText(data.updateTime)
+      dateTimeText.font = new Font('Futura-Medium', 14)
+      this.setWidgetNodeColor(dateTimeText, 'textColor')
+      // endregion
+      // endregion
+      mainStack.addSpacer()
+      // region 右侧车辆图片
+      const rowRightStack = this.addStackTo(mainStack, 'vertical')
+      rowRightStack.addSpacer()
+      const carPhotoStack = this.addStackTo(rowRightStack, 'horizontal')
+      carPhotoStack.addSpacer()
+      carPhotoStack.centerAlignContent()
+      const carPhoto = await this.getMyCarPhoto()
+      const carPhotoImage = carPhotoStack.addImage(carPhoto)
+      carPhotoImage.centerAlignImage()
+      const statusStack = this.addStackTo(rowRightStack, 'vertical')
+      statusStack.setPadding(5, 0, 0, 0)
+      statusStack.centerAlignContent()
 
-    return widget
+      const doorStatus = data.doorStatus || []
+      const windowStatus = data.windowStatus || []
+      const carStatus = doorStatus.concat(windowStatus)
+      // const carStatus = ['左前门', '后备箱', '右前窗', '右后窗', '天窗']
+      if (carStatus.length !== 0) {
+        const statusArray = this.format2Array(carStatus, 3)
+        statusArray.forEach(arr => {
+          const statusRowStack = this.addStackTo(statusStack, 'horizontal')
+          statusRowStack.setPadding(2, 0, 2, 0)
+          statusRowStack.centerAlignContent()
+          arr.forEach(async (item) => {
+            const statusItemStack = this.addStackTo(statusRowStack, 'horizontal')
+            statusItemStack.addSpacer()
+            statusItemStack.centerAlignContent()
+            const image = await this.getSFSymbolImage('exclamationmark.shield.fill')
+            const statusItemImage = statusItemStack.addImage(image)
+            statusItemImage.imageSize = new Size(12, 12)
+            statusItemImage.tintColor = this.warningColor
+            statusItemStack.addSpacer(2)
+            const statusItemText = statusItemStack.addText(item)
+            statusItemText.font = new Font('PingFangSC-Regular', 12)
+            statusItemText.textColor = this.warningColor
+            statusItemText.centerAlignText()
+            statusItemStack.addSpacer()
+          })
+        })
+      } else {
+        const statusItemStack = this.addStackTo(statusStack, 'horizontal')
+        statusItemStack.setPadding(5, 0, 5, 0)
+        statusItemStack.addSpacer()
+        statusItemStack.centerAlignContent()
+        const statusItemImage = statusItemStack.addImage(await this.getSFSymbolImage('checkmark.shield.fill'))
+        statusItemImage.imageSize = new Size(12, 12)
+        statusItemImage.tintColor = this.successColor
+        statusItemStack.addSpacer(2)
+        const statusItemText = statusItemStack.addText('当前车窗已全关闭')
+        statusItemText.font = new Font('PingFangSC-Regular', 12)
+        this.setWidgetNodeColor(statusItemText, 'textColor')
+        statusItemText.centerAlignText()
+        statusItemStack.addSpacer()
+      }
+      rowRightStack.addSpacer()
+      // endregion
+      // 地图/一言展示
+      const leftImage = data.largeLocationPicture
+      const rightText = data.showLocation ? data.completeAddress : data.myOne
+      const footerWrapperStack = this.addStackTo(widget, 'horizontal')
+      footerWrapperStack.setPadding(0, 0, 0, 0)
+      const footerStack = this.addStackTo(footerWrapperStack, 'horizontal')
+      footerStack.cornerRadius = 25
+      footerStack.borderColor = Color.dynamic(new Color('#000000', 0.25), new Color('#ffffff', 0.25))
+      footerStack.borderWidth = 2
+      footerStack.setPadding(0, 0, 0, 20)
+      footerStack.centerAlignContent()
+      // 地图图片
+      const footerLeftStack = this.addStackTo(footerStack, 'vertical')
+      footerLeftStack.borderWidth = 2
+      footerLeftStack.borderColor = Color.dynamic(new Color('#000000', 0.25), new Color('#ffffff', 0.25))
+      const locationImage = await this.getImageByUrl(leftImage, !data.showLocation)
+      const locationImageStack = footerLeftStack.addImage(locationImage)
+      locationImageStack.imageSize = new Size(100, 60)
+      if (!data.showLocation) this.setWidgetNodeColor(locationImageStack, 'tintColor')
+      locationImageStack.centerAlignImage()
+      footerStack.addSpacer()
+      // 地理位置
+      const footerRightStack = this.addStackTo(footerStack, 'vertical')
+      const locationText = footerRightStack.addText(rightText)
+      locationText.font = new Font('PingFangSC-Regular', 12)
+      locationText.centerAlignText()
+      this.setWidgetNodeColor(locationText, 'textColor')
+      footerStack.addSpacer()
+      // 有地理数据时候展示一言
+      if (data.showLocation) {
+        const oneStack = this.addStackTo(widget, 'horizontal')
+        oneStack.setPadding(10, 0, 0, 0)
+        oneStack.addSpacer()
+        oneStack.centerAlignContent()
+        const oneText = oneStack.addText(data.myOne)
+        oneText.font = new Font('PingFangSC-Regular', 12)
+        this.setWidgetNodeColor(oneText, 'textColor')
+        oneText.centerAlignText()
+        oneStack.addSpacer()
+      }
+
+      return widget
+    } catch (error) {
+      await this.writeErrorLog(data)
+    }
   }
 
   /**
@@ -537,12 +550,10 @@ class Widget extends Base {
   async getData(debug = false) {
     // 日志追踪
     if (this.settings['trackingLogEnabled']) {
-      const formatter = new DateFormatter()
-      formatter.dateFormat = 'yyyy年MM月dd日 HH:mm:ss 更新\n'
       if (this.settings['debug_bootstrap_date_time']) {
-        this.settings['debug_bootstrap_date_time'] += formatter.string(new Date())
+        this.settings['debug_bootstrap_date_time'] += this.formatDate(new Date(), 'yyyy年MM月dd日 HH:mm:ss 更新\n')
       } else {
-        this.settings['debug_bootstrap_date_time'] = '\n' + formatter.string(new Date())
+        this.settings['debug_bootstrap_date_time'] = '\n' + this.formatDate(new Date(), 'yyyy年MM月dd日 HH:mm:ss 更新\n')
       }
       await this.saveSettings(false)
     }
@@ -550,12 +561,27 @@ class Widget extends Base {
     const showLocation = this.settings['aMapKey'] !== '' && this.settings['aMapKey'] !== undefined
     const showPlate = this.settings['showPlate'] || false
 
+    const getVehiclesStatusData = await this.getVehiclesStatus(debug)
+
     const data = {
       carPlateNo: this.settings['carPlateNo'],
       seriesName: this.settings['myCarName'] || this.settings['seriesName'],
       carModelName: this.settings['myCarModelName'] || this.settings['carModelName'],
       carVIN: this.settings['carVIN'],
       myOne: this.settings['myOne'] || '世间美好，与您环环相扣',
+      oilSupport: getVehiclesStatusData.oilSupport || false,
+      oilLevel: getVehiclesStatusData.oilLevel || false,
+      parkingLights: getVehiclesStatusData.parkingLights || '0',
+      outdoorTemperature: getVehiclesStatusData.outdoorTemperature || '0',
+      parkingBrakeActive: getVehiclesStatusData.parkingBrakeActive || '0',
+      fuelRange: getVehiclesStatusData.fuelRange || '0',
+      fuelLevel: getVehiclesStatusData.fuelLevel || false,
+      socLevel: getVehiclesStatusData.socLevel || false,
+      mileage: getVehiclesStatusData.mileage || '0',
+      updateTime: getVehiclesStatusData.updateTime || this.formatDate(),
+      isLocked: getVehiclesStatusData.isLocked || false,
+      doorStatus: getVehiclesStatusData.doorStatus || [],
+      windowStatus: getVehiclesStatusData.windowStatus || [],
       showLocation,
       showPlate,
       // 获取车辆状态信息
@@ -589,7 +615,7 @@ class Widget extends Base {
   handleVehiclesData(data) {
     // region 机油信息
     const oilSupport = data.find(i => i.id === '0x0204FFFFFF')?.field
-    let oilLevel = null
+    let oilLevel = false
     // 有些车辆不一定支持机油显示，需要判断下 机油单位百分比
     if (oilSupport) oilLevel = oilSupport.find(i => i.id === '0x0204040003')?.value
     // endregion
@@ -622,10 +648,8 @@ class Widget extends Base {
     // region 总里程和更新时间
     const mileageArr = data.find(i => i.id === '0x0101010002')?.field
     const mileage = mileageArr.find(i => i.id === '0x0101010002')?.value
-    const formatter = new DateFormatter()
-    formatter.dateFormat = 'MM-dd HH:mm'
-    const updateDate = new Date(mileageArr.find(i => i.id === '0x0101010002').tsCarSentUtc)
-    const updateTime = formatter.string(updateDate)
+    const dateTime = mileageArr.find(i => i.id === '0x0101010002')?.tsCarSentUtc
+    const updateTime = this.formatDate(dateTime, 'MM-dd HH:mm')
     // endregion
     // region 锁车状态
     const isLocked = this.getVehiclesLocked(statusArr)
@@ -1035,6 +1059,7 @@ class Widget extends Base {
           default:
             await this.notify('未知错误' + response.error.errorCode, '未知错误:' + response.error.description)
         }
+        return this.settings['vehicleData']
       } else {
         // 接口获取数据成功
         const vehicleData = response.StoredVehicleDataResponse.vehicleData.data
@@ -1103,31 +1128,39 @@ class Widget extends Base {
           longitude = response.findCarResponse.Position.carCoordinate.longitude
           latitude = response.findCarResponse.Position.carCoordinate.latitude
         }
-        // todo 当 longitude 和 latitude 都返回 0 的时候做一下处理
-        // 转换正常经纬度信息
-        longitude = parseInt(longitude, 10) / 1000000
-        latitude = parseInt(latitude, 10) / 1000000
-        this.settings['longitude'] = longitude
-        this.settings['latitude'] = latitude
-        await this.saveSettings(false)
-        console.log('获取车辆经纬度信息')
-        if (debug) {
-          console.log('当前车辆经纬度：')
-          console.log('经度：' + longitude)
-          console.log('纬度：' + latitude)
-          console.log('车辆经纬度接口返回数据：')
-          console.log(response)
-        }
-        return {
-          longitude,
-          latitude
+        if (longitude === 0 || latitude === 0) {
+          console.warn('获取车辆经纬度失败')
+          return {
+            longitude: 0,
+            latitude: 0
+          }
+        } else {
+          // 转换正常经纬度信息
+          longitude = parseInt(longitude, 10) / 1000000
+          latitude = parseInt(latitude, 10) / 1000000
+          this.settings['longitude'] = longitude
+          this.settings['latitude'] = latitude
+          await this.saveSettings(false)
+          console.log('获取车辆经纬度信息')
+          if (debug) {
+            console.log('当前车辆经纬度：')
+            console.log('经度：' + longitude)
+            console.log('纬度：' + latitude)
+            console.log('车辆经纬度接口返回数据：')
+            console.log(response)
+          }
+          return {
+            longitude,
+            latitude
+          }
         }
       }
     } catch (error) {
+      console.error('当前车辆可能正在行驶中或者没有上传信号，请稍后再重试！')
       console.error(error)
       return {
-        longitude: this.settings['longitude'] || 0,
-        latitude: this.settings['latitude'] || 0
+        longitude: 0,
+        latitude: 0
       }
     }
   }
@@ -1883,6 +1916,12 @@ class Widget extends Base {
     }, {
       name: 'clearTrackingLog',
       text: '清除追踪日志'
+    }, {
+      name: 'viewErrorLog',
+      text: '查阅报错日志'
+    }, {
+      name: 'clearErrorLog',
+      text: '清除报错日志'
     }]
 
     menuList.forEach(item => {
@@ -1924,6 +1963,7 @@ class Widget extends Base {
     alert.message = this.settings['debug_bootstrap_date_time']
     alert.addAction('关闭')
     await alert.presentAlert()
+    return await this.actionDebug()
   }
 
   /**
@@ -1932,6 +1972,47 @@ class Widget extends Base {
    */
   async clearTrackingLog() {
     this.settings['debug_bootstrap_date_time'] = undefined
+    await this.saveSettings(false)
+    return await this.actionDebug()
+  }
+
+  /**
+   * 查阅错误日志
+   * @return {Promise<void>}
+   */
+  async viewErrorLog() {
+    console.log(this.settings['error_bootstrap_date_time'])
+
+    const alert = new Alert()
+    alert.title = '查阅错误日志'
+    alert.message = this.settings['error_bootstrap_date_time']
+    alert.addAction('关闭')
+    await alert.presentAlert()
+    return await this.actionDebug()
+  }
+
+  /**
+   * 清除错误日志
+   * @return {Promise<void>}
+   */
+  async clearErrorLog() {
+    this.settings['error_bootstrap_date_time'] = undefined
+    await this.saveSettings(false)
+    return await this.actionDebug()
+  }
+
+  /**
+   * 写入错误日志
+   * @param data
+   * @return {Promise<void>}
+   */
+  async writeErrorLog(data) {
+    const type = Object.prototype.toString.call(data)
+    let log = data
+    if (type === '[object Object]' || type === '[object Array]') {
+      log = JSON.stringify(log)
+    }
+    this.settings['error_bootstrap_date_time'] = this.formatDate(new Date(), '\nyyyy年MM月dd日 HH:mm:ss 错误日志：\n') + ' - ' + log
     await this.saveSettings(false)
   }
 
@@ -2041,6 +2122,19 @@ class Widget extends Base {
       'User-Agent': 'MyAuDi/3.0.2 CFNetwork/1325.0.1 Darwin/21.1.0',
       'X-Client-ID': this.settings['clientID']
     }
+  }
+
+  /**
+   * 时间格式化
+   * @param date
+   * @param format
+   * @return {string}
+   */
+  formatDate(date = new Date(), format = 'MM-dd HH:mm') {
+    const formatter = new DateFormatter()
+    formatter.dateFormat = format
+    const updateDate = new Date(date)
+    return formatter.string(updateDate)
   }
 }
 
