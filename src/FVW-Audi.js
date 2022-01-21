@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.1.2'
+const SCRIPT_VERSION = '2.1.3.beta1'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
@@ -72,9 +72,29 @@ class Widget extends Base {
    * @returns {Promise<ListWidget>}
    */
   async renderSmall(data) {
-    const widget = new ListWidget()
-    widget.addText('Hello World').centerAlignText()
-    return widget
+    try {
+      const widget = new ListWidget()
+      await this.setWidgetDynamicBackground(widget, 'Small')
+      widget.setPadding(10, 10, 10, 10)
+      const containerStack = this.addStackTo(widget, 'vertical')
+      // containerStack.setPadding(20, 20, 20, 20)
+      containerStack.cornerRadius = 100
+      containerStack.addSpacer(2)
+      containerStack.backgroundColor = Color.red()
+      const inContainerStack = this.addStackTo(containerStack, 'vertical')
+      inContainerStack.cornerRadius = 100
+      inContainerStack.backgroundColor = Color.green()
+      inContainerStack.addSpacer()
+      const carPhoto = await this.getMyCarPhoto()
+      const inContainerImage = inContainerStack.addImage(carPhoto)
+      inContainerImage.centerAlignImage()
+      inContainerStack.addSpacer()
+      containerStack.addSpacer()
+
+      return widget
+    } catch (error) {
+      await this.writeErrorLog(data)
+    }
   }
 
   /**
@@ -171,7 +191,7 @@ class Widget extends Base {
       }
       if (data.socLevel) {
         const fuelText2 = carInfoTextStack.addText(data.socLevel + '%')
-        fuelText2.font = new Font('Futura-Medium', 8)
+        fuelText2.font = new Font('Futura-Medium', data.fuelLevel ? 8 : 12)
         this.setWidgetNodeColor(fuelText2, 'textColor')
       }
 
@@ -591,6 +611,9 @@ class Widget extends Base {
       // 获取静态位置图片
       largeLocationPicture: showLocation ? this.getCarAddressImage(debug) : 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/fvw_audi_joiner/audi_logo.png',
     }
+    // 保存数据
+    this.settings['widgetData'] = data
+    await this.saveSettings(false)
     if (debug) {
       console.log('获取组件所需数据')
       console.log(data)
@@ -2150,19 +2173,6 @@ class Widget extends Base {
       'User-Agent': 'MyAuDi/3.0.2 CFNetwork/1325.0.1 Darwin/21.1.0',
       'X-Client-ID': this.settings['clientID']
     }
-  }
-
-  /**
-   * 时间格式化
-   * @param date
-   * @param format
-   * @return {string}
-   */
-  formatDate(date = new Date(), format = 'MM-dd HH:mm') {
-    const formatter = new DateFormatter()
-    formatter.dateFormat = format
-    const updateDate = new Date(date)
-    return formatter.string(updateDate)
   }
 }
 

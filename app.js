@@ -106,11 +106,11 @@ app.post('/console', (req, res) => {
 
 // 获取当前电脑IP
 function getIPAdress() {
-  var interfaces = os.networkInterfaces()
-  for (var devName in interfaces) {
-      var iface = interfaces[devName]
-      for (var i = 0; i < iface.length; i++) {
-          var alias = iface[i]
+  const interfaces = os.networkInterfaces()
+  for (const devName in interfaces) {
+    const iface = interfaces[devName]
+      for (let i = 0; i < iface.length; i++) {
+        const alias = iface[i]
           if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
               return alias.address
           }
@@ -125,5 +125,4 @@ console.log('开发服务运行中')
 console.log(`地址：${_host}`)
 console.log('如果你的手机还没有配置开发环境，请手机 Safari 访问上述地址，查看引导')
 console.log('如果你的手机已经安装好环境和小组件模板，请在 Scriptable 里点击小组件模板->远程开发，服务器地址输入：', _ip)
-console.log('更多帮助：https://github.com/im3x/scriptables')
 app.listen(HTTP_PORT)

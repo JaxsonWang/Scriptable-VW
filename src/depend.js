@@ -563,6 +563,19 @@ class Base {
       }
     }
   }
+
+  /**
+   * 时间格式化
+   * @param date
+   * @param format
+   * @return {string}
+   */
+  formatDate(date = new Date(), format = 'MM-dd HH:mm') {
+    const formatter = new DateFormatter()
+    formatter.dateFormat = format
+    const updateDate = new Date(date)
+    return formatter.string(updateDate)
+  }
 }
 
 // @base.end
