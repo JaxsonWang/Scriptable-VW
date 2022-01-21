@@ -7,6 +7,7 @@ module.exports = {
   extends: [
     '@scriptable-ios'
   ],
+  parser: '@babel/eslint-parser',
   parserOptions: {
     ecmaVersion: 'latest'
   },

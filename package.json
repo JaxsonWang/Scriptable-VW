@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app",
-    "build:FVW-Audi": "node pack.js src/FVW-Audi.js FVW-Audi-Joiner",
+    "build:FVW-Audi": "npm run lint && node pack.js src/FVW-Audi.js FVW-Audi-Joiner",
     "build:FVW": "npm run lint && node pack.js src/FVW.js FVW-Joiner",
     "build:SVW": "npm run lint && node pack.js src/SVW.js SVW-Joiner",
     "lint": "eslint src/**",
@@ -14,6 +14,9 @@
   "author": "淮城一只猫",
   "license": "MIT",
   "devDependencies": {
+    "@babel/core": "^7.16.10",
+    "@babel/eslint-parser": "^7.16.5",
+    "@babel/plugin-syntax-top-level-await": "^7.14.5",
     "@scriptable-ios/eslint-config": "^1.6.4",
     "@types/scriptable-ios": "^1.6.4",
     "body-parser": "^1.19.0",
