@@ -576,6 +576,10 @@ class Base {
     const updateDate = new Date(date)
     return formatter.string(updateDate)
   }
+
+  successColor = (alpha = 1) => new Color('#67C23A', alpha)
+  warningColor = (alpha = 1) => new Color('#E6A23C', alpha)
+  dangerColor = (alpha = 1) => new Color('#F56C6C', alpha)
 }
 
 // @base.end

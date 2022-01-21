@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.1.3.beta1'
+const SCRIPT_VERSION = '2.1.4'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
@@ -28,9 +28,6 @@ class Widget extends Base {
     this.name = 'Audi 挂件'
     this.desc = 'Audi 车辆桌面组件展示'
 
-    this.successColor = new Color('#67C23A', 1)
-    this.warningColor = new Color('#E6A23C', 1)
-    this.dangerColor = new Color('#F56C6C', 1)
     this.lightDefaultBackgroundColorGradient = ['#ffffff', '#dbefff']
     this.darkDefaultBackgroundColorGradient = ['#414345', '#232526']
 
@@ -76,19 +73,92 @@ class Widget extends Base {
       const widget = new ListWidget()
       await this.setWidgetDynamicBackground(widget, 'Small')
       widget.setPadding(10, 10, 10, 10)
+
+      const doorStatus = data.doorStatus
+      const windowStatus = data.windowStatus
+      const doorAndWindowNormal = doorStatus.concat(windowStatus).length !== 0
+      const isLocked = data.isLocked
+
       const containerStack = this.addStackTo(widget, 'vertical')
-      // containerStack.setPadding(20, 20, 20, 20)
-      containerStack.cornerRadius = 100
-      containerStack.addSpacer(2)
-      containerStack.backgroundColor = Color.red()
-      const inContainerStack = this.addStackTo(containerStack, 'vertical')
-      inContainerStack.cornerRadius = 100
-      inContainerStack.backgroundColor = Color.green()
-      inContainerStack.addSpacer()
+      containerStack.cornerRadius = 20
+      containerStack.addSpacer()
+      const fuelStack = this.addStackTo(containerStack, 'horizontal')
+      fuelStack.bottomAlignContent()
+      fuelStack.addSpacer()
+      const fuelText1 = fuelStack.addText(`${data.fuelRange}km`)
+      fuelText1.font = new Font('Futura-CondensedExtraBold', 14)
+      this.setWidgetNodeColor(fuelText1, 'textColor')
+      if (
+        data.fuelLevel && data.fuelLevel <= 20 ||
+        data.socLevel && data.socLevel <= 20
+      ) {
+        fuelText1.textColor = this.dangerColor()
+      }
+      const fuelOccupancy = fuelStack.addText('/')
+      fuelOccupancy.font = new Font('Futura-Medium', 12)
+      this.setWidgetNodeColor(fuelOccupancy, 'textColor')
+      if (data.fuelLevel) {
+        const fuelText2 = fuelStack.addText(`${data.fuelLevel}%`)
+        fuelText2.font = new Font('Futura-Medium', 12)
+        this.setWidgetNodeColor(fuelText2, 'textColor')
+        if (
+          data.fuelLevel && data.fuelLevel <= 20 ||
+          data.socLevel && data.socLevel <= 20
+        ) {
+          fuelText2.textColor = this.dangerColor()
+        }
+      }
+      if (data.socLevel) {
+        const fuelText3 = fuelStack.addText(`${data.socLevel}%`)
+        fuelText3.font = new Font('Futura-Medium', data.fuelLevel ? 8 : 12)
+        this.setWidgetNodeColor(fuelText3, 'textColor')
+        if (
+          data.fuelLevel && data.fuelLevel <= 20 ||
+          data.socLevel && data.socLevel <= 20
+        ) {
+          fuelText3.textColor = this.dangerColor()
+        }
+      }
+      fuelStack.addSpacer()
+      containerStack.addSpacer(10)
       const carPhoto = await this.getMyCarPhoto()
-      const inContainerImage = inContainerStack.addImage(carPhoto)
+      const inContainerImage = containerStack.addImage(carPhoto)
       inContainerImage.centerAlignImage()
-      inContainerStack.addSpacer()
+      containerStack.addSpacer(10)
+      const statusMainStack = this.addStackTo(containerStack, 'horizontal')
+      statusMainStack.addSpacer()
+      const statusStack = this.addStackTo(statusMainStack, 'horizontal')
+      statusStack.centerAlignContent()
+      statusStack.setPadding(5, 10, 5, 10)
+      statusStack.cornerRadius = 10
+      statusStack.borderWidth = 2
+      statusStack.backgroundColor = this.successColor(0.25)
+      if (doorAndWindowNormal) statusStack.backgroundColor = this.warningColor(0.25)
+      if (!isLocked) statusStack.backgroundColor = this.dangerColor(0.25)
+
+      statusStack.borderColor = this.successColor(0.5)
+      if (doorAndWindowNormal) statusStack.borderColor = this.warningColor(0.5)
+      if (!isLocked) statusStack.borderColor = this.dangerColor(0.5)
+
+      let icon = await this.getSFSymbolImage('lock.fill')
+      if (doorAndWindowNormal) icon = await this.getSFSymbolImage('exclamationmark.shield.fill')
+      if (!isLocked) icon = await this.getSFSymbolImage('lock.open.fill')
+      const statusImage = statusStack.addImage(icon)
+      statusImage.imageSize = new Size(12, 12)
+      statusImage.tintColor = this.successColor()
+      if (doorAndWindowNormal) statusImage.tintColor = this.warningColor()
+      if (!isLocked) statusImage.tintColor = this.dangerColor()
+      statusStack.spacing = 4
+      let status = '车辆已锁定'
+      if (doorAndWindowNormal) status = '门窗未锁定'
+      if (!isLocked) status = '未锁车'
+      const statusText = statusStack.addText(status)
+      statusText.font = new Font('PingFangSC-Medium', 12)
+      statusText.textColor = this.successColor()
+      if (doorAndWindowNormal) statusText.textColor = this.warningColor()
+      if (!isLocked) statusText.textColor = this.dangerColor()
+      statusMainStack.addSpacer()
+
       containerStack.addSpacer()
 
       return widget
@@ -147,20 +217,20 @@ class Widget extends Base {
       const carLockStack = this.addStackTo(statusStack, 'horizontal')
       carLockStack.centerAlignContent()
       // 门窗状态
-      const doorStatus = data.doorStatus || []
-      const windowStatus = data.windowStatus || []
+      const doorStatus = data.doorStatus
+      const windowStatus = data.windowStatus
       const doorAndWindowNormal = doorStatus.concat(windowStatus).length !== 0
       // const doorAndWindowNormal = true
       if (doorAndWindowNormal) {
         const carDoorImage = carLockStack.addImage(await this.getSFSymbolImage('xmark.shield.fill'))
         carDoorImage.imageSize = new Size(12, 12)
-        carDoorImage.tintColor = this.warningColor
+        carDoorImage.tintColor = this.warningColor()
       }
       carLockStack.spacing = 5
       // 锁车状态
       const carLockImage = carLockStack.addImage(await this.getSFSymbolImage('lock.shield.fill'))
       carLockImage.imageSize = new Size(12, 12)
-      carLockImage.tintColor = data.isLocked ? this.successColor : this.dangerColor
+      carLockImage.tintColor = data.isLocked ? this.successColor() : this.dangerColor()
       // endregion
       // region mainStack
       const mainStack = this.addStackTo(widget, 'horizontal')
@@ -182,17 +252,36 @@ class Widget extends Base {
       const enduranceText = carInfoTextStack.addText(data.fuelRange + 'km')
       enduranceText.font = new Font('Futura-CondensedExtraBold', 14)
       this.setWidgetNodeColor(enduranceText, 'textColor')
+      if (
+        data.fuelLevel && data.fuelLevel <= 20 ||
+        data.socLevel && data.socLevel <= 20
+      ) {
+        enduranceText.textColor = this.dangerColor()
+        carInfoImage.tintColor = this.dangerColor()
+      }
       if (data.fuelLevel) {
         carInfoTextStack.addSpacer(3)
         const fuelText1 = carInfoTextStack.addText(data.fuelLevel + '%')
         fuelText1.font = new Font('Futura-Medium', 12)
         this.setWidgetNodeColor(fuelText1, 'textColor')
         carInfoTextStack.addSpacer(1)
+        if (
+          data.fuelLevel && data.fuelLevel <= 20 ||
+          data.socLevel && data.socLevel <= 20
+        ) {
+          fuelText1.textColor = this.dangerColor()
+        }
       }
       if (data.socLevel) {
         const fuelText2 = carInfoTextStack.addText(data.socLevel + '%')
         fuelText2.font = new Font('Futura-Medium', data.fuelLevel ? 8 : 12)
         this.setWidgetNodeColor(fuelText2, 'textColor')
+        if (
+          data.fuelLevel && data.fuelLevel <= 20 ||
+          data.socLevel && data.socLevel <= 20
+        ) {
+          fuelText2.textColor = this.dangerColor()
+        }
       }
 
       rowLeftStack.spacing = 5
@@ -316,6 +405,13 @@ class Widget extends Base {
       const enduranceText = enduranceTextStack.addText(data.fuelRange + 'km')
       enduranceText.font = new Font('Futura-Medium', 14)
       this.setWidgetNodeColor(enduranceText, 'textColor')
+      if (
+        data.fuelLevel && data.fuelLevel <= 20 ||
+        data.socLevel && data.socLevel <= 20
+      ) {
+        enduranceImage.tintColor = this.dangerColor()
+        enduranceText.textColor = this.dangerColor()
+      }
       // endregion
       rowLeftStack.addSpacer(5)
       // region 燃料信息
@@ -328,6 +424,12 @@ class Widget extends Base {
       const fuelImage = fuelImageStack.addImage(await this.getSFSymbolImage(fuelIcon))
       fuelImage.imageSize = new Size(18, 18)
       this.setWidgetNodeColor(fuelImage, 'tintColor')
+      if (
+        data.fuelLevel && data.fuelLevel <= 20 ||
+        data.socLevel && data.socLevel <= 20
+      ) {
+        fuelImage.tintColor = this.dangerColor()
+      }
       fuelStack.addSpacer(5)
       // 汽油
       const fuelTextStack1 = this.addStackTo(fuelStack, 'horizontal')
@@ -337,6 +439,12 @@ class Widget extends Base {
         fuelText1.font = new Font('Futura-Medium', 14)
         this.setWidgetNodeColor(fuelText1, 'textColor')
         fuelStack.addSpacer(5)
+        if (
+          data.fuelLevel && data.fuelLevel <= 20 ||
+          data.socLevel && data.socLevel <= 20
+        ) {
+          fuelText1.textColor = this.dangerColor()
+        }
       }
       // 电池
       if (data.socLevel) {
@@ -345,6 +453,12 @@ class Widget extends Base {
         const fuelText2 = fuelTextStack2.addText(data.socLevel + '%')
         fuelText2.font = new Font('Futura-Medium', 12)
         this.setWidgetNodeColor(fuelText2, 'textColor')
+        if (
+          data.fuelLevel && data.fuelLevel <= 20 ||
+          data.socLevel && data.socLevel <= 20
+        ) {
+          fuelText2.textColor = this.dangerColor()
+        }
       }
       // endregion
       rowLeftStack.addSpacer(5)
@@ -373,7 +487,7 @@ class Widget extends Base {
         const oilImage = oilImageStack.addImage(await this.getSFSymbolImage('drop.circle'))
         oilImage.imageSize = new Size(18, 18)
         if (Number(data.oilLevel) <= 12.5) {
-          oilImage.tintColor = this.dangerColor
+          oilImage.tintColor = this.dangerColor()
         } else {
           this.setWidgetNodeColor(oilImage, 'tintColor')
         }
@@ -383,7 +497,7 @@ class Widget extends Base {
         const oilText = oilTextStack.addText(data.oilLevel + '%')
         oilText.font = new Font('Futura-Medium', 14)
         if (Number(data.oilLevel) <= 12.5) {
-          oilText.textColor = this.dangerColor
+          oilText.textColor = this.dangerColor()
         } else {
           this.setWidgetNodeColor(oilText, 'textColor')
         }
@@ -400,7 +514,7 @@ class Widget extends Base {
       if (data.isLocked) {
         this.setWidgetNodeColor(lockedImage, 'tintColor')
       } else {
-        lockedImage.tintColor = this.dangerColor
+        lockedImage.tintColor = this.dangerColor()
       }
       lockedStack.addSpacer(5)
       const lockedTextStack = this.addStackTo(lockedStack, 'horizontal')
@@ -410,7 +524,7 @@ class Widget extends Base {
       if (data.isLocked) {
         this.setWidgetNodeColor(lockedText, 'textColor')
       } else {
-        lockedText.textColor = this.dangerColor
+        lockedText.textColor = this.dangerColor()
       }
       // endregion
       rowLeftStack.addSpacer(5)
@@ -461,11 +575,11 @@ class Widget extends Base {
             const image = await this.getSFSymbolImage('exclamationmark.shield.fill')
             const statusItemImage = statusItemStack.addImage(image)
             statusItemImage.imageSize = new Size(12, 12)
-            statusItemImage.tintColor = this.warningColor
+            statusItemImage.tintColor = this.warningColor()
             statusItemStack.addSpacer(2)
             const statusItemText = statusItemStack.addText(item)
             statusItemText.font = new Font('PingFangSC-Regular', 12)
-            statusItemText.textColor = this.warningColor
+            statusItemText.textColor = this.warningColor()
             statusItemText.centerAlignText()
             statusItemStack.addSpacer()
           })
@@ -477,7 +591,7 @@ class Widget extends Base {
         statusItemStack.centerAlignContent()
         const statusItemImage = statusItemStack.addImage(await this.getSFSymbolImage('checkmark.shield.fill'))
         statusItemImage.imageSize = new Size(12, 12)
-        statusItemImage.tintColor = this.successColor
+        statusItemImage.tintColor = this.successColor()
         statusItemStack.addSpacer(2)
         const statusItemText = statusItemStack.addText('当前车窗已全关闭')
         statusItemText.font = new Font('PingFangSC-Regular', 12)
@@ -2076,12 +2190,13 @@ class Widget extends Base {
 
   /**
    * 获取动态字体颜色
+   * @param alpha
    * @returns {Color}
    */
-  dynamicTextColor() {
+  dynamicTextColor(alpha = 1) {
     const lightTextColor = this.settings['lightTextColor'] ? this.settings['lightTextColor'] : '#000000'
     const darkTextColor = this.settings['darkTextColor'] ? this.settings['darkTextColor'] : '#ffffff'
-    return Color.dynamic(new Color(lightTextColor, 1), new Color(darkTextColor, 1))
+    return Color.dynamic(new Color(lightTextColor, alpha), new Color(darkTextColor, alpha))
   }
 
   /**
@@ -2108,10 +2223,11 @@ class Widget extends Base {
 
   /**
    * 动态设置组件字体或者图片颜色
-   * @param {WidgetText || WidgetImage} widget
-   * @param {'textColor' || 'tintColor'} type
+   * @param {WidgetText || WidgetImage || WidgetStack} widget
+   * @param {'textColor' || 'tintColor' || 'borderColor'} type
+   * @param {number} alpha
    */
-  setWidgetNodeColor(widget, type = 'textColor') {
+  setWidgetNodeColor(widget, type = 'textColor', alpha = 1) {
     if (
       this.settings['backgroundPhotoSmallLight'] ||
       this.settings['backgroundPhotoSmallDark'] ||
@@ -2120,17 +2236,17 @@ class Widget extends Base {
       this.settings['backgroundPhotoLargeLight'] ||
       this.settings['backgroundPhotoLargeDark']
     ) {
-      const lightTextColor = this.settings['backgroundImageLightTextColor'] || '#ffffff'
-      const darkTextColor = this.settings['backgroundImageDarkTextColor'] || '#000000'
-      widget[type] = Color.dynamic(new Color(lightTextColor, 1), new Color(darkTextColor, 1))
+      const lightTextColor = this.settings['backgroundImageLightTextColor'] || '#000000'
+      const darkTextColor = this.settings['backgroundImageDarkTextColor'] || '#ffffff'
+      widget[type] = Color.dynamic(new Color(lightTextColor, alpha), new Color(darkTextColor, alpha))
     } else {
-      widget[type] = this.dynamicTextColor()
+      widget[type] = this.dynamicTextColor(alpha)
     }
   }
 
   /**
    * 动态设置组件字体或者图片颜色
-   * @param {ListWidget} widget
+   * @param {ListWidget || WidgetStack} widget
    * @param {'Small' || 'Medium' || 'Large'} widgetFamily
    */
   async setWidgetDynamicBackground(widget, widgetFamily) {
