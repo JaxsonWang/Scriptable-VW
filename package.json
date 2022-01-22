@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node app",
     "build:FVW-Audi": "npm run lint && node pack.js src/FVW-Audi.js FVW-Audi-Joiner",
+    "build:FVW-Audi-Theme-Simple": "npm run lint && node pack.js src/FVW-Audi_Simple.js FVW-Audi_Theme-Simple",
     "build:FVW": "npm run lint && node pack.js src/FVW.js FVW-Joiner",
     "build:SVW": "npm run lint && node pack.js src/SVW.js SVW-Joiner",
     "lint": "eslint src/**",

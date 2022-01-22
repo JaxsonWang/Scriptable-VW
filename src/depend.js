@@ -187,12 +187,13 @@ class Base {
   /**
    * 获取当前插件的设置
    * @param {boolean} json 是否为json格式
+   * @param key
    */
-  getSettings(json = true) {
+  getSettings(json = true, key = this.SETTING_KEY) {
     let result = json ? {} : ''
     let cache = ''
-    if (Keychain.contains(this.SETTING_KEY)) {
-      cache = Keychain.get(this.SETTING_KEY)
+    if (Keychain.contains(key)) {
+      cache = Keychain.get(key)
     }
     if (json) {
       try {

@@ -2,9 +2,6 @@
 // These must be at the very top of the file. Do not edit.
 // icon-color: cyan; icon-glyph: car;
 // Variables used by Scriptable.
-// These must be at the very top of the file. Do not edit.
-// icon-color: cyan; icon-glyph: car;
-// Variables used by Scriptable.
 //
 // iOS 桌面组件脚本
 // 开发说明：请从 Widget 类开始编写，注释请勿修改
@@ -14,7 +11,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.1.6'
+const SCRIPT_VERSION = '2.1.7'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
@@ -37,6 +34,7 @@ class Widget extends Base {
       if (this.settings['isLogin']) this.registerAction('刷新数据', this.actionRefreshData)
       if (this.settings['isLogin']) this.registerAction('登出重置', this.actionLogOut)
       if (this.settings['isLogin']) this.registerAction('调试日志', this.actionDebug)
+      this.registerAction('主题下载', this.actionDownloadThemes)
       this.registerAction('检查更新', this.actionCheckUpdate)
       this.registerAction('当前版本: v' + SCRIPT_VERSION, this.actionAbout)
     }
@@ -148,7 +146,7 @@ class Widget extends Base {
     try {
       const widget = new ListWidget()
       await this.setWidgetDynamicBackground(widget, 'Medium')
-      widget.setPadding(15, 15, 15, 15)
+      widget.setPadding(15, 15, 10, 15)
       // region logoStack
       const rowHeader = this.addStackTo(widget, 'horizontal')
       rowHeader.setPadding(0, 0, 0, 0)
@@ -212,11 +210,11 @@ class Widget extends Base {
       const rowLeftStack = this.addStackTo(mainStack, 'vertical')
       // 续航/燃料信息
       const carInfoStack = this.addStackTo(rowLeftStack, 'horizontal')
-      carInfoStack.bottomAlignContent()
+      carInfoStack.centerAlignContent()
       const carInfoImageStack = this.addStackTo(carInfoStack, 'vertical')
       carInfoImageStack.bottomAlignContent()
-      const carInfoImage = carInfoImageStack.addImage(await this.getSFSymbolImage('timer'))
-      carInfoImage.imageSize = new Size(15, 15)
+      const carInfoImage = carInfoImageStack.addImage(await this.getSFSymbolImage('gauge'))
+      carInfoImage.imageSize = new Size(14, 14)
       this.setWidgetNodeColor(carInfoImage, 'tintColor')
       carInfoStack.addSpacer(5)
       const carInfoTextStack = this.addStackTo(carInfoStack, 'horizontal')
@@ -263,7 +261,7 @@ class Widget extends Base {
       const mileageImageStack = this.addStackTo(mileageStack, 'vertical')
       mileageImageStack.bottomAlignContent()
       const mileageImage = mileageImageStack.addImage(await this.getSFSymbolImage('car'))
-      mileageImage.imageSize = new Size(15, 15)
+      mileageImage.imageSize = new Size(14, 14)
       this.setWidgetNodeColor(mileageImage, 'tintColor')
       mileageStack.addSpacer(5)
       const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
@@ -278,7 +276,7 @@ class Widget extends Base {
       dateTimeStack.bottomAlignContent()
       const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical')
       dateTimeImageStack.bottomAlignContent()
-      const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('goforward'))
+      const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('arrow.clockwise.icloud'))
       dateTimeImage.imageSize = new Size(15, 15)
       this.setWidgetNodeColor(dateTimeImage, 'tintColor')
       dateTimeStack.addSpacer(5)
@@ -298,6 +296,7 @@ class Widget extends Base {
       // endregion
       const footTextData = data.showLocation ? data.completeAddress : data.myOne
       const footerStack = this.addStackTo(widget, 'horizontal')
+      footerStack.setPadding(5, 0, 0, 0)
       footerStack.centerAlignContent()
       footerStack.addSpacer()
       const footerText = footerStack.addText(footTextData)
@@ -513,7 +512,7 @@ class Widget extends Base {
       updateStack.bottomAlignContent()
       const updateImageStack = this.addStackTo(updateStack, 'vertical')
       updateImageStack.bottomAlignContent()
-      const updateImage = updateImageStack.addImage(await this.getSFSymbolImage('clock'))
+      const updateImage = updateImageStack.addImage(await this.getSFSymbolImage('clock.arrow.2.circlepath'))
       updateImage.imageSize = new Size(16, 16)
       this.setWidgetNodeColor(updateImage, 'tintColor')
       updateStack.addSpacer(5)
@@ -685,6 +684,7 @@ class Widget extends Base {
     const getVehiclesStatusData = await this.getVehiclesStatus(debug)
 
     const data = {
+      isLogin: this.settings['isLogin'] === true,
       carPlateNo: this.settings['carPlateNo'],
       seriesName: this.settings['myCarName'] || this.settings['seriesName'],
       carModelName: this.settings['myCarModelName'] || this.settings['carModelName'],
@@ -702,6 +702,7 @@ class Widget extends Base {
       updateTime: getVehiclesStatusData.updateTime || this.formatDate(),
       updateDate: getVehiclesStatusData.updateDate || this.formatDate(),
       updateNowDate: this.formatDate(),
+      updateTimeStamp: getVehiclesStatusData.updateTimeStamp || new Date().valueOf(),
       isLocked: getVehiclesStatusData.isLocked || false,
       doorStatus: getVehiclesStatusData.doorStatus || [],
       windowStatus: getVehiclesStatusData.windowStatus || [],
@@ -775,6 +776,7 @@ class Widget extends Base {
     const dateTime = mileageArr.find(i => i.id === '0x0101010002')?.tsCarSentUtc
     const updateTime = this.formatDate(dateTime, 'MM-dd HH:mm')
     const updateDate = this.formatDate(dateTime, 'yyyy年MM月dd日 HH:mm')
+    const updateTimeStamp = new Date(dateTime).valueOf()
     // endregion
     // region 锁车状态
     const isLocked = this.getVehiclesLocked(statusArr)
@@ -798,6 +800,7 @@ class Widget extends Base {
       mileage,
       updateTime,
       updateDate,
+      updateTimeStamp,
       isLocked,
       doorStatus,
       windowStatus
@@ -1256,9 +1259,11 @@ class Widget extends Base {
         }
         if (longitude === 0 || latitude === 0) {
           console.warn('获取车辆经纬度失败')
+          this.settings['longitude'] = 0
+          this.settings['latitude'] = 0
           return {
-            longitude: 0,
-            latitude: 0
+            longitude: this.settings['longitude'],
+            latitude: this.settings['latitude']
           }
         } else {
           // 转换正常经纬度信息
@@ -1284,9 +1289,11 @@ class Widget extends Base {
     } catch (error) {
       console.error('当前车辆可能正在行驶中或者没有上传信号，请稍后再重试！')
       console.error(error)
+      this.settings['longitude'] = -1
+      this.settings['latitude'] = -1
       return {
-        longitude: 0,
-        latitude: 0
+        longitude: this.settings['longitude'],
+        latitude: this.settings['latitude']
       }
     }
   }
@@ -1310,6 +1317,14 @@ class Widget extends Base {
       return {
         simpleAddress: '暂无位置信息',
         completeAddress: '暂无位置信息'
+      }
+    } else if (
+      longitude === -1 ||
+      latitude === -1
+    ) {
+      return {
+        simpleAddress: '当前车辆正在行驶中...',
+        completeAddress: '当前车辆正在行驶中...'
       }
     }
 
@@ -1342,17 +1357,21 @@ class Widget extends Base {
       } else {
         console.error('获取车辆位置失败，请检查高德地图 key 是否填写正常')
         await this.notify('逆编码地理位置失败', '请检查高德地图 key 是否填写正常')
+        this.settings['simpleAddress'] = '暂无位置信息'
+        this.settings['completeAddress'] = '暂无位置信息'
         return {
-          simpleAddress: this.settings['simpleAddress'] || '暂无位置信息',
-          completeAddress: this.settings['completeAddress'] || '暂无位置信息'
+          simpleAddress: this.settings['simpleAddress'],
+          completeAddress: this.settings['completeAddress']
         }
       }
     } catch (error) {
       await this.notify('请求失败', '提示：' + error)
       console.error(error)
+      this.settings['simpleAddress'] = '暂无位置信息'
+      this.settings['completeAddress'] = '暂无位置信息'
       return {
-        simpleAddress: this.settings['simpleAddress'] || '暂无位置信息',
-        completeAddress: this.settings['completeAddress'] || '暂无位置信息'
+        simpleAddress: this.settings['simpleAddress'],
+        completeAddress: this.settings['completeAddress']
       }
     }
   }
@@ -1884,7 +1903,7 @@ class Widget extends Base {
   async setAMapKey() {
     const alert = new Alert()
     alert.title = '设置车辆位置'
-    alert.message = '请输入组件所需要的高德地图密钥，用于车辆逆地理编码以及地图资源'
+    alert.message = '请输入组件所需要的高德地图密钥，用于车辆逆地理编码以及地图资源\n如不填写则关闭地址显示'
     alert.addTextField('高德地图密钥', this.settings['aMapKey'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
@@ -2051,6 +2070,37 @@ class Widget extends Base {
     FILE_MGR.write(FILE_MGR.joinPath(FILE_MGR.documentsDirectory(), UPDATE_FILE), REMOTE_RES)
 
     await this.notify('Audi 桌面组件更新完毕！')
+  }
+
+  /**
+   * 下载额外的主题文件
+   * @returns {Promise<void>}
+   */
+  async actionDownloadThemes() {
+    const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
+
+    const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/themes/fvw-audi-themes.json')
+    const response = await request.loadJSON()
+    const themes = response['themes']
+
+    const alert = new Alert()
+    alert.title = '下载主题'
+    alert.message = '点击下载你喜欢的主题，并且在桌面引入主题风格即可'
+
+    themes.forEach(item => {
+      alert.addAction(item.name)
+    })
+
+    alert.addCancelAction('退出菜单')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+
+    await this.notify('正在下载主题中...')
+    const REMOTE_REQ = new Request(themes[id]?.download)
+    const REMOTE_RES = await REMOTE_REQ.load()
+    FILE_MGR.write(FILE_MGR.joinPath(FILE_MGR.documentsDirectory(), themes[id]?.fileName), REMOTE_RES)
+
+    await this.notify(`${themes[id]?.name} 主题下载完毕，快去使用吧！`)
   }
 
   /**
