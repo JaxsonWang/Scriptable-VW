@@ -14,7 +14,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.1.4'
+const SCRIPT_VERSION = '2.1.6'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
@@ -80,51 +80,23 @@ class Widget extends Base {
       const isLocked = data.isLocked
 
       const containerStack = this.addStackTo(widget, 'vertical')
-      containerStack.cornerRadius = 20
+      // containerStack.backgroundColor = Color.cyan()
       containerStack.addSpacer()
-      const fuelStack = this.addStackTo(containerStack, 'horizontal')
-      fuelStack.bottomAlignContent()
-      fuelStack.addSpacer()
-      const fuelText1 = fuelStack.addText(`${data.fuelRange}km`)
-      fuelText1.font = new Font('Futura-CondensedExtraBold', 14)
-      this.setWidgetNodeColor(fuelText1, 'textColor')
-      if (
-        data.fuelLevel && data.fuelLevel <= 20 ||
-        data.socLevel && data.socLevel <= 20
-      ) {
-        fuelText1.textColor = this.dangerColor()
-      }
-      const fuelOccupancy = fuelStack.addText('/')
-      fuelOccupancy.font = new Font('Futura-Medium', 12)
-      this.setWidgetNodeColor(fuelOccupancy, 'textColor')
-      if (data.fuelLevel) {
-        const fuelText2 = fuelStack.addText(`${data.fuelLevel}%`)
-        fuelText2.font = new Font('Futura-Medium', 12)
-        this.setWidgetNodeColor(fuelText2, 'textColor')
-        if (
-          data.fuelLevel && data.fuelLevel <= 20 ||
-          data.socLevel && data.socLevel <= 20
-        ) {
-          fuelText2.textColor = this.dangerColor()
-        }
-      }
-      if (data.socLevel) {
-        const fuelText3 = fuelStack.addText(`${data.socLevel}%`)
-        fuelText3.font = new Font('Futura-Medium', data.fuelLevel ? 8 : 12)
-        this.setWidgetNodeColor(fuelText3, 'textColor')
-        if (
-          data.fuelLevel && data.fuelLevel <= 20 ||
-          data.socLevel && data.socLevel <= 20
-        ) {
-          fuelText3.textColor = this.dangerColor()
-        }
-      }
-      fuelStack.addSpacer()
-      containerStack.addSpacer(10)
+      const carPhotoStack = this.addStackTo(containerStack, 'horizontal')
+      carPhotoStack.addSpacer()
       const carPhoto = await this.getMyCarPhoto()
-      const inContainerImage = containerStack.addImage(carPhoto)
+      const inContainerImage = carPhotoStack.addImage(carPhoto)
+      carPhotoStack.addSpacer()
       inContainerImage.centerAlignImage()
-      containerStack.addSpacer(10)
+      containerStack.addSpacer()
+      const updateTimeStack = this.addStackTo(containerStack, 'horizontal')
+      updateTimeStack.bottomAlignContent()
+      updateTimeStack.addSpacer()
+      const updateTimeText = updateTimeStack.addText(`${data.updateTime}`)
+      updateTimeText.font = new Font('Futura-Medium', 12)
+      this.setWidgetNodeColor(updateTimeText, 'textColor')
+      updateTimeStack.addSpacer()
+      containerStack.addSpacer(5)
       const statusMainStack = this.addStackTo(containerStack, 'horizontal')
       statusMainStack.addSpacer()
       const statusStack = this.addStackTo(statusMainStack, 'horizontal')
@@ -149,17 +121,17 @@ class Widget extends Base {
       if (doorAndWindowNormal) statusImage.tintColor = this.warningColor()
       if (!isLocked) statusImage.tintColor = this.dangerColor()
       statusStack.spacing = 4
+
+      const infoStack = this.addStackTo(statusStack, 'vertical')
       let status = '车辆已锁定'
       if (doorAndWindowNormal) status = '门窗未锁定'
       if (!isLocked) status = '未锁车'
-      const statusText = statusStack.addText(status)
+      const statusText = infoStack.addText(status)
       statusText.font = new Font('PingFangSC-Medium', 12)
       statusText.textColor = this.successColor()
       if (doorAndWindowNormal) statusText.textColor = this.warningColor()
       if (!isLocked) statusText.textColor = this.dangerColor()
       statusMainStack.addSpacer()
-
-      containerStack.addSpacer()
 
       return widget
     } catch (error) {
@@ -511,29 +483,21 @@ class Widget extends Base {
       lockedImageStack.bottomAlignContent()
       const lockedImage = lockedImageStack.addImage(await this.getSFSymbolImage('lock.circle'))
       lockedImage.imageSize = new Size(18, 18)
-      if (data.isLocked) {
-        this.setWidgetNodeColor(lockedImage, 'tintColor')
-      } else {
-        lockedImage.tintColor = this.dangerColor()
-      }
+      lockedImage.tintColor = data.isLocked ? this.successColor() : this.dangerColor()
       lockedStack.addSpacer(5)
       const lockedTextStack = this.addStackTo(lockedStack, 'horizontal')
       lockedTextStack.bottomAlignContent()
       const lockedText = lockedTextStack.addText(data.isLocked ? '已锁车' : '未锁车')
       lockedText.font = new Font('Futura-Medium', 14)
-      if (data.isLocked) {
-        this.setWidgetNodeColor(lockedText, 'textColor')
-      } else {
-        lockedText.textColor = this.dangerColor()
-      }
+      lockedText.textColor = data.isLocked ? this.successColor() : this.dangerColor()
       // endregion
       rowLeftStack.addSpacer(5)
-      // region 更新日期
+      // region 数据更新日期
       const dateTimeStack = this.addStackTo(rowLeftStack, 'horizontal')
       dateTimeStack.bottomAlignContent()
       const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical')
       dateTimeImageStack.bottomAlignContent()
-      const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('clock.arrow.2.circlepath'))
+      const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('arrow.clockwise.icloud'))
       dateTimeImage.imageSize = new Size(18, 18)
       this.setWidgetNodeColor(dateTimeImage, 'tintColor')
       dateTimeStack.addSpacer(5)
@@ -542,6 +506,22 @@ class Widget extends Base {
       const dateTimeText = dateTimeTextStack.addText(data.updateTime)
       dateTimeText.font = new Font('Futura-Medium', 14)
       this.setWidgetNodeColor(dateTimeText, 'textColor')
+      // endregion
+      rowLeftStack.addSpacer(5)
+      // region 刷新日期
+      const updateStack = this.addStackTo(rowLeftStack, 'horizontal')
+      updateStack.bottomAlignContent()
+      const updateImageStack = this.addStackTo(updateStack, 'vertical')
+      updateImageStack.bottomAlignContent()
+      const updateImage = updateImageStack.addImage(await this.getSFSymbolImage('clock'))
+      updateImage.imageSize = new Size(16, 16)
+      this.setWidgetNodeColor(updateImage, 'tintColor')
+      updateStack.addSpacer(5)
+      const updateTextStack = this.addStackTo(updateStack, 'horizontal')
+      updateTextStack.bottomAlignContent()
+      const updateText = updateTextStack.addText(data.updateNowDate)
+      updateText.font = new Font('Futura-Medium', 14)
+      this.setWidgetNodeColor(updateText, 'textColor')
       // endregion
       // endregion
       mainStack.addSpacer()
@@ -585,9 +565,16 @@ class Widget extends Base {
           })
         })
       } else {
-        const statusItemStack = this.addStackTo(statusStack, 'horizontal')
-        statusItemStack.setPadding(5, 0, 5, 0)
-        statusItemStack.addSpacer()
+        statusStack.addSpacer(5)
+        const statusInfoStack = this.addStackTo(statusStack, 'horizontal')
+        statusInfoStack.addSpacer()
+        const statusItemStack = this.addStackTo(statusInfoStack, 'horizontal')
+        // statusItemStack.setPadding(5, 0, 5, 0)
+        statusItemStack.setPadding(5, 10, 5, 10)
+        statusItemStack.cornerRadius = 10
+        statusItemStack.borderWidth = 2
+        statusItemStack.borderColor = this.successColor(0.5)
+        statusItemStack.backgroundColor = this.successColor(0.25)
         statusItemStack.centerAlignContent()
         const statusItemImage = statusItemStack.addImage(await this.getSFSymbolImage('checkmark.shield.fill'))
         statusItemImage.imageSize = new Size(12, 12)
@@ -595,9 +582,9 @@ class Widget extends Base {
         statusItemStack.addSpacer(2)
         const statusItemText = statusItemStack.addText('当前车窗已全关闭')
         statusItemText.font = new Font('PingFangSC-Regular', 12)
-        this.setWidgetNodeColor(statusItemText, 'textColor')
+        statusItemText.textColor = this.successColor()
         statusItemText.centerAlignText()
-        statusItemStack.addSpacer()
+        statusInfoStack.addSpacer()
       }
       rowRightStack.addSpacer()
       // endregion
@@ -608,14 +595,14 @@ class Widget extends Base {
       footerWrapperStack.setPadding(0, 0, 0, 0)
       const footerStack = this.addStackTo(footerWrapperStack, 'horizontal')
       footerStack.cornerRadius = 15
-      footerStack.borderColor = Color.dynamic(new Color('#000000', 0.25), new Color('#ffffff', 0.25))
+      this.setWidgetNodeColor(footerStack, 'borderColor', 0.25)
       footerStack.borderWidth = 2
-      footerStack.setPadding(0, 0, 0, 20)
+      footerStack.setPadding(0, 0, 0, 0)
       footerStack.centerAlignContent()
       // 地图图片
       const footerLeftStack = this.addStackTo(footerStack, 'vertical')
-      footerLeftStack.borderWidth = 2
-      footerLeftStack.borderColor = Color.dynamic(new Color('#000000', 0.25), new Color('#ffffff', 0.25))
+      // footerLeftStack.borderWidth = 2
+      // footerLeftStack.borderColor = Color.dynamic(new Color('#000000', 0.25), new Color('#ffffff', 0.25))
       const locationImage = await this.getImageByUrl(leftImage, !data.showLocation)
       const locationImageStack = footerLeftStack.addImage(locationImage)
       locationImageStack.imageSize = new Size(100, 60)
@@ -713,6 +700,8 @@ class Widget extends Base {
       socLevel: getVehiclesStatusData.socLevel || false,
       mileage: getVehiclesStatusData.mileage || '0',
       updateTime: getVehiclesStatusData.updateTime || this.formatDate(),
+      updateDate: getVehiclesStatusData.updateDate || this.formatDate(),
+      updateNowDate: this.formatDate(),
       isLocked: getVehiclesStatusData.isLocked || false,
       doorStatus: getVehiclesStatusData.doorStatus || [],
       windowStatus: getVehiclesStatusData.windowStatus || [],
@@ -785,6 +774,7 @@ class Widget extends Base {
     const mileage = mileageArr.find(i => i.id === '0x0101010002')?.value
     const dateTime = mileageArr.find(i => i.id === '0x0101010002')?.tsCarSentUtc
     const updateTime = this.formatDate(dateTime, 'MM-dd HH:mm')
+    const updateDate = this.formatDate(dateTime, 'yyyy年MM月dd日 HH:mm')
     // endregion
     // region 锁车状态
     const isLocked = this.getVehiclesLocked(statusArr)
@@ -807,6 +797,7 @@ class Widget extends Base {
       socLevel,
       mileage,
       updateTime,
+      updateDate,
       isLocked,
       doorStatus,
       windowStatus
