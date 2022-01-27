@@ -11,7 +11,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.1.8'
+const SCRIPT_VERSION = '2.1.9'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
@@ -78,14 +78,57 @@ class Widget extends Base {
       const isLocked = data.isLocked
 
       const containerStack = this.addStackTo(widget, 'vertical')
-      containerStack.addSpacer()
+      // 续航/燃料信息
+      const carInfoStack = this.addStackTo(containerStack, 'horizontal')
+      carInfoStack.addSpacer()
+      carInfoStack.centerAlignContent()
+      const carInfoTextStack = this.addStackTo(carInfoStack, 'horizontal')
+      carInfoTextStack.bottomAlignContent()
+      const enduranceText = carInfoTextStack.addText(`${data.fuelRange}km`)
+      this.setFontFamilyStyle(enduranceText, 14, 'bold')
+      this.setWidgetNodeColor(enduranceText, 'textColor')
+      if (
+        data.fuelLevel && data.fuelLevel <= 20 ||
+        data.socLevel && data.socLevel <= 20
+      ) {
+        enduranceText.textColor = this.dangerColor()
+      }
+      if (data.fuelLevel) {
+        carInfoTextStack.spacing = 4
+        const fuelStack = this.addStackTo(carInfoTextStack, 'horizontal')
+        fuelStack.setPadding(0, 0, 2, 0)
+        const fuelText = fuelStack.addText(`${data.fuelLevel}%`)
+        this.setFontFamilyStyle(fuelText, 12, 'regular')
+        this.setWidgetNodeColor(fuelText, 'textColor')
+        if (
+          data.fuelLevel && data.fuelLevel <= 20 ||
+          data.socLevel && data.socLevel <= 20
+        ) {
+          fuelText.textColor = this.dangerColor()
+        }
+      }
+      if (data.socLevel) {
+        carInfoTextStack.spacing = 4
+        const fuelStack = this.addStackTo(carInfoTextStack, 'horizontal')
+        fuelStack.setPadding(0, 0, data.fuelLevel ? 3 : 2, 0)
+        const fuelText = fuelStack.addText(data.socLevel + '%')
+        this.setFontFamilyStyle(fuelText, data.fuelLevel ? 10 : 12, 'regular')
+        this.setWidgetNodeColor(fuelText, 'textColor')
+        if (
+          data.fuelLevel && data.fuelLevel <= 20 ||
+          data.socLevel && data.socLevel <= 20
+        ) {
+          fuelText.textColor = this.dangerColor()
+        }
+      }
+      carInfoStack.addSpacer()
+      containerStack.spacing = 5
       const carPhotoStack = this.addStackTo(containerStack, 'horizontal')
       carPhotoStack.addSpacer()
       const carPhoto = await this.getMyCarPhoto()
       const inContainerImage = carPhotoStack.addImage(carPhoto)
       carPhotoStack.addSpacer()
       inContainerImage.centerAlignImage()
-      containerStack.addSpacer()
       const updateTimeStack = this.addStackTo(containerStack, 'horizontal')
       updateTimeStack.bottomAlignContent()
       updateTimeStack.addSpacer()
@@ -157,7 +200,7 @@ class Widget extends Base {
       this.setWidgetNodeColor(carText, 'textColor')
       // 2.0 140KW B9 40TFSI S-line
       const powerText = nameStack.addText(data.carModelName)
-      this.setFontFamilyStyle(powerText, 12, 'regular')
+      this.setFontFamilyStyle(powerText, 10, 'regular')
       this.setWidgetNodeColor(powerText, 'textColor')
       rowHeader.addSpacer()
       const headerRightStack = this.addStackTo(rowHeader, 'vertical')
@@ -218,7 +261,7 @@ class Widget extends Base {
       carInfoStack.addSpacer(5)
       const carInfoTextStack = this.addStackTo(carInfoStack, 'horizontal')
       carInfoTextStack.bottomAlignContent()
-      const enduranceText = carInfoTextStack.addText(data.fuelRange + 'km')
+      const enduranceText = carInfoTextStack.addText(`${data.fuelRange}km`)
       this.setFontFamilyStyle(enduranceText, 14, 'bold')
       this.setWidgetNodeColor(enduranceText, 'textColor')
       if (
@@ -230,26 +273,30 @@ class Widget extends Base {
       }
       if (data.fuelLevel) {
         carInfoTextStack.spacing = 4
-        const fuelText1 = carInfoTextStack.addText(data.fuelLevel + '%')
-        this.setFontFamilyStyle(fuelText1, 12, 'regular')
-        this.setWidgetNodeColor(fuelText1, 'textColor')
+        const fuelStack = this.addStackTo(carInfoTextStack, 'horizontal')
+        fuelStack.setPadding(0, 0, 2, 0)
+        const fuelText = fuelStack.addText(`${data.fuelLevel}%`)
+        this.setFontFamilyStyle(fuelText, 12, 'regular')
+        this.setWidgetNodeColor(fuelText, 'textColor')
         if (
           data.fuelLevel && data.fuelLevel <= 20 ||
           data.socLevel && data.socLevel <= 20
         ) {
-          fuelText1.textColor = this.dangerColor()
+          fuelText.textColor = this.dangerColor()
         }
       }
       if (data.socLevel) {
         carInfoTextStack.spacing = 4
-        const fuelText2 = carInfoTextStack.addText(data.socLevel + '%')
-        this.setFontFamilyStyle(fuelText2, data.fuelLevel ? 8 : 12, 'regular')
-        this.setWidgetNodeColor(fuelText2, 'textColor')
+        const fuelStack = this.addStackTo(carInfoTextStack, 'horizontal')
+        fuelStack.setPadding(0, 0, data.fuelLevel ? 3 : 2, 0)
+        const fuelText = fuelStack.addText(data.socLevel + '%')
+        this.setFontFamilyStyle(fuelText, data.fuelLevel ? 8 : 12, 'regular')
+        this.setWidgetNodeColor(fuelText, 'textColor')
         if (
           data.fuelLevel && data.fuelLevel <= 20 ||
           data.socLevel && data.socLevel <= 20
         ) {
-          fuelText2.textColor = this.dangerColor()
+          fuelText.textColor = this.dangerColor()
         }
       }
 
@@ -933,7 +980,6 @@ class Widget extends Base {
         await this.notify('系统通知', '获取设备编码失败，请稍后再重试！')
       }
     } catch (error) {
-      await this.notify('请求失败', '提示：' + error)
       console.error(error)
     }
   }
@@ -979,7 +1025,6 @@ class Widget extends Base {
       }
     } catch (error) {
       // Error: 似乎已断开与互联网到连接。
-      await this.notify('请求失败', '提示：' + error)
       console.error(error)
     }
   }
@@ -1051,7 +1096,6 @@ class Widget extends Base {
         }
       }
     } catch (error) {
-      await this.notify('请求失败', '提示：' + error)
       console.error(error)
     }
   }
@@ -1102,7 +1146,6 @@ class Widget extends Base {
         await this.notify('个人信息获取失败', '获取个人信息失败，请登出重置后再进行小组件登录！')
       }
     } catch (error) {
-      await this.notify('请求失败', '提示：' + error)
       console.error(error)
     }
   }
@@ -1140,7 +1183,6 @@ class Widget extends Base {
         }
       }
     } catch (error) {
-      await this.notify('请求失败', '提示：' + error)
       console.error(error)
     }
   }
@@ -1200,7 +1242,6 @@ class Widget extends Base {
         return this.handleVehiclesData(vehicleData)
       }
     } catch (error) {
-      await this.notify('请求失败', '提示：' + error)
       console.error(error)
       return this.settings['vehicleData']
     }
@@ -1286,7 +1327,6 @@ class Widget extends Base {
         }
       }
     } catch (error) {
-      console.error('当前车辆可能正在行驶中或者没有上传信号，请稍后再重试！')
       console.error(error)
       this.settings['longitude'] = -1
       this.settings['latitude'] = -1
@@ -1322,8 +1362,8 @@ class Widget extends Base {
       latitude === -1
     ) {
       return {
-        simpleAddress: '当前车辆正在行驶中...',
-        completeAddress: '当前车辆正在行驶中...'
+        simpleAddress: '当前车辆可能正在行驶中...',
+        completeAddress: '当前车辆可能正在行驶中...'
       }
     }
 
