@@ -35,6 +35,7 @@ class Widget extends Base {
       if (this.settings['isLogin']) this.registerAction('登出重置', this.actionLogOut)
       if (this.settings['isLogin']) this.registerAction('调试日志', this.actionDebug)
       this.registerAction('主题下载', this.actionDownloadThemes)
+      this.registerAction('预览组件', this.actionPreview)
       this.registerAction('检查更新', this.actionCheckUpdate)
       this.registerAction('当前版本: v' + SCRIPT_VERSION, this.actionAbout)
     }
@@ -2173,6 +2174,40 @@ class Widget extends Base {
   }
 
   /**
+   * 预览组件
+   * @returns {Promise<void>}
+   */
+  async actionPreview() {
+    const alert = new Alert()
+    alert.title = '预览组件'
+    alert.message = '用于调试和测试组件样式'
+
+    const menuList = [{
+      name: 'Small',
+      text: '小尺寸'
+    }, {
+      name: 'Medium',
+      text: '中尺寸'
+    }, {
+      name: 'Large',
+      text: '大尺寸'
+    }]
+
+    menuList.forEach(item => {
+      alert.addAction(item.text)
+    })
+
+    alert.addCancelAction('退出菜单')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    // 执行函数
+    const widget = new Widget(args.widgetParameter || '')
+    widget.widgetFamily = (menuList[id].name).toLowerCase()
+    const w = await widget.render()
+    await w['present' + menuList[id].name]()
+  }
+
+  /**
    * 调试日志
    */
   async actionDebug() {
@@ -2296,28 +2331,6 @@ class Widget extends Base {
    */
   async actionAbout() {
     Safari.open( 'https://joiner.i95.me/about.html')
-  }
-
-  /**
-   * 动态背景色
-   * @returns {LinearGradient}
-   */
-  dynamicBackgroundColor() {
-    const bgColor = new LinearGradient()
-
-    const lightBgColor1 = this.settings['lightBgColor1'] ? this.settings['lightBgColor1'] : this.lightDefaultBackgroundColorGradient[0]
-    const lightBgColor2 = this.settings['lightBgColor2'] ? this.settings['lightBgColor2'] : this.lightDefaultBackgroundColorGradient[1]
-    const darkBgColor1 = this.settings['darkBgColor1'] ? this.settings['darkBgColor1'] : this.darkDefaultBackgroundColorGradient[0]
-    const darkBgColor2 = this.settings['darkBgColor2'] ? this.settings['darkBgColor2'] : this.darkDefaultBackgroundColorGradient[1]
-
-    const startColor = Color.dynamic(new Color(lightBgColor1, 1), new Color(darkBgColor1, 1))
-    const endColor = Color.dynamic(new Color(lightBgColor2, 1), new Color(darkBgColor2, 1))
-
-    bgColor.colors = [startColor, endColor]
-
-    bgColor.locations = [0.0, 1.0]
-
-    return bgColor
   }
 
   /**
