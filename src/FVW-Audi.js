@@ -11,7 +11,7 @@ if (typeof require === 'undefined') require = importModule
 const { Base, Testing } = require('./depend')
 
 // @组件代码开始
-const SCRIPT_VERSION = '2.2.1'
+const SCRIPT_VERSION = '2.2.2'
 
 const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
 
@@ -2361,12 +2361,21 @@ class Widget extends Base {
    * @param {'Small' || 'Medium' || 'Large'} widgetFamily
    */
   async setWidgetDynamicBackground(widget, widgetFamily) {
-    if (await this.isUsingDarkAppearance() === false && this.settings['backgroundPhoto' + widgetFamily + 'Light']) {
-      widget.backgroundImage = await FileManager.local().readImage(this.settings['backgroundPhoto' + widgetFamily + 'Light'])
-    } else if (await this.isUsingDarkAppearance() === true && this.settings['backgroundPhoto' + widgetFamily + 'Dark']) {
+    if (Device.isUsingDarkAppearance() && this.settings['backgroundPhoto' + widgetFamily + 'Dark']) {
       widget.backgroundImage = await FileManager.local().readImage(this.settings['backgroundPhoto' + widgetFamily + 'Dark'])
+    } else if (!Device.isUsingDarkAppearance() && this.settings['backgroundPhoto' + widgetFamily + 'Light']) {
+      widget.backgroundImage = await FileManager.local().readImage(this.settings['backgroundPhoto' + widgetFamily + 'Light'])
     } else {
-      widget.backgroundGradient = this.dynamicBackgroundColor()
+      const bgColor = new LinearGradient()
+      const lightBgColor1 = this.settings['lightBgColor1'] ? this.settings['lightBgColor1'] : this.lightDefaultBackgroundColorGradient[0]
+      const lightBgColor2 = this.settings['lightBgColor2'] ? this.settings['lightBgColor2'] : this.lightDefaultBackgroundColorGradient[1]
+      const darkBgColor1 = this.settings['darkBgColor1'] ? this.settings['darkBgColor1'] : this.darkDefaultBackgroundColorGradient[0]
+      const darkBgColor2 = this.settings['darkBgColor2'] ? this.settings['darkBgColor2'] : this.darkDefaultBackgroundColorGradient[1]
+      const startColor = Color.dynamic(new Color(lightBgColor1, 1), new Color(darkBgColor1, 1))
+      const endColor = Color.dynamic(new Color(lightBgColor2, 1), new Color(darkBgColor2, 1))
+      bgColor.colors = [startColor, endColor]
+      bgColor.locations = [0.0, 1.0]
+      widget.backgroundGradient = bgColor
     }
   }
 

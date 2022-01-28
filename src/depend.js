@@ -166,14 +166,6 @@ class Base {
   }
 
   /**
-   * 判断系统外观模式
-   * @return {Promise<boolean>}
-   */
-  async isUsingDarkAppearance() {
-    return !(Color.dynamic(Color.white(), Color.black()).red)
-  }
-
-  /**
    * 组件声明
    * @returns {Promise<number>}
    */
