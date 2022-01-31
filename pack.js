@@ -5,10 +5,10 @@
  * 将会在`Dist`目录生成「小件件」小组件示例.js 文件，这个文件可以发送给用户单独使用
  */
 
- const process = require('process')
- const os = require('os')
- const fs = require('fs')
- const path = require('path')
+const process = require('process')
+const os = require('os')
+const fs = require('fs')
+const path = require('path')
 
 if (process.argv.length !== 4) {
   console.log('[!] 用法：node pack src/xxx.js xxx')

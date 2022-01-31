@@ -2,13 +2,10 @@
   "name": "scriptable-audi-component",
   "version": "1.0.0",
   "description": "scriptable dev javascript",
-  "main": "app.js",
   "scripts": {
-    "start": "node app",
-    "build:FVW-Audi": "npm run lint && node pack.js src/FVW-Audi.js FVW-Audi-Joiner",
-    "build:FVW-Audi-Theme-Simple": "npm run lint && node pack.js src/FVW-Audi_Simple.js FVW-Audi_Theme-Simple",
-    "build:FVW": "npm run lint && node pack.js src/FVW.js FVW-Joiner",
-    "build:SVW": "npm run lint && node pack.js src/SVW.js SVW-Joiner",
+    "watch": "node app",
+    "debug:FVW-Audi": "FILE=FVW-Audi DEBUG=true rollup -c --watch",
+    "build:FVW-Audi": "FILE=FVW-Audi rollup -c",
     "lint": "eslint src/**",
     "ncu": "npx npm-check-updates -u"
   },
@@ -18,12 +15,15 @@
     "@babel/core": "^7.16.10",
     "@babel/eslint-parser": "^7.16.5",
     "@babel/plugin-syntax-top-level-await": "^7.14.5",
+    "@rollup/plugin-eslint": "^8.0.1",
+    "@rollup/plugin-replace": "^3.0.1",
     "@scriptable-ios/eslint-config": "^1.6.4",
     "@types/scriptable-ios": "^1.6.4",
     "body-parser": "^1.19.1",
     "eslint": "^8.7.0",
     "express": "^4.17.2",
     "javascript-obfuscator": "^3.0.0",
-    "multer": "^1.4.4"
+    "multer": "^1.4.4",
+    "rollup": "^2.66.1"
   }
 }

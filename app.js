@@ -8,7 +8,7 @@ const bodyParser = require('body-parser')
 
 const HTTP_PORT = 5566
 const WORK_DIR = path.dirname(__filename)
-const SCRIPTS_DIR = path.join(WORK_DIR, 'src')
+const SCRIPTS_DIR = path.join(WORK_DIR, 'dist')
 
 const app = express()
 const upload = multer({
@@ -58,7 +58,6 @@ app.get('/sync', (req, res) => {
 
   }, 1000)
 })
-
 
 app.post('/sync', (req, res) => {
   if (req.files.length !== 1) return res.send('no')
@@ -124,5 +123,5 @@ const _host = `http://${_ip}:${HTTP_PORT}`
 console.log('开发服务运行中')
 console.log(`地址：${_host}`)
 console.log('如果你的手机还没有配置开发环境，请手机 Safari 访问上述地址，查看引导')
-console.log('如果你的手机已经安装好环境和小组件模板，请在 Scriptable 里点击小组件模板->远程开发，服务器地址输入：', _ip)
+console.log('如果你的手机已经安装好环境和小组件模板，请在 Scriptable 里点击远程开发，服务器地址输入：', _ip)
 app.listen(HTTP_PORT)
