@@ -8,16 +8,16 @@ class Widget extends UIRender {
    */
   constructor(arg) {
     super(arg)
-    this.name = 'Audi 挂件'
-    this.desc = 'Audi 车辆桌面组件展示'
-    this.version = '2.2.2'
+    this.name = '上汽大众挂件'
+    this.desc = '上汽大众车辆桌面组件展示'
+    this.version = '2.0.0'
 
-    this.appName = 'MyAuDi'
-    this.appVersion = '3.0.2'
+    this.appName = 'BootstrapApp'
+    this.appVersion = '1.0'
 
-    this.myCarPhotoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png'
-    this.myCarLogoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
-    this.logoWidth = 40
+    this.myCarPhotoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/svw_default_passat.png'
+    this.myCarLogoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_logo.png'
+    this.logoWidth = 14
     this.logoHeight = 14
 
     if (config.runsInApp) {
@@ -39,14 +39,18 @@ class Widget extends UIRender {
    */
   async handleLoginRequest(debug = false) {
     const options = {
-      url: 'https://audi2c.faw-vw.com/capi/v1/user/login',
+      url: 'https://api.mos.csvw.com/mos/security/api/v1/app/actions/pwdlogin',
       method: 'POST',
       headers: this.requestHeader(),
       body: JSON.stringify({
-        loginChannelEnum: 'APP',
-        loginTypeEnum: 'ACCOUNT_PASSWORD',
-        account: this.settings['username'],
-        password: this.settings['password']
+        pwd: this.settings['password'],
+        mobile: this.settings['username'],
+        picContent: '',
+        picTicket: '',
+        deviceId: this.settings['clientID'],
+        scope: 'openid',
+        brand: 'vw',
+        deviceType: 'ios'
       })
     }
     try {
@@ -55,21 +59,18 @@ class Widget extends UIRender {
         console.log('登录接口返回数据：')
         console.log(response)
       }
-      if (response.code === 0) {
+      if (response.code === '000000') {
         await this.notify('登录成功', '正在从服务器获取车辆数据，请耐心等待！')
         // 解构数据
-        const { accessToken, idToken } = response.data
-        this.settings['userAccessToken'] = accessToken
+        const { idToken } = response.data
         this.settings['userIDToken'] = idToken
         await this.saveSettings(false)
-        console.log('账户登录成功，存储用户 accessToken, idToken 密钥信息，准备交换验证密钥数据和获取个人基础信息')
-        // 准备交换验证密钥数据
-        await this.getTokenRequest('refreshAuthToken', debug)
+        console.log('账户登录成功，存储用户 idToken 密钥信息，准备交换验证密钥数据和获取个人基础信息')
         // 获取个人中心数据
-        await this.getUserMineRequest(debug)
+        await this.getUserToken(debug)
       } else {
-        console.error('账户登录失败：' + response.message)
-        await this.notify('账户登录失败', '账户登录失败：' + response.message)
+        console.error('账户登录失败：' + response.description)
+        await this.notify('账户登录失败', '账户登录失败：' + response.description)
       }
     } catch (error) {
       // Error: 似乎已断开与互联网到连接。
@@ -79,37 +80,26 @@ class Widget extends UIRender {
 
   /**
    * 获取密钥数据
-   * @param {'refreshAuthToken' | 'authAccessToken'} type
    * @param {boolean} debug 开启日志输出
    * @returns {Promise<void>}
    */
-  async getTokenRequest(type, debug = false) {
+  async getTokenRequest(debug = false) {
     // 根据交换token请求参数不同
-    let requestParams = ''
-    switch (type) {
-      case 'refreshAuthToken':
-        requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(this.settings['userIDToken'])}&scope=${encodeURIComponent('sc2:fal')}`
-        break
-      case 'authAccessToken':
-        requestParams = `grant_type=${encodeURIComponent('refresh_token')}&token=${encodeURIComponent(this.settings['refreshAuthToken'])}&scope=${encodeURIComponent('sc2:fal')}&vin=${this.settings['carVIN']}`
-        break
-    }
-
-    const requestHeader = JSON.parse(JSON.stringify(this.requestHeader()))
-    delete requestHeader.Accept
-    delete requestHeader['Content-Type']
-    requestHeader['X-Client-ID'] = 'de6d8b23-792f-47b8-82f4-e4cc59c2916e'
+    // token 参数
+    const requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(this.settings['userIDToken'])}&scope=${encodeURIComponent('t2_svw:fal')}`
 
     const options = {
       url: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/oauth2/v1/token',
       method: 'POST',
-      headers: requestHeader,
+      headers: {
+        'X-Client-Id': this.settings['clientID']
+      },
       body: requestParams
     }
     try {
       const response = await this.http(options)
       if (debug) {
-        console.log(`${type} 密钥接口返回数据：`)
+        console.log('密钥接口返回数据：')
         console.log(response)
         console.warn('请注意不要公开此密钥信息，否则会有被丢车、被盗窃等的风险！')
       }
@@ -119,29 +109,71 @@ class Widget extends UIRender {
           case 'invalid_grant':
             if (/expired/g.test(response.error_description)) {
               console.warn('IDToken 数据过期，正在重新获取数据中，请耐心等待...')
-              await this.getTokenRequest('refreshAuthToken', debug)
+              await this.getTokenRequest(debug)
             } else {
               console.error('Token 授权无效，请联系开发者：')
               console.error(`${response.error_description} - ${response.error_description}`)
             }
+            break
+          case 'invalid_request':
+            console.warn('无效 Token，正在重新登录中，请耐心等待...')
+            await this.handleLoginRequest(debug)
             break
           default:
             console.error('交换 Token 请求失败：' + response.error + ' - ' + response.error_description)
         }
       } else {
         // 获取密钥数据成功，存储数据
-        if (type === 'refreshAuthToken') {
-          this.settings['refreshAuthToken'] = response.refresh_token
-          await this.saveSettings(false)
-          console.log('refreshAuthToken 密钥数据获取成功并且存储到本地')
-        }
-        if (type === 'authAccessToken') {
-          this.settings['authToken'] = response.access_token
-          await this.saveSettings(false)
-          console.log('authToken 密钥数据获取成功并且存储到本地')
-          // 设置访问接口
-          await this.getApiBaseURI(debug)
-        }
+        this.settings['authToken'] = response.access_token
+        await this.saveSettings(false)
+        console.log('authToken 密钥数据获取成功并且存储到本地')
+        // 设置访问接口
+        await this.getApiBaseURI(debug)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  /**
+   * 获取上汽大众用户 Token
+   * @param debug
+   * @returns {Promise<void>}
+   */
+  async getUserToken(debug = false) {
+    const options = {
+      url: 'https://api.mos.csvw.com/mos/security/api/v1/app/token',
+      method: 'POST',
+      headers: this.requestHeader(),
+      body: JSON.stringify({
+        consentTypeList: 'app_privacy,app_agreement',
+        scope: 'user',
+        idToken: this.settings['userIDToken'],
+        isNeedSign: true
+      })
+    }
+
+    try {
+      const response = await this.http(options)
+      if (debug) {
+        console.log('上汽大众用户 Token 鉴权接口返回数据：')
+        console.log(response)
+      }
+      if (response.code === '000000') {
+        // 解构数据
+        const { accessToken } = response.data
+        this.settings['userSVWToken'] = accessToken
+        await this.saveSettings(false)
+        console.log('账户登录成功，存储用户 SVW Token 密钥信息，准备获取个人基础信息')
+        // 获取个人中心数据
+        await this.getUserMineRequest()
+      } else if (response.code === '103103') {
+        // 重新登陆
+        await this.notify('登陆失败', response.description)
+        await this.handleLoginRequest(debug)
+      } else {
+        console.error('上汽大众用户鉴权获取失败：')
+        console.error(response)
       }
     } catch (error) {
       console.error(error)
@@ -155,25 +187,25 @@ class Widget extends UIRender {
    */
   async getUserMineRequest(debug = false) {
     const options = {
-      url: 'https://audi2c.faw-vw.com/capi/v1/user/mine',
+      url: 'https://api.mos.csvw.com/mos/security/api/v1/auth/psga/oprationList',
       method: 'GET',
       headers: {
         ...{
-          'X-ACCESS-TOKEN': this.settings['userAccessToken'],
-          'X-CHANNEL': 'IOS',
-          'x-mobile': this.settings['username']
+          'Authorization': 'Bearer ' + this.settings['userSVWToken']
         },
         ...this.requestHeader()
       }
     }
     try {
       const response = await this.http(options)
-      console.log('个人中心接口返回数据：')
-      console.log(response)
+      if (debug) {
+        console.log('个人中心接口返回数据：')
+        console.log(response)
+      }
       // 判断接口状态
-      if (response.code === 0) {
-        const { vehicleDto } = response.data
-        const { plateNo, seriesName, carModelName, vin } = vehicleDto
+      if (response.code === '000000') {
+        const { vehicle } = response.data
+        const { licensePlate: plateNo, serial: seriesName, model: carModelName, vin } = vehicle
         this.settings['carPlateNo'] = plateNo
         this.settings['seriesName'] = seriesName
         this.settings['carModelName'] = carModelName
@@ -188,7 +220,7 @@ class Widget extends UIRender {
           console.log('车架号码：' + vin)
         }
         // 准备交换验证密钥数据
-        await this.getTokenRequest('authAccessToken', debug)
+        await this.getTokenRequest()
       } else {
         console.error('获取个人信息失败，请登出重置后再进行小组件登录！')
         await this.notify('个人信息获取失败', '获取个人信息失败，请登出重置后再进行小组件登录！')
@@ -205,17 +237,17 @@ class Widget extends UIRender {
     const message = `
       Joiner 小组件需要使用到您的一汽大众应用的账号，首次登录请配置账号、密码进行令牌获取\n\r
       Joiner 小组件不会收集您的个人账户信息，所有账号信息将存在 iCloud 或者 iPhone 上但也请您妥善保管自己的账号\n\r
-      Joiner 小组件是开源、并且完全免费的，由奥迪车主开发，所有责任与一汽奥迪公司无关\n\r
+      Joiner 小组件是开源、并且完全免费的，由大众粉丝车主开发，所有责任与上汽大众公司无关\n\r
       开发者: 淮城一只猫\n\r
-      温馨提示：由于一汽奥迪应用支持单点登录，即不支持多终端应用登录，建议在一汽奥迪应用「用车 - 更多功能 - 用户管理」进行添加用户，这样 Joiner 组件和应用独立执行。
+      温馨提示：由于上汽大众应用支持单点登录，即不支持多终端应用登录，建议在上汽大众应用「爱车 - 智慧车联 - 车辆授权」进行添加用户，这样 Joiner 组件和应用独立执行。
     `
     const present = await this.actionStatementSettings(message)
     if (present !== -1) {
       const alert = new Alert()
       alert.title = 'Joiner 登录'
-      alert.message = '使用一汽奥迪账号登录进行展示数据'
-      alert.addTextField('一汽奥迪账号', this.settings['username'])
-      alert.addSecureTextField('一汽奥迪密码', this.settings['password'])
+      alert.message = '使用上汽大众账号登录进行展示数据'
+      alert.addTextField('上汽大众账号', this.settings['username'])
+      alert.addSecureTextField('上汽大众密码', this.settings['password'])
       alert.addAction('确定')
       alert.addCancelAction('取消')
 
@@ -233,7 +265,7 @@ class Widget extends UIRender {
    * 检查更新
    */
   async actionCheckUpdate() {
-    await this.checkUpdate('FVW-Audi-Joiner.js', 'fvw-audi-version')
+    await this.checkUpdate('SVW-Joiner.js', 'svw-version')
   }
 
   /**
@@ -243,9 +275,12 @@ class Widget extends UIRender {
   requestHeader() {
     return {
       Accept: 'application/json',
+      OS: 'iOS',
       'Content-Type': 'application/json',
-      'User-Agent': 'MyAuDi/3.0.2 CFNetwork/1325.0.1 Darwin/21.1.0',
-      'X-Client-ID': this.settings['clientID']
+      'User-Agent': 'MosProject_Live/7 CFNetwork/1325.0.1 Darwin/21.1.0',
+      'Did': `VW_APP_iPhone_${this.settings['clientID'].replace(/-/g, '')}_15.1_2.7.0`,
+      'X-Client-Id': this.settings['clientID'],
+      'deviceId': this.settings['clientID']
     }
   }
 }

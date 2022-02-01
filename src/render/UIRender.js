@@ -1,6 +1,5 @@
-import Core from './Core'
-
-const DEFAULT_AUDI_LOGO = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
+import Core from '../base/Core'
+import { format2Array } from '../utils/index'
 
 class UIRender extends Core {
   constructor(args = '') {
@@ -9,6 +8,14 @@ class UIRender extends Core {
     // 默认背景色
     this.lightDefaultBackgroundColorGradient = ['#ffffff', '#dbefff']
     this.darkDefaultBackgroundColorGradient = ['#414345', '#232526']
+
+    this.appName = ''
+    this.appVersion = ''
+
+    this.myCarPhotoUrl = ''
+    this.myCarLogoUrl = ''
+    this.logoWidth = 0
+    this.logoHeight = 0
   }
 
   /**
@@ -200,7 +207,7 @@ class UIRender extends Core {
     // endregion
     // region 续航里程
     // 单位 km
-    const fuelRange = statusArr.find(i => i.id === '0x0301030005')?.value || statusArr.find(i => i.id === '0x0301030006')?.value
+    const fuelRange = parseInt(statusArr.find(i => i.id === '0x0301030005')?.value, 10) || parseInt(statusArr.find(i => i.id === '0x0301030006')?.value, 10)
     // endregion
     // region 汽油油量
     // 单位 %
@@ -358,6 +365,299 @@ class UIRender extends Core {
   }
 
   /**
+   * 获取数据
+   * @param {boolean} debug 开启日志输出
+   * @return {Promise<Object>}
+   */
+  async getData(debug = false) {
+    // 日志追踪
+    if (this.settings['trackingLogEnabled']) {
+      if (this.settings['debug_bootstrap_date_time']) {
+        this.settings['debug_bootstrap_date_time'] += this.formatDate(new Date(), 'yyyy年MM月dd日 HH:mm:ss 更新\n')
+      } else {
+        this.settings['debug_bootstrap_date_time'] = '\n' + this.formatDate(new Date(), 'yyyy年MM月dd日 HH:mm:ss 更新\n')
+      }
+      await this.saveSettings(false)
+    }
+
+    const showLocation = this.settings['aMapKey'] !== '' && this.settings['aMapKey'] !== undefined
+    const showPlate = this.settings['showPlate'] || false
+    const showOil = this.settings['showOil'] || false
+
+    const getVehiclesStatusData = await this.getVehiclesStatus(debug)
+
+    const data = {
+      carPlateNo: this.settings['carPlateNo'],
+      seriesName: this.settings['myCarName'] || this.settings['seriesName'],
+      carModelName: this.settings['myCarModelName'] || this.settings['carModelName'],
+      carVIN: this.settings['carVIN'],
+      myOne: this.settings['myOne'] || '世间美好，与您环环相扣',
+      oilSupport: showOil ? getVehiclesStatusData.oilSupport : false,
+      oilLevel: getVehiclesStatusData.oilLevel || false,
+      parkingLights: getVehiclesStatusData.parkingLights || '0',
+      outdoorTemperature: getVehiclesStatusData.outdoorTemperature || '0',
+      parkingBrakeActive: getVehiclesStatusData.parkingBrakeActive || '0',
+      fuelRange: getVehiclesStatusData.fuelRange || '0',
+      fuelLevel: getVehiclesStatusData.fuelLevel || false,
+      socLevel: getVehiclesStatusData.socLevel || false,
+      mileage: getVehiclesStatusData.mileage || '0',
+      updateTime: getVehiclesStatusData.updateTime || this.formatDate(),
+      updateDate: getVehiclesStatusData.updateDate || this.formatDate(),
+      updateNowDate: this.formatDate(),
+      updateTimeStamp: getVehiclesStatusData.updateTimeStamp || new Date().valueOf(),
+      isLocked: getVehiclesStatusData.isLocked || false,
+      doorStatus: getVehiclesStatusData.doorStatus || [],
+      windowStatus: getVehiclesStatusData.windowStatus || [],
+      showLocation,
+      showPlate,
+      // 获取车辆经纬度
+      ...(showLocation ? await this.getVehiclesPosition(debug) : {}),
+      // 获取车辆位置信息
+      ...(showLocation ? await this.getCarAddressInfo(debug) : {}),
+      // 获取静态位置图片
+      largeLocationPicture: showLocation ? this.getCarAddressImage(debug) : this.myCarLogoUrl,
+    }
+    // 保存数据
+    this.settings['widgetData'] = data
+    this.settings['scriptName'] = Script.name()
+    await this.saveSettings(false)
+    if (debug) {
+      console.log('获取组件所需数据：')
+      console.log(data)
+    }
+    return data
+  }
+
+  /**
+   * 获取设备编码
+   * @returns {Promise<void>}
+   */
+  async getDeviceId(debug = false) {
+    const options = {
+      url: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/register/v1',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        appId: 'com.tima.aftermarket',
+        client_brand: 'VW',
+        appName: this.appName,
+        client_name: 'Maton',
+        appVersion: this.appVersion,
+        platform: 'iOS'
+      })
+    }
+    try {
+      const response = await this.http(options)
+      if (debug) {
+        console.log('设备编码接口返回数据：')
+        console.log(response)
+      }
+      if (response.client_id) {
+        this.settings['clientID'] = response.client_id
+        await this.saveSettings(false)
+        console.log('获取设备编码成功，准备进行账户登录')
+        await this.handleLoginRequest(debug)
+      } else {
+        console.error('获取设备编码失败，请稍后再重试！')
+        await this.notify('系统通知', '获取设备编码失败，请稍后再重试！')
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  /**
+   * 根据车架号查询基础访问域
+   * @param {boolean} debug 开启日志输出
+   * @returns {Promise<void>}
+   */
+  async getApiBaseURI(debug = false) {
+    const options = {
+      url: `https://mal-1a.prd.cn.vwg-connect.cn/api/cs/vds/v1/vehicles/${this.settings['carVIN']}/homeRegion`,
+      method: 'GET',
+      headers: {
+        ...this.requestHeader(),
+        'Authorization': 'Bearer ' + this.settings['authToken'],
+      }
+    }
+    try {
+      const response = await this.http(options)
+      if (debug) {
+        console.log('基础访问域接口返回数据：')
+        console.log(response)
+      }
+      // 判断接口状态
+      if (response.error) {
+        // 接口异常
+        console.error('getApiBaseURI 接口异常' + response.error.errorCode + ' - ' + response.error.description)
+      } else {
+        // 接口获取数据成功
+        const { baseUri } = response.homeRegion
+        this.settings['ApiBaseURI'] = baseUri.content
+        this.settings['isLogin'] = true
+        await this.saveSettings(false)
+        console.log(`根据车架号查询基础访问域成功：${baseUri.content}`)
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  /**
+   * 获取车辆状态
+   * @param {boolean} debug 开启日志输出
+   * @returns {Promise<Object>}
+   */
+  async getVehiclesStatus(debug = false) {
+    const options = {
+      url: `${this.settings['ApiBaseURI']}/bs/vsr/v1/vehicles/${this.settings['carVIN']}/status`,
+      method: 'GET',
+      headers: {
+        ...{
+          'Authorization': 'Bearer ' + this.settings['authToken'],
+          'X-App-Name': this.appName,
+          'X-App-Version': '113',
+          'Accept-Language': 'de-DE'
+        },
+        ...this.requestHeader()
+      }
+    }
+    try {
+      const response = await this.http(options)
+      if (debug) {
+        console.log('当前车辆状态接口返回数据：')
+        console.log(response)
+      }
+      // 判断接口状态
+      if (response.error) {
+        // 接口异常
+        switch (response.error.errorCode) {
+          case 'gw.error.authentication':
+            console.error(`获取车辆状态失败：${response.error.errorCode} - ${response.error.description}`)
+            await this.getTokenRequest('authAccessToken')
+            await this.getVehiclesStatus()
+            break
+          case 'mbbc.rolesandrights.unauthorized':
+            await this.notify('unauthorized 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽奥迪应用查看！')
+            break
+          case 'mbbc.rolesandrights.unknownService':
+            await this.notify('unknownService 错误', '请联系开发者！')
+            break
+          case 'mbbc.rolesandrights.unauthorizedUserDisabled':
+            await this.notify('unauthorizedUserDisabled 错误', '未经授权的用户已禁用！')
+            break
+          default:
+            await this.notify('未知错误' + response.error.errorCode, '未知错误:' + response.error.description)
+        }
+        return this.settings['vehicleData']
+      } else {
+        // 接口获取数据成功
+        const vehicleData = response.StoredVehicleDataResponse.vehicleData.data
+        this.settings['vehicleData'] = this.handleVehiclesData(vehicleData)
+        await this.saveSettings(false)
+        return this.handleVehiclesData(vehicleData)
+      }
+    } catch (error) {
+      console.error(error)
+      return this.settings['vehicleData']
+    }
+  }
+
+  /**
+   * 获取车辆经纬度
+   * @param {boolean} debug 开启日志输出
+   * @return {Promise<{latitude: number, longitude: number}>}
+   */
+  async getVehiclesPosition(debug = false) {
+    const options = {
+      url: `${this.settings['ApiBaseURI']}/bs/cf/v1/vehicles/${this.settings['carVIN']}/position`,
+      method: 'GET',
+      headers: {
+        ...{
+          'Authorization': 'Bearer ' + this.settings['authToken'],
+          'X-App-Name': this.appName,
+          'X-App-Version': '113',
+          'Accept-Language': 'de-DE'
+        },
+        ...this.requestHeader()
+      }
+    }
+    try {
+      const response = await this.http(options)
+      if (debug) {
+        console.log('车辆经纬度接口返回数据：')
+        console.log(response)
+      }
+      // 判断接口状态
+      if (response.error) {
+        // 接口异常
+        switch (response.error.errorCode) {
+          case 'gw.error.authentication':
+            console.error(`获取车辆经纬度失败：${response.error.errorCode} - ${response.error.description}`)
+            await this.getTokenRequest('authAccessToken')
+            await this.getVehiclesPosition(debug)
+            break
+          case 'CF.technical.9031':
+            console.error('获取数据超时，稍后再重试')
+            break
+          case 'mbbc.rolesandrights.servicelocallydisabled':
+            console.error('请检查车辆位置是否开启')
+            break
+          default:
+            console.error('获取车辆经纬度接口异常' + response.error.errorCode + ' - ' + response.error.description)
+        }
+      } else {
+        // 接口获取数据成功储存接口数据
+        let longitude = 0
+        let latitude = 0
+        if (response.storedPositionResponse) {
+          longitude = response.storedPositionResponse.position.carCoordinate.longitude
+          latitude = response.storedPositionResponse.position.carCoordinate.latitude
+        } else if (response.findCarResponse) {
+          longitude = response.findCarResponse.Position.carCoordinate.longitude
+          latitude = response.findCarResponse.Position.carCoordinate.latitude
+        }
+        if (longitude === 0 || latitude === 0) {
+          console.warn('获取车辆经纬度失败')
+          this.settings['longitude'] = 0
+          this.settings['latitude'] = 0
+          return {
+            longitude: this.settings['longitude'],
+            latitude: this.settings['latitude']
+          }
+        } else {
+          // 转换正常经纬度信息
+          longitude = parseInt(longitude, 10) / 1000000
+          latitude = parseInt(latitude, 10) / 1000000
+          this.settings['longitude'] = longitude
+          this.settings['latitude'] = latitude
+          await this.saveSettings(false)
+          console.log('获取车辆经纬度信息')
+          if (debug) {
+            console.log('当前车辆经纬度：')
+            console.log('经度：' + longitude)
+            console.log('纬度：' + latitude)
+          }
+          return {
+            longitude,
+            latitude
+          }
+        }
+      }
+    } catch (error) {
+      console.error(error)
+      this.settings['longitude'] = -1
+      this.settings['latitude'] = -1
+      return {
+        longitude: this.settings['longitude'],
+        latitude: this.settings['latitude']
+      }
+    }
+  }
+
+  /**
    * 给图片加一层半透明遮罩
    * @param {Image} img 要处理的图片
    * @param {string} color 遮罩背景颜色
@@ -444,7 +744,7 @@ class UIRender extends Core {
   async actionDownloadThemes() {
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
 
-    const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/themes/fvw-audi-themes.json')
+    const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/themes/themes.json')
     const response = await request.loadJSON()
     const themes = response['themes']
 
@@ -1209,6 +1509,33 @@ class UIRender extends Core {
   }
 
   /**
+   * 检查更新
+   */
+  async checkUpdate(fileName, jsonName) {
+    const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
+    const request = new Request(`https://gitee.com/JaxsonWang/scriptable-audi/raw/master/${jsonName}.json`)
+    const response = await request.loadJSON()
+    console.log(`远程版本：${response?.version}`)
+    if (response?.version === this.version) return this.notify('无需更新', '远程版本一致，暂无更新')
+    console.log('发现新的版本')
+
+    const log = response?.changelog.join('\n')
+    const alert = new Alert()
+    alert.title = '更新提示'
+    alert.message = `是否需要升级到${response?.version.toString()}版本\n\r${log}`
+    alert.addAction('更新')
+    alert.addCancelAction('取消')
+    const id = await alert.presentAlert()
+    if (id === -1) return
+    await this.notify('正在更新中...')
+    const REMOTE_REQ = new Request(response?.download)
+    const REMOTE_RES = await REMOTE_REQ.load()
+    FILE_MGR.write(FILE_MGR.joinPath(FILE_MGR.documentsDirectory(), fileName), REMOTE_RES)
+
+    await this.notify('Joiner 桌面组件更新完毕！')
+  }
+
+  /**
    * 传送给 Siri 快捷指令车辆信息数据
    * @returns {Object}
    */
@@ -1467,12 +1794,12 @@ class UIRender extends Core {
         const plateNoText = plateNoStack.addText(data.carPlateNo)
         this.setFontFamilyStyle(plateNoText, 12, 'regular')
         this.setWidgetNodeColor(plateNoText, 'textColor', 'Medium')
-        baseInfoStack.addSpacer(5)
+        baseInfoStack.spacing = 5
       }
       const logoStack = this.addStackTo(baseInfoStack, 'vertical')
       logoStack.centerAlignContent()
-      const carLogoImage = logoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
-      carLogoImage.imageSize = new Size(40, 16)
+      const carLogoImage = logoStack.addImage(await this.getImageByUrl(this.myCarLogoUrl))
+      carLogoImage.imageSize = new Size(this.logoWidth, this.logoHeight)
       this.setWidgetNodeColor(carLogoImage, 'tintColor', 'Medium')
       headerRightStack.spacing = 4
       const statusStack = this.addStackTo(headerRightStack, 'horizontal')
@@ -1639,18 +1966,24 @@ class UIRender extends Core {
       // 俩侧分割
       rowHeader.addSpacer()
       // 顶部右侧
+      const headerRightStackWidth = 75
       const headerRightStack = this.addStackTo(rowHeader, 'vertical')
+      headerRightStack.size = new Size(headerRightStackWidth, this.logoHeight * 1.5 + 20)
       // Logo
-      const carLogoStack = this.addStackTo(headerRightStack, 'vertical')
-      const carLogoImage = carLogoStack.addImage(await this.getImageByUrl(DEFAULT_AUDI_LOGO))
-      carLogoImage.imageSize = new Size(70, 20)
+      const carLogoStack = this.addStackTo(headerRightStack, 'horizontal')
+      carLogoStack.addText('')
+      carLogoStack.addSpacer()
+      const carLogoImage = carLogoStack.addImage(await this.getImageByUrl(this.myCarLogoUrl))
+      carLogoImage.imageSize = new Size(this.logoWidth * 1.5, this.logoHeight * 1.5)
       this.setWidgetNodeColor(carLogoImage, 'tintColor', 'Large')
-      headerRightStack.addSpacer(5)
+      headerRightStack.spacing = 5
       // 车牌信息
       if (data.showPlate) {
         const plateNoStack = this.addStackTo(headerRightStack, 'horizontal')
+        plateNoStack.addText('')
+        plateNoStack.addSpacer()
         const plateNoText = plateNoStack.addText(data.carPlateNo)
-        this.setFontFamilyStyle(plateNoText, 14, 'regular')
+        this.setFontFamilyStyle(plateNoText, 12, 'regular')
         this.setWidgetNodeColor(plateNoText, 'textColor', 'Large')
       }
       // endregion
@@ -1842,7 +2175,7 @@ class UIRender extends Core {
       const carStatus = doorStatus.concat(windowStatus)
       // const carStatus = ['左前门', '后备箱', '右前窗', '右后窗', '天窗']
       if (carStatus.length !== 0) {
-        const statusArray = this.format2Array(carStatus, 3)
+        const statusArray = format2Array(carStatus, 3)
         statusArray.forEach(arr => {
           const statusRowStack = this.addStackTo(statusStack, 'horizontal')
           statusRowStack.setPadding(2, 0, 2, 0)

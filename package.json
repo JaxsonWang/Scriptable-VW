@@ -6,6 +6,10 @@
     "watch": "node app",
     "debug:FVW-Audi": "FILE=FVW-Audi DEBUG=true rollup -c --watch",
     "build:FVW-Audi": "FILE=FVW-Audi rollup -c",
+    "debug:SVW": "FILE=SVW DEBUG=true rollup -c --watch",
+    "build:SVW": "FILE=SVW rollup -c",
+    "debug:Theme-Simple": "FILE=简约风格 THEME=true DEBUG=true rollup -c --watch",
+    "build:Theme-Simple": "FILE=Simple THEME=true rollup -c",
     "lint": "eslint src/**",
     "ncu": "npx npm-check-updates -u"
   },
@@ -24,6 +28,7 @@
     "express": "^4.17.2",
     "javascript-obfuscator": "^3.0.0",
     "multer": "^1.4.4",
-    "rollup": "^2.66.1"
+    "rollup": "^2.66.1",
+    "rollup-plugin-banner2": "^1.2.2"
   }
 }
