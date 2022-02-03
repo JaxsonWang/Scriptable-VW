@@ -69,18 +69,6 @@ app.post('/sync', (req, res) => {
   res.send('ok')
   console.log(`小组件源码（${_file['originalname']}）已同步，请打开编辑`)
   FILE_DATE = fs.statSync(WIDGET_FILE).mtimeMs
-  // 尝试打开
-  let cmd = `code "${WIDGET_FILE}"`
-  if (os.platform() === 'win32') {
-    cmd = `cmd.exe /c ${cmd}`
-  } else if (os.platform() === 'linux') {
-    let shell = process.env['SHELL']
-    cmd = `${shell} -c ${cmd}`
-  } else {
-    // cmd = `"/Applications/Visual Studio Code.app/Contents/MacOS/Electron" "${WIDGET_FILE}"`
-    cmd = `"/Applications/WebStorm.app/Contents/MacOS/webstorm" "${WIDGET_FILE}"`
-  }
-  child_process.execSync(cmd)
 })
 
 // 远程 console，调试中把调试输出内容传送到服务端控制台输出

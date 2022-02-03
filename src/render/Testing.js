@@ -1,3 +1,5 @@
+import UIRender from './UIRender'
+
 const Testing = async (Widget, defaultArgs = '') => {
   let M = null
   // 判断hash是否和当前设备匹配
@@ -102,8 +104,9 @@ const Testing = async (Widget, defaultArgs = '') => {
               // 2. 解析 widget class
               let NewWidget = null
               try {
-                const _func = new Function(`const _Debugger = Base => {\n${_code}\nreturn Widget\n}\nreturn _Debugger`)
-                NewWidget = _func()(Base)
+                // const _func = new Function(`const _Debugger = UIRender => {\n${_code}\nreturn Widget\n}\nreturn _Debugger`)
+                // NewWidget = _func()()
+                NewWidget = UIRender
               } catch (e) {
                 M.notify('解析失败', e.message)
               }
