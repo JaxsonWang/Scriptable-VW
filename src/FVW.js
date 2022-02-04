@@ -8,14 +8,14 @@ class Widget extends UIRender {
    */
   constructor(arg) {
     super(arg)
-    this.name = '上汽大众挂件'
-    this.desc = '上汽大众车辆桌面组件展示'
-    this.version = '2.0.1'
+    this.name = '一汽大众挂件'
+    this.desc = '一汽大众车辆桌面组件展示'
+    this.version = '2.1.0'
 
     this.appName = 'BootstrapApp'
     this.appVersion = '1.0'
 
-    this.myCarPhotoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/svw_default_passat.png'
+    this.myCarPhotoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_default_1.png'
     this.myCarLogoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_logo.png'
     this.logoWidth = 14
     this.logoHeight = 14
@@ -41,18 +41,13 @@ class Widget extends UIRender {
    */
   async handleLoginRequest(debug = false) {
     const options = {
-      url: 'https://api.mos.csvw.com/mos/security/api/v1/app/actions/pwdlogin',
+      url: 'https://one-app-h5.faw-vw.com/prod-api/mobile/one-app/user/public/v1/login?appkey=6298289633',
       method: 'POST',
       headers: this.requestHeader(),
       body: JSON.stringify({
-        pwd: this.settings['password'],
-        mobile: this.settings['username'],
-        picContent: '',
-        picTicket: '',
-        deviceId: this.settings['clientID'],
-        scope: 'openid',
-        brand: 'vw',
-        deviceType: 'ios'
+        password: this.settings['password'],
+        account: this.settings['username'],
+        scope: 'openid profile mbb'
       })
     }
     try {
@@ -61,15 +56,15 @@ class Widget extends UIRender {
         console.log('登录接口返回数据：')
         console.log(response)
       }
-      if (response.code === '000000') {
+      if (response.returnStatus === 'SUCCEED') {
         await this.notify('登录成功', '正在从服务器获取车辆数据，请耐心等待！')
         // 解构数据
-        const { idToken } = response.data
-        this.settings['userIDToken'] = idToken
+        const { tokenInfo } = response.data
+        this.settings['userIDToken'] = tokenInfo.idToken
         await this.saveSettings(false)
         console.log('账户登录成功，存储用户 idToken 密钥信息，准备交换验证密钥数据和获取个人基础信息')
         // 获取个人中心数据
-        await this.getUserToken(debug)
+        await this.getTokenRequest(debug)
       } else {
         console.error('账户登录失败：' + response.description)
         await this.notify('账户登录失败', '账户登录失败：' + response.description)
@@ -88,7 +83,7 @@ class Widget extends UIRender {
   async getTokenRequest(debug = false) {
     // 根据交换token请求参数不同
     // token 参数
-    const requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(this.settings['userIDToken'])}&scope=${encodeURIComponent('t2_svw:fal')}`
+    const requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(this.settings['userIDToken'])}&scope=${encodeURIComponent('t2_fawvw:fal')}`
 
     const options = {
       url: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/oauth2/v1/token',
@@ -130,102 +125,43 @@ class Widget extends UIRender {
         await this.saveSettings(false)
         console.log('authToken 密钥数据获取成功并且存储到本地')
         // 设置访问接口
-        await this.getApiBaseURI(debug)
+        await this.getVehiclesVIN(debug)
       }
     } catch (error) {
       console.error(error)
     }
   }
 
-  /**
-   * 获取上汽大众用户 Token
-   * @param debug
-   * @returns {Promise<void>}
-   */
-  async getUserToken(debug = false) {
-    const options = {
-      url: 'https://api.mos.csvw.com/mos/security/api/v1/app/token',
-      method: 'POST',
-      headers: this.requestHeader(),
-      body: JSON.stringify({
-        consentTypeList: 'app_privacy,app_agreement',
-        scope: 'user',
-        idToken: this.settings['userIDToken'],
-        isNeedSign: true
-      })
-    }
-
-    try {
-      const response = await this.http(options)
-      if (debug) {
-        console.log('上汽大众用户 Token 鉴权接口返回数据：')
-        console.log(response)
-      }
-      if (response.code === '000000') {
-        // 解构数据
-        const { accessToken } = response.data
-        this.settings['userSVWToken'] = accessToken
-        await this.saveSettings(false)
-        console.log('账户登录成功，存储用户 SVW Token 密钥信息，准备获取个人基础信息')
-        // 获取个人中心数据
-        await this.getUserMineRequest()
-      } else if (response.code === '103103') {
-        // 重新登陆
-        await this.notify('登陆失败', response.description)
-        await this.handleLoginRequest(debug)
-      } else {
-        console.error('上汽大众用户鉴权获取失败：')
-        console.error(response)
-      }
-    } catch (error) {
-      console.error(error)
-    }
-  }
 
   /**
-   * 获取用户信息
-   * @param {boolean} debug 开启日志输出
-   * @returns {Promise<void>}
+   * 获取车辆车架号
+   * @param  debug 开启日志输出
+   * @return {Promise<void>}
    */
-  async getUserMineRequest(debug = false) {
+  async getVehiclesVIN(debug = false) {
     const options = {
-      url: 'https://api.mos.csvw.com/mos/security/api/v1/auth/psga/oprationList',
+      url: 'https://mal-1a.prd.cn.vwg-connect.cn/api/usermanagement/users/v1/vehicles',
       method: 'GET',
       headers: {
-        ...{
-          'Authorization': 'Bearer ' + this.settings['userSVWToken']
-        },
-        ...this.requestHeader()
+        'Accept': 'application/json',
+        'Authorization': 'Bearer ' + this.settings['authToken']
       }
     }
     try {
       const response = await this.http(options)
       if (debug) {
-        console.log('个人中心接口返回数据：')
+        console.log('车架号接口返回数据：')
         console.log(response)
       }
-      // 判断接口状态
-      if (response.code === '000000') {
-        const { vehicle } = response.data
-        const { licensePlate: plateNo, serial: seriesName, model: carModelName, vin } = vehicle
-        this.settings['carPlateNo'] = plateNo
-        this.settings['seriesName'] = seriesName
-        this.settings['carModelName'] = carModelName
-        this.settings['carVIN'] = vin
+      if (response?.userVehicles?.vehicle) {
+        this.settings['carVIN'] = response.userVehicles.vehicle[0]
+        // 提示：一汽大众无法获取车辆基本信息，暂时写死
+        this.settings['seriesName'] = '嗨，一汽大众'
+        this.settings['carModelName'] = 'set your car model'
         await this.saveSettings(false)
-        console.log('获取用户基本信息成功并将存储本地')
-        if (debug) {
-          console.log('获取个人信息：')
-          console.log('车牌号码：' + plateNo)
-          console.log('车系名称：' + seriesName)
-          console.log('车型名称：' + carModelName)
-          console.log('车架号码：' + vin)
-        }
-        // 准备交换验证密钥数据
-        await this.getTokenRequest()
+        await this.getApiBaseURI(debug)
       } else {
-        console.error('获取个人信息失败，请登出重置后再进行小组件登录！')
-        await this.notify('个人信息获取失败', '获取个人信息失败，请登出重置后再进行小组件登录！')
+        console.log('获取车架号失败')
       }
     } catch (error) {
       console.error(error)
@@ -239,17 +175,17 @@ class Widget extends UIRender {
     const message = `
       Joiner 小组件需要使用到您的一汽大众应用的账号，首次登录请配置账号、密码进行令牌获取\n\r
       Joiner 小组件不会收集您的个人账户信息，所有账号信息将存在 iCloud 或者 iPhone 上但也请您妥善保管自己的账号\n\r
-      Joiner 小组件是开源、并且完全免费的，由大众粉丝车主开发，所有责任与上汽大众公司无关\n\r
+      Joiner 小组件是开源、并且完全免费的，由大众粉丝车主开发，所有责任与一汽大众公司无关\n\r
       开发者: 淮城一只猫\n\r
-      温馨提示：由于上汽大众应用支持单点登录，即不支持多终端应用登录，建议在上汽大众应用「爱车 - 智慧车联 - 车辆授权」进行添加用户，这样 Joiner 组件和应用独立执行。
+      温馨提示：由于一汽大众应用支持单点登录，即不支持多终端应用登录，建议在一汽大众应用「爱车 - 用户授权」进行添加用户，这样 Joiner 组件和应用独立执行。
     `
     const present = await this.actionStatementSettings(message)
     if (present !== -1) {
       const alert = new Alert()
       alert.title = 'Joiner 登录'
-      alert.message = '使用上汽大众账号登录进行展示数据'
-      alert.addTextField('上汽大众账号', this.settings['username'])
-      alert.addSecureTextField('上汽大众密码', this.settings['password'])
+      alert.message = '使用一汽大众账号登录进行展示数据'
+      alert.addTextField('一汽大众账号', this.settings['username'])
+      alert.addSecureTextField('一汽大众密码', this.settings['password'])
       alert.addAction('确定')
       alert.addCancelAction('取消')
 
@@ -267,7 +203,33 @@ class Widget extends UIRender {
    * 检查更新
    */
   async actionCheckUpdate() {
-    await this.checkUpdate('SVW-Joiner.js', 'svw-version')
+    await this.checkUpdate('FVW-Joiner.js', 'fvw-version')
+  }
+
+  /**
+   * 重写车牌显示
+   * 提示：因为一汽大众暂时没有办法自动获取车辆基础信息
+   * @returns {Promise<void>}
+   */
+  async showPlate() {
+    const alert = new Alert()
+    alert.title = '设置车牌'
+    alert.message = '请设置您的车辆牌照信息，不填牌照默认关闭牌照展示'
+    alert.addTextField('车牌信息', this.settings['showPlate'])
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.actionPreferenceSettings()
+    // 写入车牌信息
+    if(alert.textFieldValue(0) !== '') {
+      this.settings['carPlateNo'] = alert.textFieldValue(0)
+      this.settings['showPlate'] = true
+    } else {
+      this.settings['showPlate'] = false
+    }
+    await this.saveSettings()
+    return await this.actionPreferenceSettings()
   }
 
   /**
@@ -279,7 +241,7 @@ class Widget extends UIRender {
       Accept: 'application/json',
       OS: 'iOS',
       'Content-Type': 'application/json',
-      'User-Agent': 'MosProject_Live/7 CFNetwork/1325.0.1 Darwin/21.1.0',
+      'User-Agent': 'NewAfterMarket-ios/3.17.1 CFNetwork/1329 Darwin/21.3.0',
       'Did': `VW_APP_iPhone_${this.settings['clientID'].replace(/-/g, '')}_15.1_2.7.0`,
       'X-Client-Id': this.settings['clientID'],
       'deviceId': this.settings['clientID']

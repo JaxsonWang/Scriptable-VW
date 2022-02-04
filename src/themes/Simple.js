@@ -1,5 +1,6 @@
 import Core from '../base/Core'
 import Testing from '../render/Testing'
+import md5 from '../utils/md5'
 
 class Widget extends Core {
   /**
@@ -11,13 +12,14 @@ class Widget extends Core {
     this.name = 'Joiner 简约主题'
     this.desc = '依赖 Joiner 组件，额外支持全新风格主题'
 
-    this.appSettings = this.getSettings(true, Keychain.get('SETTING_KEY'))
-    this.version = '1.0.1'
+    this.appSettings = this.settings['parentSettings'] ? this.getSettings(true, md5(this.settings['parentSettings'])) : null
+    this.version = '1.0.2'
 
     if (config.runsInApp) {
-      if (this.appSettings['isLogin']) this.registerAction('偏好配置', this.actionPreferenceSettings)
+      this.registerAction('引用组件', this.setParentSettings)
+      if (this.settings['parentSettings'] && this.appSettings['isLogin']) this.registerAction('偏好配置', this.actionPreferenceSettings)
       this.registerAction('检查更新', this.actionCheckUpdate)
-      // this.registerAction('预览组件', this.actionPreview)
+      this.registerAction('预览组件', this.actionPreview)
       this.registerAction('当前版本: v' + this.version, this.actionAbout)
     }
   }
@@ -211,6 +213,9 @@ class Widget extends Core {
       case 'FVW-Audi-Joiner':
         myCarPhoto = await this.getImageByUrl('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png')
         break
+      case 'FVW-Joiner':
+        myCarPhoto = await this.getImageByUrl('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_default_1.png')
+        break
       case 'SVW-Joiner':
         myCarPhoto = await this.getImageByUrl('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/svw_default_passat.png')
         break
@@ -230,6 +235,9 @@ class Widget extends Core {
     switch (scriptName) {
       case 'FVW-Audi-Joiner':
         myCarLogo = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
+        break
+      case 'FVW-Joiner':
+        myCarLogo = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_logo.png'
         break
       case 'SVW-Joiner':
         myCarLogo = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_logo.png'
@@ -263,6 +271,38 @@ class Widget extends Core {
    */
   async getSFSymbolImage(sfSymbolName) {
     return await this.getImageByUrl(`https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/fvw_audi_joiner/sf_icons/${sfSymbolName}@2x.png`)
+  }
+
+  /**
+   * 设置引用组件
+   * @return {Promise<void>}
+   */
+  async setParentSettings() {
+    const alert = new Alert()
+    alert.title = '设置引用组件'
+    alert.message = '请选择您要引用的组件'
+
+    const menuList = [
+      {
+        name: 'FVW-Audi-Joiner',
+        text: '一汽奥迪'
+      },
+      {
+        name: 'FVW-Joiner',
+        text: '一汽大众'
+      },
+      {
+        name: 'SVW-Joiner',
+        text: '上汽大众'
+      }
+    ]
+    menuList.forEach(item => {
+      alert.addAction(item.text)
+    })
+    const menuId = await alert.presentSheet()
+
+    this.settings['parentSettings'] = menuList[menuId].name
+    await this.saveSettings()
   }
 
   /**

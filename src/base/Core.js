@@ -24,8 +24,6 @@ class Core {
     this.SETTING_KEY = md5(Script.name())
     // 插件设置
     this.settings = this.getSettings()
-    // 设置存储设置到 key
-    if (!Keychain.contains('SETTING_KEY')) Keychain.set('SETTING_KEY', this.SETTING_KEY)
   }
 
   /**

@@ -10,7 +10,7 @@ class Widget extends UIRender {
     super(arg)
     this.name = 'Audi 挂件'
     this.desc = 'Audi 车辆桌面组件展示'
-    this.version = '2.2.2'
+    this.version = '2.2.3'
 
     this.appName = 'MyAuDi'
     this.appVersion = '3.0.2'
@@ -19,6 +19,8 @@ class Widget extends UIRender {
     this.myCarLogoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
     this.logoWidth = 40
     this.logoHeight = 14
+
+    this.defaultMyOne = '世间美好，与您环环相扣'
 
     if (config.runsInApp) {
       if (!this.settings['isLogin']) this.registerAction('账户登录', this.actionAccountLogin)

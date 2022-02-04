@@ -16,6 +16,8 @@ class UIRender extends Core {
     this.myCarLogoUrl = ''
     this.logoWidth = 0
     this.logoHeight = 0
+
+    this.defaultMyOne = ''
   }
 
   /**
@@ -391,7 +393,7 @@ class UIRender extends Core {
       seriesName: this.settings['myCarName'] || this.settings['seriesName'],
       carModelName: this.settings['myCarModelName'] || this.settings['carModelName'],
       carVIN: this.settings['carVIN'],
-      myOne: this.settings['myOne'] || '世间美好，与您环环相扣',
+      myOne: this.settings['myOne'] || this.defaultMyOne,
       oilSupport: showOil ? getVehiclesStatusData.oilSupport : false,
       oilLevel: getVehiclesStatusData.oilLevel || false,
       parkingLights: getVehiclesStatusData.parkingLights || '0',
@@ -1144,9 +1146,9 @@ class UIRender extends Core {
     const lightBgColor2 = alert.textFieldValue(1)
     const lightTextColor = alert.textFieldValue(2)
 
-    this.settings['lightBgColor1'] = lightBgColor1 || this.lightDefaultBackgroundColorGradient[0]
-    this.settings['lightBgColor2'] = lightBgColor2 || this.lightDefaultBackgroundColorGradient[1]
-    this.settings['lightTextColor'] = lightTextColor || '#000000'
+    this.settings['lightBgColor1'] = lightBgColor1
+    this.settings['lightBgColor2'] = lightBgColor2
+    this.settings['lightTextColor'] = lightTextColor
     await this.saveSettings()
 
     return await this.setColorBackground()
@@ -1174,9 +1176,9 @@ class UIRender extends Core {
     const darkBgColor2 = alert.textFieldValue(1)
     const darkTextColor = alert.textFieldValue(2)
 
-    this.settings['darkBgColor1'] = darkBgColor1 || this.darkDefaultBackgroundColorGradient[0]
-    this.settings['darkBgColor2'] = darkBgColor2 || this.darkDefaultBackgroundColorGradient[1]
-    this.settings['darkTextColor'] = darkTextColor || '#ffffff'
+    this.settings['darkBgColor1'] = darkBgColor1
+    this.settings['darkBgColor2'] = darkBgColor2
+    this.settings['darkTextColor'] = darkTextColor
     await this.saveSettings()
 
     return await this.setColorBackground()
@@ -1313,9 +1315,9 @@ class UIRender extends Core {
   async setColorBackgroundTextColor() {
     const alert = new Alert()
     alert.title = '字体颜色'
-    alert.message = '仅在设置图片背景情境下进行对字体颜色更改，字体规格：#ffffff'
-    alert.addTextField('请输入浅色模式字体颜色值', this.settings['backgroundImageLightTextColor'] || '#ffffff')
-    alert.addTextField('请输入深色模式字体颜色值', this.settings['backgroundImageDarkTextColor'] || '#000000')
+    alert.message = '仅在设置图片背景情境下进行对字体颜色更改。浅色模式下字体颜色：#000000，深色模式下字体颜色：#ffffff'
+    alert.addTextField('请输入浅色模式字体颜色值', this.settings['backgroundImageLightTextColor'])
+    alert.addTextField('请输入深色模式字体颜色值', this.settings['backgroundImageDarkTextColor'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
@@ -1350,14 +1352,14 @@ class UIRender extends Core {
   async setMyOne() {
     const alert = new Alert()
     alert.title = '输入一言'
-    alert.message = '请输入一言，将会在桌面展示语句，不填则显示 "世间美好，与您环环相扣"'
-    alert.addTextField('请输入一言', this.settings['myOne'] || '世间美好，与您环环相扣')
+    alert.message = `请输入一言，将会在桌面展示语句，不填则显示 「${this.defaultMyOne}」`
+    alert.addTextField('请输入一言', this.settings['myOne'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
     if (id === -1) return await this.actionPreferenceSettings()
-    this.settings['myOne'] = alert.textFieldValue(0) ? alert.textFieldValue(0) : '世间美好，与您环环相扣'
+    this.settings['myOne'] = alert.textFieldValue(0)
     await this.saveSettings()
 
     return await this.actionPreferenceSettings()
