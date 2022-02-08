@@ -1,7 +1,7 @@
-import UIRender from './render/UIRender'
+import DataRender from './render/DataRender'
 import Testing from './render/Testing'
 
-class Widget extends UIRender {
+class Widget extends DataRender {
   /**
    * 传递给组件的参数，可以是桌面 Parameter 数据，也可以是外部如 URLScheme 等传递的数据
    * @param {string} arg 自定义参数
