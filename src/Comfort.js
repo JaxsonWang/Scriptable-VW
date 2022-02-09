@@ -1,33 +1,27 @@
-import DataRender from './render/DataRender'
+import UIRender from './render/UIRender'
 import Testing from './render/Testing'
 
-class Widget extends DataRender {
+class Widget extends UIRender {
   /**
    * 传递给组件的参数，可以是桌面 Parameter 数据，也可以是外部如 URLScheme 等传递的数据
    * @param {string} arg 自定义参数
    */
   constructor(arg) {
     super(arg)
-    this.name = 'Audi 挂件'
-    this.desc = 'Audi 车辆桌面组件展示'
-    this.version = '2.2.4'
-
-    this.appName = 'MyAuDi'
-    this.appVersion = '3.0.2'
+    this.name = 'Joiner 挂件'
+    this.desc = 'Joiner 车辆桌面组件展示'
+    this.version = '1.0.0'
 
     this.myCarPhotoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png'
     this.myCarLogoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
     this.logoWidth = 40
     this.logoHeight = 14
 
-    this.defaultMyOne = '世间美好，与您环环相扣'
+    this.defaultMyOne = '永远年轻，永远热泪盈眶'
 
     if (config.runsInApp) {
-      if (!this.settings['isLogin']) this.registerAction('账户登录', this.actionAccountLogin)
-      if (this.settings['isLogin']) this.registerAction('偏好配置', this.actionPreferenceSettings)
-      if (this.settings['isLogin']) this.registerAction('刷新数据', this.actionRefreshData)
-      if (this.settings['isLogin']) this.registerAction('登出重置', this.actionLogOut)
-      if (this.settings['isLogin']) this.registerAction('调试日志', this.actionDebug)
+      this.registerAction('偏好配置', this.actionPreferenceSettings)
+      this.registerAction('调试日志', this.actionDebug)
       this.registerAction('主题下载', this.actionDownloadThemes)
       this.registerAction('检查更新', this.actionCheckUpdate)
       this.registerAction('当前版本: v' + this.version, this.actionAbout)

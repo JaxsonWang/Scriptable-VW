@@ -225,6 +225,16 @@ class Core {
   }
 
   /**
+   * 获取LOGO照片
+   * @returns {Promise<Image|*>}
+   */
+  async getMyCarLogo(logo) {
+    let myCarLogo = await this.getImageByUrl(logo)
+    if (this.settings['myCarLogo']) myCarLogo = await FileManager.local().readImage(this.settings['myCarLogo'])
+    return myCarLogo
+  }
+
+  /**
    * 关于组件
    */
   async actionAbout() {

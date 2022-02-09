@@ -440,35 +440,48 @@ class UIRender extends Core {
         name: 'setMyCarName',
         text: '自定义车辆名称',
         icon: '💡'
-      }, {
+      },
+      {
         name: 'setMyCarModelName',
         text: '自定义车辆功率',
         icon: '🛻'
-      }, {
+      },
+      {
         name: 'setMyCarPhoto',
         text: '自定义车辆照片',
         icon: '🚙'
-      }, {
+      },
+      {
+        name: 'setMyCarLogo',
+        text: '自定义LOGO',
+        icon: '🎱'
+      },
+      {
         name: 'setBackgroundConfig',
         text: '自定义组件背景',
         icon: '🎨'
-      }, {
+      },
+      {
         name: 'setMyOne',
         text: '自定义一言一句',
         icon: '📝'
-      }, {
+      },
+      {
         name: 'setAMapKey',
         text: '设置车辆位置',
         icon: '🎯'
-      }, {
+      },
+      {
         name: 'setFontFamily',
         text: '设置字体风格',
         icon: '🌈'
-      }, {
+      },
+      {
         name: 'showPlate',
         text: '设置车牌显示',
         icon: '🚘'
-      }, {
+      },
+      {
         name: 'showOil',
         text: '设置机油显示',
         icon: '⛽️'
@@ -543,6 +556,30 @@ class UIRender extends Core {
       const imagePath = FileManager.local().joinPath(FileManager.local().documentsDirectory(), `myCarPhoto_${this.SETTING_KEY}`)
       await FileManager.local().writeImage(imagePath, image)
       this.settings['myCarPhoto'] = imagePath
+      await this.saveSettings()
+    } catch (error) {
+      // 取消图片会异常 暂时不用管
+    }
+  }
+
+  /**
+   * 自定义LOGO
+   * @returns {Promise<void>}
+   */
+  async setMyCarLogo() {
+    const alert = new Alert()
+    alert.title = 'LOGO图片'
+    alert.message = '请在相册选择LOGO图片以便展示到小组件上，最好是全透明背景PNG图。'
+    alert.addAction('选择照片')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.actionPreferenceSettings()
+    try {
+      const image = await Photos.fromLibrary()
+      const imagePath = FileManager.local().joinPath(FileManager.local().documentsDirectory(), `myCarLogo_${this.SETTING_KEY}`)
+      await FileManager.local().writeImage(imagePath, image)
+      this.settings['myCarLogo'] = imagePath
       await this.saveSettings()
     } catch (error) {
       // 取消图片会异常 暂时不用管
@@ -1337,7 +1374,8 @@ class UIRender extends Core {
       }
       const logoStack = this.addStackTo(baseInfoStack, 'vertical')
       logoStack.centerAlignContent()
-      const carLogoImage = logoStack.addImage(await this.getImageByUrl(this.myCarLogoUrl))
+      const carLogo = await this.getMyCarLogo(this.myCarLogoUrl)
+      const carLogoImage = logoStack.addImage(carLogo)
       carLogoImage.imageSize = new Size(this.logoWidth, this.logoHeight)
       this.setWidgetNodeColor(carLogoImage, 'tintColor', 'Medium')
       headerRightStack.spacing = 4
@@ -1512,7 +1550,8 @@ class UIRender extends Core {
       const carLogoStack = this.addStackTo(headerRightStack, 'horizontal')
       carLogoStack.addText('')
       carLogoStack.addSpacer()
-      const carLogoImage = carLogoStack.addImage(await this.getImageByUrl(this.myCarLogoUrl))
+      const carLogo = await this.getMyCarLogo(this.myCarLogoUrl)
+      const carLogoImage = carLogoStack.addImage(carLogo)
       carLogoImage.imageSize = new Size(this.logoWidth * 1.5, this.logoHeight * 1.5)
       this.setWidgetNodeColor(carLogoImage, 'tintColor', 'Large')
       headerRightStack.spacing = 5
