@@ -197,6 +197,23 @@ class UIRender extends Core {
   }
 
   /**
+   * 正常锁车风格
+   * @returns {boolean}
+   */
+  getLockSuccessStyle() {
+    return this.settings['lockSuccessStyle'] === 'successColor'
+  }
+
+  /**
+   * 获取 logo 大小
+   * @param {'width' || 'height'} type
+   */
+  getLogoSize(type) {
+    if (type === 'width') return this.settings['logoWidth'] || this.logoWidth
+    if (type === 'height') return this.settings['logoHeight'] || this.logoHeight
+  }
+
+  /**
    * 给图片加一层半透明遮罩
    * @param {Image} img 要处理的图片
    * @param {string} color 遮罩背景颜色
@@ -453,8 +470,13 @@ class UIRender extends Core {
       },
       {
         name: 'setMyCarLogo',
-        text: '自定义LOGO',
+        text: '自定义 LOGO 图片',
         icon: '🎱'
+      },
+      {
+        name: 'setMyCarLogoSize',
+        text: '设置 LOGO 图片大小',
+        icon: '🔫'
       },
       {
         name: 'setBackgroundConfig',
@@ -475,6 +497,11 @@ class UIRender extends Core {
         name: 'setFontFamily',
         text: '设置字体风格',
         icon: '🌈'
+      },
+      {
+        name: 'setLockSuccessStyle',
+        text: '设置锁车提示风格',
+        icon: '🔌'
       },
       {
         name: 'showPlate',
@@ -563,13 +590,13 @@ class UIRender extends Core {
   }
 
   /**
-   * 自定义LOGO
+   * 自定义 LOGO
    * @returns {Promise<void>}
    */
   async setMyCarLogo() {
     const alert = new Alert()
-    alert.title = 'LOGO图片'
-    alert.message = '请在相册选择LOGO图片以便展示到小组件上，最好是全透明背景PNG图。'
+    alert.title = 'LOGO 图片'
+    alert.message = '请在相册选择 LOGO 图片以便展示到小组件上，最好是全透明背景PNG图。'
     alert.addAction('选择照片')
     alert.addCancelAction('取消')
 
@@ -584,6 +611,31 @@ class UIRender extends Core {
     } catch (error) {
       // 取消图片会异常 暂时不用管
     }
+  }
+
+  /**
+   * 设置LOGO图片大小
+   * @returns {Promise<void>}
+   */
+  async setMyCarLogoSize() {
+    const alert = new Alert()
+    alert.title = '设置 LOGO 大小'
+    alert.message = `不填为默认，默认图片宽度为 ${this.logoWidth} 高度为 ${this.logoHeight}`
+
+    alert.addTextField('宽度', this.settings['logoWidth'])
+    alert.addTextField('高度', this.settings['logoHeight'])
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.actionPreferenceSettings()
+    const logoWidth = alert.textFieldValue(0) || this.logoWidth
+    const logoHeight = alert.textFieldValue(1) || this.logoHeight
+
+    this.settings['logoWidth'] = logoWidth
+    this.settings['logoHeight'] = logoHeight
+    await this.saveSettings()
+    return await this.actionPreferenceSettings()
   }
 
   /**
@@ -1033,6 +1085,28 @@ class UIRender extends Core {
   }
 
   /**
+   * 设置锁车风格
+   * @returns {Promise<void>}
+   */
+  async setLockSuccessStyle() {
+    const alert = new Alert()
+    alert.title = '锁车提示风格'
+    alert.message = '用于设置锁车提示风格，可以设置绿色或者字体色俩种风格'
+    alert.addAction('绿色')
+    alert.addCancelAction('字体色')
+
+    const id = await alert.presentAlert()
+    if (id === -1) {
+      this.settings['lockSuccessStyle'] = 'fontColor'
+      await this.saveSettings()
+      return await this.actionPreferenceSettings()
+    }
+    this.settings['lockSuccessStyle'] = 'successColor'
+    await this.saveSettings()
+    return await this.actionPreferenceSettings()
+  }
+
+  /**
    * 刷新数据
    */
   async actionRefreshData() {
@@ -1300,10 +1374,12 @@ class UIRender extends Core {
       statusStack.setPadding(5, 10, 5, 10)
       statusStack.cornerRadius = 10
       statusStack.borderWidth = 2
-      this.setWidgetNodeColor(statusStack, 'backgroundColor', 'Small', 0.25)
+      if (this.getLockSuccessStyle()) statusStack.backgroundColor = this.successColor(0.25)
+      else this.setWidgetNodeColor(statusStack, 'backgroundColor', 'Small', 0.25)
       if (doorAndWindowNormal) statusStack.backgroundColor = this.warningColor(0.25)
       if (!isLocked) statusStack.backgroundColor = this.dangerColor(0.25)
-      this.setWidgetNodeColor(statusStack, 'borderColor', 'Small', 0.5)
+      if (this.getLockSuccessStyle()) statusStack.borderColor = this.successColor(0.5)
+      else this.setWidgetNodeColor(statusStack, 'borderColor', 'Small', 0.5)
       if (doorAndWindowNormal) statusStack.borderColor = this.warningColor(0.5)
       if (!isLocked) statusStack.borderColor = this.dangerColor(0.5)
 
@@ -1312,7 +1388,8 @@ class UIRender extends Core {
       if (!isLocked) icon = await this.getSFSymbolImage('lock.open.fill')
       const statusImage = statusStack.addImage(icon)
       statusImage.imageSize = new Size(12, 12)
-      this.setWidgetNodeColor(statusImage, 'tintColor', 'Small')
+      if (this.getLockSuccessStyle()) statusImage.tintColor = this.successColor()
+      else this.setWidgetNodeColor(statusImage, 'tintColor', 'Small')
       if (doorAndWindowNormal) statusImage.tintColor = this.warningColor()
       if (!isLocked) statusImage.tintColor = this.dangerColor()
       statusStack.spacing = 4
@@ -1323,7 +1400,8 @@ class UIRender extends Core {
       if (!isLocked) status = '未锁车'
       const statusText = infoStack.addText(status)
       this.setFontFamilyStyle(statusText, 12, 'regular')
-      this.setWidgetNodeColor(statusText, 'textColor', 'Small')
+      if (this.getLockSuccessStyle()) statusText.textColor = this.successColor()
+      else this.setWidgetNodeColor(statusText, 'textColor', 'Small')
       if (doorAndWindowNormal) statusText.textColor = this.warningColor()
       if (!isLocked) statusText.textColor = this.dangerColor()
       statusMainStack.addSpacer()
@@ -1376,7 +1454,7 @@ class UIRender extends Core {
       logoStack.centerAlignContent()
       const carLogo = await this.getMyCarLogo(this.myCarLogoUrl)
       const carLogoImage = logoStack.addImage(carLogo)
-      carLogoImage.imageSize = new Size(this.logoWidth, this.logoHeight)
+      carLogoImage.imageSize = new Size(this.getLogoSize('width'), this.getLogoSize('height'))
       this.setWidgetNodeColor(carLogoImage, 'tintColor', 'Medium')
       headerRightStack.spacing = 4
       const statusStack = this.addStackTo(headerRightStack, 'horizontal')
@@ -1519,6 +1597,7 @@ class UIRender extends Core {
    * @returns {Promise<ListWidget>}
    */
   async renderLarge(data) {
+    console.log(this.getLockSuccessStyle())
     try {
       const widget = new ListWidget()
       await this.setWidgetDynamicBackground(widget, 'Large')
@@ -1552,7 +1631,7 @@ class UIRender extends Core {
       carLogoStack.addSpacer()
       const carLogo = await this.getMyCarLogo(this.myCarLogoUrl)
       const carLogoImage = carLogoStack.addImage(carLogo)
-      carLogoImage.imageSize = new Size(this.logoWidth * 1.5, this.logoHeight * 1.5)
+      carLogoImage.imageSize = new Size(this.getLogoSize('width') * 1.5, this.getLogoSize('height') * 1.5)
       this.setWidgetNodeColor(carLogoImage, 'tintColor', 'Large')
       headerRightStack.spacing = 5
       // 车牌信息
@@ -1783,17 +1862,21 @@ class UIRender extends Core {
         statusItemStack.setPadding(5, 10, 5, 10)
         statusItemStack.cornerRadius = 10
         statusItemStack.borderWidth = 2
-        this.setWidgetNodeColor(statusItemStack, 'borderColor', 'Large', 0.5)
-        this.setWidgetNodeColor(statusItemStack, 'backgroundColor', 'Large', 0.25)
+        if (this.getLockSuccessStyle()) statusItemStack.borderColor = this.successColor(0.5)
+        else this.setWidgetNodeColor(statusItemStack, 'borderColor', 'Large', 0.5)
+        if (this.getLockSuccessStyle()) statusItemStack.backgroundColor = this.successColor(0.25)
+        else this.setWidgetNodeColor(statusItemStack, 'backgroundColor', 'Large', 0.25)
 
         statusItemStack.centerAlignContent()
         const statusItemImage = statusItemStack.addImage(await this.getSFSymbolImage('checkmark.shield.fill'))
         statusItemImage.imageSize = new Size(12, 12)
-        this.setWidgetNodeColor(statusItemImage, 'tintColor', 'Large')
+        if (this.getLockSuccessStyle()) statusItemImage.tintColor = this.successColor()
+        else this.setWidgetNodeColor(statusItemImage, 'tintColor', 'Large')
         statusItemStack.addSpacer(2)
         const statusItemText = statusItemStack.addText('当前车窗已全关闭')
         this.setFontFamilyStyle(statusItemText, 12)
-        this.setWidgetNodeColor(statusItemText, 'textColor', 'Large')
+        if (this.getLockSuccessStyle()) statusItemText.textColor = this.successColor()
+        else this.setWidgetNodeColor(statusItemText, 'textColor', 'Large')
         statusItemText.centerAlignText()
         statusInfoStack.addSpacer()
       }
