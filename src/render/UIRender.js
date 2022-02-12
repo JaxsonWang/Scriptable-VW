@@ -15,6 +15,7 @@ class UIRender extends Core {
     this.logoHeight = 0
 
     this.defaultMyOne = ''
+    this.locationBorderRadius = 15
   }
 
   /**
@@ -202,6 +203,14 @@ class UIRender extends Core {
    */
   getLockSuccessStyle() {
     return this.settings['lockSuccessStyle'] === 'successColor'
+  }
+
+  /**
+   * 大组件弧度
+   * @returns {number}
+   */
+  getLocationBorderRadius() {
+    return parseInt(this.settings['locationBorderRadius'], 10) || this.locationBorderRadius
   }
 
   /**
@@ -469,13 +478,40 @@ class UIRender extends Core {
         icon: '🚙'
       },
       {
+        name: 'setAMapKey',
+        text: '设置车辆位置',
+        icon: '🎯'
+      }
+    ]
+
+    menuList.forEach(item => {
+      alert.addAction(item.icon + ' ' +item.text)
+    })
+
+    alert.addCancelAction('取消设置')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    await this[menuList[id].name]()
+  }
+
+  /**
+   * 界面微调
+   * @returns {Promise<void>}
+   */
+  async actionUIRenderSettings() {
+    const alert = new Alert()
+    alert.title = '组件个性化配置'
+    alert.message = '根据您的喜好设置，更好展示组件数据'
+
+    const menuList = [
+      {
         name: 'setMyCarLogo',
         text: '自定义 LOGO 图片',
         icon: '🎱'
       },
       {
         name: 'setMyCarLogoSize',
-        text: '设置 LOGO 图片大小',
+        text: '设置 LOGO 大小',
         icon: '🔫'
       },
       {
@@ -489,19 +525,19 @@ class UIRender extends Core {
         icon: '📝'
       },
       {
-        name: 'setAMapKey',
-        text: '设置车辆位置',
-        icon: '🎯'
-      },
-      {
         name: 'setFontFamily',
         text: '设置字体风格',
         icon: '🌈'
       },
       {
         name: 'setLockSuccessStyle',
-        text: '设置锁车提示风格',
+        text: '锁车提示风格',
         icon: '🔌'
+      },
+      {
+        name: 'setLargeLocationBorderRadius',
+        text: '大组件边界弧度',
+        icon: '🍺'
       },
       {
         name: 'showPlate',
@@ -601,7 +637,7 @@ class UIRender extends Core {
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
-    if (id === -1) return await this.actionPreferenceSettings()
+    if (id === -1) return await this.actionUIRenderSettings()
     try {
       const image = await Photos.fromLibrary()
       const imagePath = FileManager.local().joinPath(FileManager.local().documentsDirectory(), `myCarLogo_${this.SETTING_KEY}`)
@@ -628,14 +664,14 @@ class UIRender extends Core {
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
-    if (id === -1) return await this.actionPreferenceSettings()
+    if (id === -1) return await this.actionUIRenderSettings()
     const logoWidth = alert.textFieldValue(0) || this.logoWidth
     const logoHeight = alert.textFieldValue(1) || this.logoHeight
 
     this.settings['logoWidth'] = logoWidth
     this.settings['logoHeight'] = logoHeight
     await this.saveSettings()
-    return await this.actionPreferenceSettings()
+    return await this.actionUIRenderSettings()
   }
 
   /**
@@ -657,7 +693,7 @@ class UIRender extends Core {
       text: '设置图片背景',
       icon: '🏞'
     }, {
-      name: 'actionPreferenceSettings',
+      name: 'actionUIRenderSettings',
       text: '返回上一级',
       icon: '👈'
     }]
@@ -732,7 +768,7 @@ class UIRender extends Core {
       icon: '✍️'
     }, {
       name: 'removeImageBackground',
-      text: '移除图片',
+      text: '还原背景',
       icon: '🪣'
     }, {
       name: 'setBackgroundConfig',
@@ -984,11 +1020,11 @@ class UIRender extends Core {
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
-    if (id === -1) return await this.actionPreferenceSettings()
+    if (id === -1) return await this.actionUIRenderSettings()
     this.settings['myOne'] = alert.textFieldValue(0)
     await this.saveSettings()
 
-    return await this.actionPreferenceSettings()
+    return await this.actionUIRenderSettings()
   }
 
   /**
@@ -1027,12 +1063,12 @@ class UIRender extends Core {
       // 关闭车牌显示
       this.settings['showPlate'] = false
       await this.saveSettings()
-      return await this.actionPreferenceSettings()
+      return await this.actionUIRenderSettings()
     }
     // 开启车牌显示
     this.settings['showPlate'] = true
     await this.saveSettings()
-    return await this.actionPreferenceSettings()
+    return await this.actionUIRenderSettings()
   }
 
   /**
@@ -1051,12 +1087,12 @@ class UIRender extends Core {
       // 关闭车牌显示
       this.settings['showOil'] = false
       await this.saveSettings()
-      return await this.actionPreferenceSettings()
+      return await this.actionUIRenderSettings()
     }
     // 开启车牌显示
     this.settings['showOil'] = true
     await this.saveSettings()
-    return await this.actionPreferenceSettings()
+    return await this.actionUIRenderSettings()
   }
 
   /**
@@ -1073,7 +1109,7 @@ class UIRender extends Core {
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
-    if (id === -1) return await this.actionPreferenceSettings()
+    if (id === -1) return await this.actionUIRenderSettings()
     const regularFont = alert.textFieldValue(0)
     const boldFont = alert.textFieldValue(1)
 
@@ -1081,7 +1117,7 @@ class UIRender extends Core {
     this.settings['boldFont'] = boldFont
     await this.saveSettings()
 
-    return await this.actionPreferenceSettings()
+    return await this.actionUIRenderSettings()
   }
 
   /**
@@ -1099,11 +1135,31 @@ class UIRender extends Core {
     if (id === -1) {
       this.settings['lockSuccessStyle'] = 'fontColor'
       await this.saveSettings()
-      return await this.actionPreferenceSettings()
+      return await this.actionUIRenderSettings()
     }
     this.settings['lockSuccessStyle'] = 'successColor'
     await this.saveSettings()
-    return await this.actionPreferenceSettings()
+    return await this.actionUIRenderSettings()
+  }
+
+  /**
+   * 设置大组件位置边界弧度
+   * @returns {Promise<void>}
+   */
+  async setLargeLocationBorderRadius() {
+    const alert = new Alert()
+    alert.title = '设置弧度'
+    alert.message = `大组件下方长方形弧度设置，默认是 ${this.locationBorderRadius}，请输入数字类型。`
+    alert.addTextField('弧度大小', this.settings['locationBorderRadius'])
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.actionUIRenderSettings()
+    this.settings['locationBorderRadius'] = alert.textFieldValue(0)
+    await this.saveSettings()
+
+    return await this.actionUIRenderSettings()
   }
 
   /**
@@ -1363,7 +1419,7 @@ class UIRender extends Core {
       const updateTimeStack = this.addStackTo(containerStack, 'horizontal')
       updateTimeStack.bottomAlignContent()
       updateTimeStack.addSpacer()
-      const updateTimeText = updateTimeStack.addText(`${data.updateTime}`)
+      const updateTimeText = updateTimeStack.addText(`${this.formatDate(data.updateTimeStamp, 'MM-dd HH:mm')}`)
       this.setFontFamilyStyle(updateTimeText, 12, 'regular')
       this.setWidgetNodeColor(updateTimeText, 'textColor', 'Small')
       updateTimeStack.addSpacer()
@@ -1562,7 +1618,7 @@ class UIRender extends Core {
       dateTimeStack.addSpacer(5)
       const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
       dateTimeTextStack.bottomAlignContent()
-      const dateTimeText = dateTimeTextStack.addText(data.updateTime)
+      const dateTimeText = dateTimeTextStack.addText(this.formatDate(data.updateTimeStamp, 'MM-dd HH:mm'))
       this.setFontFamilyStyle(dateTimeText, 12, 'regular')
       this.setWidgetNodeColor(dateTimeText, 'textColor', 'Medium')
       // endregion
@@ -1597,7 +1653,6 @@ class UIRender extends Core {
    * @returns {Promise<ListWidget>}
    */
   async renderLarge(data) {
-    console.log(this.getLockSuccessStyle())
     try {
       const widget = new ListWidget()
       await this.setWidgetDynamicBackground(widget, 'Large')
@@ -1770,14 +1825,16 @@ class UIRender extends Core {
       lockedImageStack.bottomAlignContent()
       const lockedImage = lockedImageStack.addImage(await this.getSFSymbolImage('lock.circle'))
       lockedImage.imageSize = new Size(18, 18)
-      this.setWidgetNodeColor(lockedImage, 'tintColor', 'Large')
+      if (this.getLockSuccessStyle()) lockedImage.tintColor = this.successColor()
+      else this.setWidgetNodeColor(lockedImage, 'tintColor', 'Large')
       if (!data.isLocked) lockedImage.tintColor = this.dangerColor()
       lockedStack.addSpacer(5)
       const lockedTextStack = this.addStackTo(lockedStack, 'horizontal')
       lockedTextStack.bottomAlignContent()
       const lockedText = lockedTextStack.addText(data.isLocked ? '已锁车' : '未锁车')
       this.setFontFamilyStyle(lockedText, 14, 'regular')
-      this.setWidgetNodeColor(lockedText, 'textColor', 'Large')
+      if (this.getLockSuccessStyle()) lockedText.textColor = this.successColor()
+      else this.setWidgetNodeColor(lockedText, 'textColor', 'Large')
       if (!data.isLocked) lockedText.textColor = this.dangerColor()
       // endregion
       rowLeftStack.addSpacer(5)
@@ -1792,7 +1849,7 @@ class UIRender extends Core {
       dateTimeStack.addSpacer(5)
       const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
       dateTimeTextStack.bottomAlignContent()
-      const dateTimeText = dateTimeTextStack.addText(data.updateTime)
+      const dateTimeText = dateTimeTextStack.addText(this.formatDate(data.updateTimeStamp, 'MM-dd HH:mm'))
       this.setFontFamilyStyle(dateTimeText, 14, 'regular')
       this.setWidgetNodeColor(dateTimeText, 'textColor', 'Large')
       // endregion
@@ -1803,12 +1860,12 @@ class UIRender extends Core {
       const updateImageStack = this.addStackTo(updateStack, 'vertical')
       updateImageStack.bottomAlignContent()
       const updateImage = updateImageStack.addImage(await this.getSFSymbolImage('clock.arrow.2.circlepath'))
-      updateImage.imageSize = new Size(16, 16)
+      updateImage.imageSize = new Size(18, 18)
       this.setWidgetNodeColor(updateImage, 'tintColor', 'Large')
       updateStack.addSpacer(5)
       const updateTextStack = this.addStackTo(updateStack, 'horizontal')
       updateTextStack.bottomAlignContent()
-      const updateText = updateTextStack.addText(data.updateNowDate)
+      const updateText = updateTextStack.addText(this.formatDate(data.updateNowDate, 'MM-dd HH:mm'))
       this.setFontFamilyStyle(updateText, 14, 'regular')
       this.setWidgetNodeColor(updateText, 'textColor', 'Large')
       // endregion
@@ -1888,27 +1945,29 @@ class UIRender extends Core {
       const footerWrapperStack = this.addStackTo(widget, 'horizontal')
       footerWrapperStack.setPadding(0, 0, 0, 0)
       const footerStack = this.addStackTo(footerWrapperStack, 'horizontal')
-      footerStack.cornerRadius = 15
+      footerStack.cornerRadius = this.getLocationBorderRadius()
       this.setWidgetNodeColor(footerStack, 'borderColor', 'Large', 0.25)
       footerStack.borderWidth = 2
       footerStack.setPadding(0, 0, 0, 0)
       footerStack.centerAlignContent()
       // 地图图片
-      const footerLeftStack = this.addStackTo(footerStack, 'vertical')
-      // footerLeftStack.borderWidth = 2
-      // footerLeftStack.borderColor = Color.dynamic(new Color('#000000', 0.25), new Color('#ffffff', 0.25))
-      const locationImage = await this.getImageByUrl(leftImage, !data.showLocation)
-      const locationImageStack = footerLeftStack.addImage(locationImage)
-      locationImageStack.imageSize = new Size(100, 60)
-      if (!data.showLocation) this.setWidgetNodeColor(locationImageStack, 'tintColor', 'Large')
-      locationImageStack.centerAlignImage()
-      footerStack.addSpacer()
+      if (data.showLocation) {
+        const footerLeftStack = this.addStackTo(footerStack, 'vertical')
+        const locationImage = await this.getImageByUrl(leftImage, !data.showLocation)
+        const locationImageStack = footerLeftStack.addImage(locationImage)
+        locationImageStack.imageSize = new Size(100, 60)
+        locationImageStack.centerAlignImage()
+        footerStack.addSpacer()
+      }
       // 地理位置
-      const footerRightStack = this.addStackTo(footerStack, 'vertical')
+      const footerRightStack = this.addStackTo(footerStack, 'horizontal')
+      if (!data.showLocation) footerStack.setPadding(25, 20, 25, 20)
+      footerRightStack.addSpacer()
       const locationText = footerRightStack.addText(rightText)
       this.setFontFamilyStyle(locationText, 12)
       locationText.centerAlignText()
       this.setWidgetNodeColor(locationText, 'textColor', 'Large')
+      footerRightStack.addSpacer()
       footerStack.addSpacer()
       // 有地理数据时候展示一言
       if (data.showLocation) {

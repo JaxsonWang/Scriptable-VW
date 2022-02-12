@@ -25,6 +25,7 @@ class Widget extends DataRender {
     if (config.runsInApp) {
       if (!this.settings['isLogin']) this.registerAction('账户登录', this.actionAccountLogin)
       if (this.settings['isLogin']) this.registerAction('偏好配置', this.actionPreferenceSettings)
+      if (this.settings['isLogin']) this.registerAction('界面微调', this.actionUIRenderSettings)
       if (this.settings['isLogin']) this.registerAction('刷新数据', this.actionRefreshData)
       if (this.settings['isLogin']) this.registerAction('登出重置', this.actionLogOut)
       if (this.settings['isLogin']) this.registerAction('调试日志', this.actionDebug)

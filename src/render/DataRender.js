@@ -49,8 +49,6 @@ class DataRender extends UIRender {
     const mileageArr = data.find(i => i.id === '0x0101010002')?.field
     const mileage = mileageArr.find(i => i.id === '0x0101010002')?.value
     const dateTime = mileageArr.find(i => i.id === '0x0101010002')?.tsCarSentUtc
-    const updateTime = this.formatDate(dateTime, 'MM-dd HH:mm')
-    const updateDate = this.formatDate(dateTime, 'yyyy年MM月dd日 HH:mm')
     const updateTimeStamp = new Date(dateTime).valueOf()
     // endregion
     // region 锁车状态
@@ -73,8 +71,6 @@ class DataRender extends UIRender {
       fuelLevel,
       socLevel,
       mileage,
-      updateTime,
-      updateDate,
       updateTimeStamp,
       isLocked,
       doorStatus,
@@ -212,9 +208,7 @@ class DataRender extends UIRender {
       fuelLevel: getVehiclesStatusData.fuelLevel || false,
       socLevel: getVehiclesStatusData.socLevel || false,
       mileage: getVehiclesStatusData.mileage || '0',
-      updateTime: getVehiclesStatusData.updateTime || this.formatDate(),
-      updateDate: getVehiclesStatusData.updateDate || this.formatDate(),
-      updateNowDate: this.formatDate(),
+      updateNowDate: new Date().valueOf(),
       updateTimeStamp: getVehiclesStatusData.updateTimeStamp || new Date().valueOf(),
       isLocked: getVehiclesStatusData.isLocked || false,
       doorStatus: getVehiclesStatusData.doorStatus || [],

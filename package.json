@@ -10,6 +10,8 @@
     "build:FVW": "FILE=FVW rollup -c",
     "debug:SVW": "FILE=SVW DEBUG=true rollup -c --watch",
     "build:SVW": "FILE=SVW rollup -c",
+    "debug:Comfort": "FILE=Comfort DEBUG=true rollup -c --watch",
+    "build:Comfort": "FILE=Comfort rollup -c",
     "debug:Theme-Simple": "FILE=Simple THEME=true DEBUG=true rollup -c --watch",
     "build:Theme-Simple": "FILE=Simple THEME=true rollup -c",
     "build:Install-RunTime": "rollup install-runtime.js --file dist/install-runtime-builder.js --format es",

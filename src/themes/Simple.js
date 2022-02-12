@@ -13,7 +13,7 @@ class Widget extends Core {
     this.desc = '依赖 Joiner 组件，额外支持全新风格主题'
 
     this.appSettings = this.settings['parentSettings'] ? this.getSettings(true, md5(this.settings['parentSettings'])) : null
-    this.version = '1.0.2'
+    this.version = '1.0.3'
 
     if (config.runsInApp) {
       this.registerAction('引用组件', this.setParentSettings)
@@ -85,7 +85,7 @@ class Widget extends Core {
     updateImage.tintColor = new Color('#838383', 1)
     updateImage.imageSize = new Size(14, 14)
     updateStack.spacing = 2
-    const updateText = updateStack.addText(this.formatDate(new Date(data.updateTimeStamp), 'yyyy-MM-dd HH:mm'))
+    const updateText = updateStack.addText(this.formatDate(data.updateTimeStamp, 'yyyy-MM-dd HH:mm'))
     updateText.textColor = new Color('#838383', 1)
     updateText.font = isEn ? new Font('AppleSDGothicNeo-Regular', 12) : new Font('PingFangSC-Medium', 12)
 
@@ -465,13 +465,6 @@ class Widget extends Core {
     widget.widgetFamily = (menuList[id].name).toLowerCase()
     const w = await widget.render()
     await w['present' + menuList[id].name]()
-  }
-
-  /**
-   * 关于组件
-   */
-  async actionAbout() {
-    Safari.open( 'https://joiner.i95.me/about.html')
   }
 
   /**

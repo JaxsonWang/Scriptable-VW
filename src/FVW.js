@@ -25,6 +25,7 @@ class Widget extends DataRender {
     if (config.runsInApp) {
       if (!this.settings['isLogin']) this.registerAction('账户登录', this.actionAccountLogin)
       if (this.settings['isLogin']) this.registerAction('偏好配置', this.actionPreferenceSettings)
+      if (this.settings['isLogin']) this.registerAction('界面微调', this.actionUIRenderSettings)
       if (this.settings['isLogin']) this.registerAction('刷新数据', this.actionRefreshData)
       if (this.settings['isLogin']) this.registerAction('登出重置', this.actionLogOut)
       if (this.settings['isLogin']) this.registerAction('调试日志', this.actionDebug)
@@ -132,7 +133,6 @@ class Widget extends DataRender {
     }
   }
 
-
   /**
    * 获取车辆车架号
    * @param  debug 开启日志输出
@@ -220,7 +220,7 @@ class Widget extends DataRender {
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
-    if (id === -1) return await this.actionPreferenceSettings()
+    if (id === -1) return await this.actionUIRenderSettings()
     // 写入车牌信息
     if(alert.textFieldValue(0) !== '') {
       this.settings['carPlateNo'] = alert.textFieldValue(0)
@@ -229,7 +229,7 @@ class Widget extends DataRender {
       this.settings['showPlate'] = false
     }
     await this.saveSettings()
-    return await this.actionPreferenceSettings()
+    return await this.actionUIRenderSettings()
   }
 
   /**

@@ -13,6 +13,10 @@ const menuList = [
   {
     name: 'SVW-Joiner.js',
     text: '上汽大众'
+  },
+  {
+    name: 'Comfort-Joiner.js',
+    text: '体验版'
   }
 ]
 menuList.forEach(item => {

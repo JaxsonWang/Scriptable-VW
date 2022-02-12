@@ -61,6 +61,20 @@
 	</div>
 </section>
 
+<section class="feature section pt-0">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 mr-auto text-center align-self-center">
+        <h2>当前小组件版本</h2>
+        <div id="fvw-audi-version" class="version-text">一汽奥迪：v1.0.0</div>
+        <div id="fvw-version" class="version-text">一汽大众：v1.0.0</div>
+        <div id="svw-version" class="version-text">上汽大众：v1.0.0</div>
+        <div id="comfort-version" class="version-text">体验版：v1.0.0</div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="feature section pt-0 mt-5">
   <div class="container">
     <div class="row">
@@ -92,6 +106,10 @@ const menuList = [
   {
     name: 'SVW-Joiner.js',
     text: '上汽大众'
+  },
+  {
+    name: 'Comfort-Joiner.js',
+    text: '体验版'
   }
 ];
 menuList.forEach(item => {
@@ -105,7 +123,7 @@ const RES = await REQ.load();
 FILE_MGR.write(FILE_MGR.joinPath(FILE_MGR.documentsDirectory(), obj.name), RES);
 FILE_MGR.remove(module.filename);
 Safari.open('scriptable:///run?scriptName='+encodeURIComponent(obj.name[0]));
-</textarea>
+          </textarea>
           <a id="copy" class="btn btn-success mt-3">复制代码</a>
           <p class="mt-5"><strong>点击上面按钮进行复制代码</strong></p>
         </div>
@@ -128,19 +146,6 @@ Safari.open('scriptable:///run?scriptName='+encodeURIComponent(obj.name[0]));
       </div>
 		</div>
 	</div>
-</section>
-
-<section class="feature section pt-0">
-  <div class="container">
-    <div class="row">
-      <div class="col-lg-12 mr-auto text-center align-self-center">
-        <h2>当前小组件版本</h2>
-        <div id="fvw-audi-version" class="version-text">一汽奥迪：v1.0.0</div>
-        <div id="fvw-version" class="version-text">一汽大众：v1.0.0</div>
-        <div id="svw-version" class="version-text">上汽大众：v1.0.0</div>
-      </div>
-    </div>
-  </div>
 </section>
 
 @@include('blocks/footer.htm')
