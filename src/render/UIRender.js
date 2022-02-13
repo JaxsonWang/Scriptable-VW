@@ -206,6 +206,14 @@ class UIRender extends Core {
   }
 
   /**
+   * logo 填充
+   * @returns {boolean}
+   */
+  getLogoHasTint() {
+    return this.settings['logoTintType'] && this.settings['logoTintType'] === 'fontColor' || true
+  }
+
+  /**
    * 大组件弧度
    * @returns {number}
    */
@@ -218,8 +226,26 @@ class UIRender extends Core {
    * @param {'width' || 'height'} type
    */
   getLogoSize(type) {
-    if (type === 'width') return this.settings['logoWidth'] || this.logoWidth
-    if (type === 'height') return this.settings['logoHeight'] || this.logoHeight
+    if (type === 'width') return parseInt(this.settings['logoWidth'], 10) || this.logoWidth
+    if (type === 'height') return parseInt(this.settings['logoHeight'], 10) || this.logoHeight
+  }
+
+  /**
+   * 动态设置组件字体或者图片颜色
+   * @param {WidgetText || WidgetImage || WidgetStack} widget
+   * @param {'textColor' || 'tintColor' || 'borderColor' || 'backgroundColor'} type
+   * @param {'Small' || 'Medium' || 'Large'} size
+   * @param {number} alpha
+   */
+  setWidgetNodeColor(widget, type = 'textColor', size = 'Small', alpha = 1) {
+    if (this.settings['backgroundPhotoMode']) {
+      const textColor = this.settings['backgroundImageTextColor'] || '#ffffff'
+      widget[type] = new Color(textColor, alpha)
+    } else {
+      const lightTextColor = this.settings['lightTextColor'] ? this.settings['lightTextColor'] : '#000000'
+      const darkTextColor = this.settings['darkTextColor'] ? this.settings['darkTextColor'] : '#ffffff'
+      widget[type] = Color.dynamic(new Color(lightTextColor, alpha), new Color(darkTextColor, alpha))
+    }
   }
 
   /**
@@ -279,25 +305,24 @@ class UIRender extends Core {
   }
 
   /**
-   * 动态设置组件字体或者图片颜色
+   * 动态设置组件背景色
    * @param {ListWidget || WidgetStack} widget
    * @param {'Small' || 'Medium' || 'Large'} widgetFamily
    */
   async setWidgetDynamicBackground(widget, widgetFamily) {
-    if (Device.isUsingDarkAppearance() && this.settings['backgroundPhoto' + widgetFamily + 'Dark']) {
-      widget.backgroundImage = await FileManager.local().readImage(this.settings['backgroundPhoto' + widgetFamily + 'Dark'])
-    } else if (!Device.isUsingDarkAppearance() && this.settings['backgroundPhoto' + widgetFamily + 'Light']) {
-      widget.backgroundImage = await FileManager.local().readImage(this.settings['backgroundPhoto' + widgetFamily + 'Light'])
+    if (this.settings['backgroundPhoto' + widgetFamily]) {
+      widget.backgroundImage = await FileManager.local().readImage(this.settings['backgroundPhoto' + widgetFamily])
     } else {
       const bgColor = new LinearGradient()
-      const lightBgColor1 = this.settings['lightBgColor1'] ? this.settings['lightBgColor1'] : this.lightDefaultBackgroundColorGradient[0]
-      const lightBgColor2 = this.settings['lightBgColor2'] ? this.settings['lightBgColor2'] : this.lightDefaultBackgroundColorGradient[1]
-      const darkBgColor1 = this.settings['darkBgColor1'] ? this.settings['darkBgColor1'] : this.darkDefaultBackgroundColorGradient[0]
-      const darkBgColor2 = this.settings['darkBgColor2'] ? this.settings['darkBgColor2'] : this.darkDefaultBackgroundColorGradient[1]
-      const startColor = Color.dynamic(new Color(lightBgColor1, 1), new Color(darkBgColor1, 1))
-      const endColor = Color.dynamic(new Color(lightBgColor2, 1), new Color(darkBgColor2, 1))
-      bgColor.colors = [startColor, endColor]
-      bgColor.locations = [0.0, 1.0]
+      const lightBgColors = this.settings['lightBgColors'] ? this.settings['lightBgColors'].split(',') : this.lightDefaultBackgroundColorGradient
+      const darkBgColors = this.settings['darkBgColors'] ? this.settings['darkBgColors'].split(',') : this.darkDefaultBackgroundColorGradient
+      const colorArr = []
+      lightBgColors.forEach((color, index) => {
+        const dynamicColor = Color.dynamic(new Color(lightBgColors[index], 1), new Color(darkBgColors[index], 1))
+        colorArr.push(dynamicColor)
+      })
+      bgColor.colors = colorArr
+      bgColor.locations = this.settings['bgColorsLocations'] ? this.settings['bgColorsLocations'].split(',').map(i => parseFloat(i)) : [0.0, 1.0]
       widget.backgroundGradient = bgColor
     }
   }
@@ -440,15 +465,16 @@ class UIRender extends Core {
   /**
    * 写入错误日志
    * @param data
+   * @param error
    * @return {Promise<void>}
    */
-  async writeErrorLog(data) {
+  async writeErrorLog(data, error) {
     const type = Object.prototype.toString.call(data)
     let log = data
     if (type === '[object Object]' || type === '[object Array]') {
       log = JSON.stringify(log)
     }
-    this.settings['error_bootstrap_date_time'] = this.formatDate(new Date(), '\nyyyy年MM月dd日 HH:mm:ss 错误日志：\n') + ' - ' + log
+    this.settings['error_bootstrap_date_time'] = this.formatDate(new Date(), '\nyyyy年MM月dd日 HH:mm:ss 错误日志：\n') + ' - ' + error + log
     await this.saveSettings(false)
   }
 
@@ -620,6 +646,7 @@ class UIRender extends Core {
       await FileManager.local().writeImage(imagePath, image)
       this.settings['myCarPhoto'] = imagePath
       await this.saveSettings()
+      return await this.actionPreferenceSettings()
     } catch (error) {
       // 取消图片会异常 暂时不用管
     }
@@ -638,6 +665,7 @@ class UIRender extends Core {
 
     const id = await alert.presentAlert()
     if (id === -1) return await this.actionUIRenderSettings()
+    // 选择图片
     try {
       const image = await Photos.fromLibrary()
       const imagePath = FileManager.local().joinPath(FileManager.local().documentsDirectory(), `myCarLogo_${this.SETTING_KEY}`)
@@ -647,6 +675,20 @@ class UIRender extends Core {
     } catch (error) {
       // 取消图片会异常 暂时不用管
     }
+    // 设置图片颜色
+    const message = '请选择是否需要图片颜色填充？\n' +
+      '原彩色：保持图片颜色\n' +
+      '字体色：和字体颜色统一'
+    const sizes = ['原彩色', '字体色']
+    const size = await this.generateAlert(message, sizes)
+    if (size === 1) {
+      this.settings['logoTintType'] = 'fontColor'
+      await this.saveSettings()
+      return await this.actionUIRenderSettings()
+    }
+    this.settings['logoTintType'] = 'default'
+    await this.saveSettings()
+    return await this.actionUIRenderSettings()
   }
 
   /**
@@ -658,8 +700,8 @@ class UIRender extends Core {
     alert.title = '设置 LOGO 大小'
     alert.message = `不填为默认，默认图片宽度为 ${this.logoWidth} 高度为 ${this.logoHeight}`
 
-    alert.addTextField('宽度', this.settings['logoWidth'])
-    alert.addTextField('高度', this.settings['logoHeight'])
+    alert.addTextField('logo 宽度', this.settings['logoWidth'])
+    alert.addTextField('logo 高度', this.settings['logoHeight'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
@@ -717,30 +759,37 @@ class UIRender extends Core {
     alert.title = '自定义颜色背景'
     alert.message = '系统浅色模式适用于白天情景\n' +
       '系统深色模式适用于晚上情景\n' +
-      '请根据自己的偏好进行设置，请确保您的手机「设置 - 显示与亮度」外观「自动」选项已打开'
+      '请根据自己的偏好进行设置，请确保您的手机「设置 - 显示与亮度」外观「自动」选项已打开\n' +
+      '颜色列表只写一个为纯色背景，多个则是渐变背景，格式如下：' +
+      '「#fff」或者「#333,#666,#999」\n' +
+      '位置列表规格如下：「0.0, 1.0」请填写 0.0 到 1.0 范围内，根据值选项渲染渐变效果不同\n' +
+      '使用英文逗号分隔，颜色值可以不限制填写，全部为空则不启用该功能'
 
-    const menuList = [{
-      name: 'setColorBackgroundLightMode',
-      text: '系统浅色模式',
-      icon: '🌕'
-    }, {
-      name: 'setColorBackgroundDarkMode',
-      text: '系统深色模式',
-      icon: '🌑'
-    }, {
-      name: 'setBackgroundConfig',
-      text: '返回上一级',
-      icon: '👈'
-    }]
+    alert.addTextField('浅色背景颜色列表', this.settings['lightBgColors'])
+    alert.addTextField('浅色字体颜色', this.settings['lightTextColor'])
+    alert.addTextField('深色背景颜色列表', this.settings['darkBgColors'])
+    alert.addTextField('深色字体颜色', this.settings['darkTextColor'])
+    alert.addTextField('渐变位置列表值', this.settings['bgColorsLocations'])
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
 
-    menuList.forEach(item => {
-      alert.addAction(item.icon + ' ' +item.text)
-    })
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.setBackgroundConfig()
+    const lightBgColors = alert.textFieldValue(0)
+    const lightTextColor = alert.textFieldValue(1)
+    const darkBgColors = alert.textFieldValue(2)
+    const darkTextColor = alert.textFieldValue(3)
+    const bgColorsLocations = alert.textFieldValue(4)
 
-    alert.addCancelAction('取消设置')
-    const id = await alert.presentSheet()
-    if (id === -1) return
-    await this[menuList[id].name]()
+    if (lightBgColors.split(',').length !== darkBgColors.split(',').length) return this.setColorBackground()
+
+    this.settings['lightBgColors'] = lightBgColors
+    this.settings['lightTextColor'] = lightTextColor
+    this.settings['darkBgColors'] = darkBgColors
+    this.settings['darkTextColor'] = darkTextColor
+    this.settings['bgColorsLocations'] = bgColorsLocations
+    await this.saveSettings()
+    return await this.setBackgroundConfig()
   }
 
   /**
@@ -784,66 +833,6 @@ class UIRender extends Core {
     const id = await alert.presentSheet()
     if (id === -1) return
     await this[menuList[id].name]()
-  }
-
-  /**
-   * 浅色模式背景
-   * @returns {Promise<void>}
-   */
-  async setColorBackgroundLightMode() {
-    const alert = new Alert()
-    alert.title = '浅色模式颜色代码'
-    alert.message = '如果都输入相同的颜色代码小组件则是纯色背景色，如果是不同的代码则是渐变背景色，不填写采取默认背景色\n\r' +
-      '默认背景颜色代码：' + this.lightDefaultBackgroundColorGradient[0] + ' 和 ' + this.lightDefaultBackgroundColorGradient[1] + '\n\r' +
-      '默认字体颜色代码：#000000'
-    alert.addTextField('背景颜色代码一', this.settings['lightBgColor1'])
-    alert.addTextField('背景颜色代码二', this.settings['lightBgColor2'])
-    alert.addTextField('字体颜色', this.settings['lightTextColor'])
-    alert.addAction('确定')
-    alert.addCancelAction('取消')
-
-    const id = await alert.presentAlert()
-    if (id === -1) return await this.setColorBackground()
-    const lightBgColor1 = alert.textFieldValue(0)
-    const lightBgColor2 = alert.textFieldValue(1)
-    const lightTextColor = alert.textFieldValue(2)
-
-    this.settings['lightBgColor1'] = lightBgColor1
-    this.settings['lightBgColor2'] = lightBgColor2
-    this.settings['lightTextColor'] = lightTextColor
-    await this.saveSettings()
-
-    return await this.setColorBackground()
-  }
-
-  /**
-   * 深色模式背景
-   * @returns {Promise<void>}
-   */
-  async setColorBackgroundDarkMode() {
-    const alert = new Alert()
-    alert.title = '深色模式颜色代码'
-    alert.message = '如果都输入相同的颜色代码小组件则是纯色背景色，如果是不同的代码则是渐变背景色，不填写采取默认背景色\n\r' +
-      '默认背景颜色代码：' + this.darkDefaultBackgroundColorGradient[0] + ' 和 ' + this.darkDefaultBackgroundColorGradient[1] + '\n\r' +
-      '默认字体颜色代码：#ffffff'
-    alert.addTextField('颜色代码一', this.settings['darkBgColor1'])
-    alert.addTextField('颜色代码二', this.settings['darkBgColor2'])
-    alert.addTextField('字体颜色', this.settings['darkTextColor'])
-    alert.addAction('确定')
-    alert.addCancelAction('取消')
-
-    const id = await alert.presentAlert()
-    if (id === -1) return await this.setColorBackground()
-    const darkBgColor1 = alert.textFieldValue(0)
-    const darkBgColor2 = alert.textFieldValue(1)
-    const darkTextColor = alert.textFieldValue(2)
-
-    this.settings['darkBgColor1'] = darkBgColor1
-    this.settings['darkBgColor2'] = darkBgColor2
-    this.settings['darkTextColor'] = darkTextColor
-    await this.saveSettings()
-
-    return await this.setColorBackground()
   }
 
   /**
@@ -920,19 +909,13 @@ class UIRender extends Core {
           break
       }
 
-      // 系统外观模式
-      message = '您要在系统外观设置什么模式？'
-      const _modes = ['浅色模式', '深色模式']
-      const modes = ['Light', 'Dark']
-      const mode = await this.generateAlert(message, _modes)
-      const widgetMode = modes[mode]
-
       // Crop image and finalize the widget.
       const imgCrop = this.cropImage(img, new Rect(crop.x, crop.y, crop.w, crop.h))
 
-      const imagePath = FileManager.local().joinPath(FileManager.local().documentsDirectory(), `backgroundPhoto${widgetSize}${widgetMode}_${this.SETTING_KEY}`)
+      const imagePath = FileManager.local().joinPath(FileManager.local().documentsDirectory(), `backgroundPhoto${widgetSize}_${this.SETTING_KEY}`)
       await FileManager.local().writeImage(imagePath, imgCrop)
-      this.settings['backgroundPhoto' + widgetSize + widgetMode] = imagePath
+      this.settings['backgroundPhoto' + widgetSize] = imagePath
+      this.settings['backgroundPhotoMode'] = true
       await this.saveSettings()
       await this.setImageBackground()
     } catch (error) {
@@ -953,16 +936,11 @@ class UIRender extends Core {
       const size = await this.generateAlert(message, sizes)
       const widgetSize = _sizes[size]
 
-      // 系统外观模式
-      message = '您要在系统外观设置什么模式？'
-      const modes = ['浅色模式', '深色模式']
-      const _modes = ['Light', 'Dark']
-      const mode = await this.generateAlert(message, modes)
-      const widgetMode = _modes[mode]
       const image = await Photos.fromLibrary()
-      const imagePath = FileManager.local().joinPath(FileManager.local().documentsDirectory(), `backgroundPhoto${widgetSize}${widgetMode}_${this.SETTING_KEY}`)
+      const imagePath = FileManager.local().joinPath(FileManager.local().documentsDirectory(), `backgroundPhoto${widgetSize}_${this.SETTING_KEY}`)
       await FileManager.local().writeImage(imagePath, image)
-      this.settings['backgroundPhoto' + widgetSize + widgetMode] = imagePath
+      this.settings['backgroundPhoto' + widgetSize] = imagePath
+      this.settings['backgroundPhotoMode'] = true
       await this.saveSettings()
       await this.setImageBackground()
     } catch (error) {
@@ -977,16 +955,14 @@ class UIRender extends Core {
   async setColorBackgroundTextColor() {
     const alert = new Alert()
     alert.title = '字体颜色'
-    alert.message = '仅在设置图片背景情境下进行对字体颜色更改。浅色模式下字体颜色：#000000，深色模式下字体颜色：#ffffff'
-    alert.addTextField('请输入浅色模式字体颜色值', this.settings['backgroundImageLightTextColor'])
-    alert.addTextField('请输入深色模式字体颜色值', this.settings['backgroundImageDarkTextColor'])
+    alert.message = '仅在设置图片背景情境下进行对字体颜色更改。字体颜色规格：#ffffff'
+    alert.addTextField('请输入字体颜色值', this.settings['backgroundImageTextColor'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
     if (id === -1) return await this.setImageBackground()
-    this.settings['backgroundImageLightTextColor'] = alert.textFieldValue(0)
-    this.settings['backgroundImageDarkTextColor'] = alert.textFieldValue(1)
+    this.settings['backgroundImageTextColor'] = alert.textFieldValue(0)
     await this.saveSettings()
 
     return await this.setImageBackground()
@@ -997,12 +973,10 @@ class UIRender extends Core {
    * @return {Promise<void>}
    */
   async removeImageBackground() {
-    this.settings['backgroundPhotoSmallLight'] = undefined
-    this.settings['backgroundPhotoSmallDark'] = undefined
-    this.settings['backgroundPhotoMediumLight'] = undefined
-    this.settings['backgroundPhotoMediumDark'] = undefined
-    this.settings['backgroundPhotoLargeLight'] = undefined
-    this.settings['backgroundPhotoLargeDark'] = undefined
+    this.settings['backgroundPhotoSmall'] = undefined
+    this.settings['backgroundPhotoMedium'] = undefined
+    this.settings['backgroundPhotoLarge'] = undefined
+    this.settings['backgroundPhotoMode'] = false
     await this.saveSettings()
     await this.setImageBackground()
   }
@@ -1125,14 +1099,10 @@ class UIRender extends Core {
    * @returns {Promise<void>}
    */
   async setLockSuccessStyle() {
-    const alert = new Alert()
-    alert.title = '锁车提示风格'
-    alert.message = '用于设置锁车提示风格，可以设置绿色或者字体色俩种风格'
-    alert.addAction('绿色')
-    alert.addCancelAction('字体色')
-
-    const id = await alert.presentAlert()
-    if (id === -1) {
+    const message = '用于设置锁车提示风格，可以设置绿色或者字体色俩种风格'
+    const sizes = ['绿色', '字体色']
+    const size = await this.generateAlert(message, sizes)
+    if (size === 1) {
       this.settings['lockSuccessStyle'] = 'fontColor'
       await this.saveSettings()
       return await this.actionUIRenderSettings()
@@ -1464,7 +1434,8 @@ class UIRender extends Core {
 
       return widget
     } catch (error) {
-      await this.writeErrorLog(data)
+      await this.writeErrorLog(data, error)
+      throw error
     }
   }
 
@@ -1511,7 +1482,7 @@ class UIRender extends Core {
       const carLogo = await this.getMyCarLogo(this.myCarLogoUrl)
       const carLogoImage = logoStack.addImage(carLogo)
       carLogoImage.imageSize = new Size(this.getLogoSize('width'), this.getLogoSize('height'))
-      this.setWidgetNodeColor(carLogoImage, 'tintColor', 'Medium')
+      if (this.getLogoHasTint()) this.setWidgetNodeColor(carLogoImage, 'tintColor', 'Medium')
       headerRightStack.spacing = 4
       const statusStack = this.addStackTo(headerRightStack, 'horizontal')
       statusStack.centerAlignContent()
@@ -1643,7 +1614,8 @@ class UIRender extends Core {
 
       return widget
     } catch (error) {
-      await this.writeErrorLog(data)
+      await this.writeErrorLog(data, error)
+      throw error
     }
   }
 
@@ -1677,9 +1649,10 @@ class UIRender extends Core {
       // 俩侧分割
       rowHeader.addSpacer()
       // 顶部右侧
-      const headerRightStackWidth = 75
+      const headerRightStackWidth = data.carPlateNo.length * 12
+      const headerRightStackHeight = this.logoHeight * 1.5 + 25
       const headerRightStack = this.addStackTo(rowHeader, 'vertical')
-      headerRightStack.size = new Size(headerRightStackWidth, this.logoHeight * 1.5 + 20)
+      headerRightStack.size = new Size(headerRightStackWidth, headerRightStackHeight)
       // Logo
       const carLogoStack = this.addStackTo(headerRightStack, 'horizontal')
       carLogoStack.addText('')
@@ -1687,7 +1660,7 @@ class UIRender extends Core {
       const carLogo = await this.getMyCarLogo(this.myCarLogoUrl)
       const carLogoImage = carLogoStack.addImage(carLogo)
       carLogoImage.imageSize = new Size(this.getLogoSize('width') * 1.5, this.getLogoSize('height') * 1.5)
-      this.setWidgetNodeColor(carLogoImage, 'tintColor', 'Large')
+      if (this.getLogoHasTint()) this.setWidgetNodeColor(carLogoImage, 'tintColor', 'Large')
       headerRightStack.spacing = 5
       // 车牌信息
       if (data.showPlate) {
@@ -1984,7 +1957,8 @@ class UIRender extends Core {
 
       return widget
     } catch (error) {
-      await this.writeErrorLog(data)
+      await this.writeErrorLog(data, error)
+      throw error
     }
   }
 

@@ -36,28 +36,6 @@ class Core {
   }
 
   /**
-   * 动态设置组件字体或者图片颜色
-   * @param {WidgetText || WidgetImage || WidgetStack} widget
-   * @param {'textColor' || 'tintColor' || 'borderColor' || 'backgroundColor'} type
-   * @param {'Small' || 'Medium' || 'Large'} size
-   * @param {number} alpha
-   */
-  setWidgetNodeColor(widget, type = 'textColor', size = 'Small', alpha = 1) {
-    if (
-      this.settings['backgroundPhoto' + size + 'Light'] ||
-      this.settings['backgroundPhoto' + size + 'Dark']
-    ) {
-      const lightTextColor = this.settings['backgroundImageLightTextColor'] || '#000000'
-      const darkTextColor = this.settings['backgroundImageDarkTextColor'] || '#ffffff'
-      widget[type] = Color.dynamic(new Color(lightTextColor, alpha), new Color(darkTextColor, alpha))
-    } else {
-      const lightTextColor = this.settings['lightTextColor'] ? this.settings['lightTextColor'] : '#000000'
-      const darkTextColor = this.settings['darkTextColor'] ? this.settings['darkTextColor'] : '#ffffff'
-      widget[type] = Color.dynamic(new Color(lightTextColor, alpha), new Color(darkTextColor, alpha))
-    }
-  }
-
-  /**
    * 设置字体
    * @param {WidgetText} widget
    * @param size
