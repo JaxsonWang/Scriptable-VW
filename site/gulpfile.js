@@ -7,7 +7,6 @@ const fileinclude = require('gulp-file-include');
 const autoprefixer = require('gulp-autoprefixer');
 const bs = require('browser-sync').create();
 const rimraf = require('rimraf');
-const comments = require('gulp-header-comment');
 
 var path = {
   src: {
