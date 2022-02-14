@@ -210,7 +210,7 @@ class UIRender extends Core {
    * @returns {boolean}
    */
   getLogoHasTint() {
-    return this.settings['logoTintType'] && this.settings['logoTintType'] === 'fontColor' || true
+    return this.settings['logoTintType'] ? this.settings['logoTintType'] === 'fontColor' : true
   }
 
   /**
@@ -234,10 +234,9 @@ class UIRender extends Core {
    * 动态设置组件字体或者图片颜色
    * @param {WidgetText || WidgetImage || WidgetStack} widget
    * @param {'textColor' || 'tintColor' || 'borderColor' || 'backgroundColor'} type
-   * @param {'Small' || 'Medium' || 'Large'} size
    * @param {number} alpha
    */
-  setWidgetNodeColor(widget, type = 'textColor', size = 'Small', alpha = 1) {
+  setWidgetNodeColor(widget, type = 'textColor', alpha = 1) {
     if (this.settings['backgroundPhotoMode']) {
       const textColor = this.settings['backgroundImageTextColor'] || '#ffffff'
       widget[type] = new Color(textColor, alpha)
@@ -1343,7 +1342,7 @@ class UIRender extends Core {
       carInfoTextStack.bottomAlignContent()
       const enduranceText = carInfoTextStack.addText(`${data.fuelRange}km`)
       this.setFontFamilyStyle(enduranceText, 14, 'bold')
-      this.setWidgetNodeColor(enduranceText, 'textColor', 'Small')
+      this.setWidgetNodeColor(enduranceText, 'textColor')
       if (
         data.fuelLevel && data.fuelLevel <= 20 ||
         data.socLevel && data.socLevel <= 20
@@ -1356,7 +1355,7 @@ class UIRender extends Core {
         fuelStack.setPadding(0, 0, 2, 0)
         const fuelText = fuelStack.addText(`${data.fuelLevel}%`)
         this.setFontFamilyStyle(fuelText, 12, 'regular')
-        this.setWidgetNodeColor(fuelText, 'textColor', 'Small')
+        this.setWidgetNodeColor(fuelText, 'textColor')
         if (
           data.fuelLevel && data.fuelLevel <= 20 ||
           data.socLevel && data.socLevel <= 20
@@ -1370,7 +1369,7 @@ class UIRender extends Core {
         fuelStack.setPadding(0, 0, data.fuelLevel ? 3 : 2, 0)
         const fuelText = fuelStack.addText(data.socLevel + '%')
         this.setFontFamilyStyle(fuelText, data.fuelLevel ? 10 : 12, 'regular')
-        this.setWidgetNodeColor(fuelText, 'textColor', 'Small')
+        this.setWidgetNodeColor(fuelText, 'textColor')
         if (
           data.fuelLevel && data.fuelLevel <= 20 ||
           data.socLevel && data.socLevel <= 20
@@ -1391,7 +1390,7 @@ class UIRender extends Core {
       updateTimeStack.addSpacer()
       const updateTimeText = updateTimeStack.addText(`${this.formatDate(data.updateTimeStamp, 'MM-dd HH:mm')}`)
       this.setFontFamilyStyle(updateTimeText, 12, 'regular')
-      this.setWidgetNodeColor(updateTimeText, 'textColor', 'Small')
+      this.setWidgetNodeColor(updateTimeText, 'textColor')
       updateTimeStack.addSpacer()
       const statusMainStack = this.addStackTo(containerStack, 'horizontal')
       statusMainStack.addSpacer()
@@ -1401,11 +1400,11 @@ class UIRender extends Core {
       statusStack.cornerRadius = 10
       statusStack.borderWidth = 2
       if (this.getLockSuccessStyle()) statusStack.backgroundColor = this.successColor(0.25)
-      else this.setWidgetNodeColor(statusStack, 'backgroundColor', 'Small', 0.25)
+      else this.setWidgetNodeColor(statusStack, 'backgroundColor', 0.25)
       if (doorAndWindowNormal) statusStack.backgroundColor = this.warningColor(0.25)
       if (!isLocked) statusStack.backgroundColor = this.dangerColor(0.25)
       if (this.getLockSuccessStyle()) statusStack.borderColor = this.successColor(0.5)
-      else this.setWidgetNodeColor(statusStack, 'borderColor', 'Small', 0.5)
+      else this.setWidgetNodeColor(statusStack, 'borderColor', 0.5)
       if (doorAndWindowNormal) statusStack.borderColor = this.warningColor(0.5)
       if (!isLocked) statusStack.borderColor = this.dangerColor(0.5)
 
@@ -1415,7 +1414,7 @@ class UIRender extends Core {
       const statusImage = statusStack.addImage(icon)
       statusImage.imageSize = new Size(12, 12)
       if (this.getLockSuccessStyle()) statusImage.tintColor = this.successColor()
-      else this.setWidgetNodeColor(statusImage, 'tintColor', 'Small')
+      else this.setWidgetNodeColor(statusImage, 'tintColor')
       if (doorAndWindowNormal) statusImage.tintColor = this.warningColor()
       if (!isLocked) statusImage.tintColor = this.dangerColor()
       statusStack.spacing = 4
@@ -1427,7 +1426,7 @@ class UIRender extends Core {
       const statusText = infoStack.addText(status)
       this.setFontFamilyStyle(statusText, 12, 'regular')
       if (this.getLockSuccessStyle()) statusText.textColor = this.successColor()
-      else this.setWidgetNodeColor(statusText, 'textColor', 'Small')
+      else this.setWidgetNodeColor(statusText, 'textColor')
       if (doorAndWindowNormal) statusText.textColor = this.warningColor()
       if (!isLocked) statusText.textColor = this.dangerColor()
       statusMainStack.addSpacer()
@@ -1457,11 +1456,11 @@ class UIRender extends Core {
       const nameStack = this.addStackTo(rowHeader, 'vertical')
       const carText = nameStack.addText(data.seriesName)
       this.setFontFamilyStyle(carText, 18, 'bold')
-      this.setWidgetNodeColor(carText, 'textColor', 'Medium')
+      this.setWidgetNodeColor(carText, 'textColor')
       // 2.0 140KW B9 40TFSI S-line
       const powerText = nameStack.addText(data.carModelName)
       this.setFontFamilyStyle(powerText, 10, 'regular')
-      this.setWidgetNodeColor(powerText, 'textColor', 'Medium')
+      this.setWidgetNodeColor(powerText, 'textColor')
       rowHeader.addSpacer()
       const headerRightStack = this.addStackTo(rowHeader, 'vertical')
       headerRightStack.centerAlignContent()
@@ -1474,7 +1473,7 @@ class UIRender extends Core {
         plateNoStack.centerAlignContent()
         const plateNoText = plateNoStack.addText(data.carPlateNo)
         this.setFontFamilyStyle(plateNoText, 12, 'regular')
-        this.setWidgetNodeColor(plateNoText, 'textColor', 'Medium')
+        this.setWidgetNodeColor(plateNoText, 'textColor')
         baseInfoStack.spacing = 5
       }
       const logoStack = this.addStackTo(baseInfoStack, 'vertical')
@@ -1482,7 +1481,7 @@ class UIRender extends Core {
       const carLogo = await this.getMyCarLogo(this.myCarLogoUrl)
       const carLogoImage = logoStack.addImage(carLogo)
       carLogoImage.imageSize = new Size(this.getLogoSize('width'), this.getLogoSize('height'))
-      if (this.getLogoHasTint()) this.setWidgetNodeColor(carLogoImage, 'tintColor', 'Medium')
+      if (this.getLogoHasTint()) this.setWidgetNodeColor(carLogoImage, 'tintColor')
       headerRightStack.spacing = 4
       const statusStack = this.addStackTo(headerRightStack, 'horizontal')
       statusStack.centerAlignContent()
@@ -1518,13 +1517,13 @@ class UIRender extends Core {
       carInfoImageStack.bottomAlignContent()
       const carInfoImage = carInfoImageStack.addImage(await this.getSFSymbolImage('gauge'))
       carInfoImage.imageSize = new Size(14, 14)
-      this.setWidgetNodeColor(carInfoImage, 'tintColor', 'Medium')
+      this.setWidgetNodeColor(carInfoImage, 'tintColor')
       carInfoStack.addSpacer(5)
       const carInfoTextStack = this.addStackTo(carInfoStack, 'horizontal')
       carInfoTextStack.bottomAlignContent()
       const enduranceText = carInfoTextStack.addText(`${data.fuelRange}km`)
       this.setFontFamilyStyle(enduranceText, 14, 'bold')
-      this.setWidgetNodeColor(enduranceText, 'textColor', 'Medium')
+      this.setWidgetNodeColor(enduranceText, 'textColor')
       if (
         data.fuelLevel && data.fuelLevel <= 20 ||
         data.socLevel && data.socLevel <= 20
@@ -1538,7 +1537,7 @@ class UIRender extends Core {
         fuelStack.setPadding(0, 0, 2, 0)
         const fuelText = fuelStack.addText(`${data.fuelLevel}%`)
         this.setFontFamilyStyle(fuelText, 12, 'regular')
-        this.setWidgetNodeColor(fuelText, 'textColor', 'Medium')
+        this.setWidgetNodeColor(fuelText, 'textColor')
         if (
           data.fuelLevel && data.fuelLevel <= 20 ||
           data.socLevel && data.socLevel <= 20
@@ -1552,7 +1551,7 @@ class UIRender extends Core {
         fuelStack.setPadding(0, 0, data.fuelLevel ? 3 : 2, 0)
         const fuelText = fuelStack.addText(data.socLevel + '%')
         this.setFontFamilyStyle(fuelText, data.fuelLevel ? 8 : 12, 'regular')
-        this.setWidgetNodeColor(fuelText, 'textColor', 'Medium')
+        this.setWidgetNodeColor(fuelText, 'textColor')
         if (
           data.fuelLevel && data.fuelLevel <= 20 ||
           data.socLevel && data.socLevel <= 20
@@ -1569,13 +1568,13 @@ class UIRender extends Core {
       mileageImageStack.bottomAlignContent()
       const mileageImage = mileageImageStack.addImage(await this.getSFSymbolImage('car'))
       mileageImage.imageSize = new Size(14, 14)
-      this.setWidgetNodeColor(mileageImage, 'tintColor', 'Medium')
+      this.setWidgetNodeColor(mileageImage, 'tintColor')
       mileageStack.addSpacer(5)
       const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
       mileageTextStack.bottomAlignContent()
       const mileageText = mileageTextStack.addText(data.mileage + 'km')
       this.setFontFamilyStyle(mileageText, 12, 'regular')
-      this.setWidgetNodeColor(mileageText, 'textColor', 'Medium')
+      this.setWidgetNodeColor(mileageText, 'textColor')
 
       rowLeftStack.spacing = 5
       // 更新日期
@@ -1585,13 +1584,13 @@ class UIRender extends Core {
       dateTimeImageStack.bottomAlignContent()
       const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('arrow.clockwise.icloud'))
       dateTimeImage.imageSize = new Size(15, 15)
-      this.setWidgetNodeColor(dateTimeImage, 'tintColor', 'Medium')
+      this.setWidgetNodeColor(dateTimeImage, 'tintColor')
       dateTimeStack.addSpacer(5)
       const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
       dateTimeTextStack.bottomAlignContent()
       const dateTimeText = dateTimeTextStack.addText(this.formatDate(data.updateTimeStamp, 'MM-dd HH:mm'))
       this.setFontFamilyStyle(dateTimeText, 12, 'regular')
-      this.setWidgetNodeColor(dateTimeText, 'textColor', 'Medium')
+      this.setWidgetNodeColor(dateTimeText, 'textColor')
       // endregion
       mainStack.addSpacer()
       // region 右侧车辆图片
@@ -1608,7 +1607,7 @@ class UIRender extends Core {
       footerStack.addSpacer()
       const footerText = footerStack.addText(footTextData)
       this.setFontFamilyStyle(footerText, 10, 'regular')
-      this.setWidgetNodeColor(footerText, 'textColor', 'Medium')
+      this.setWidgetNodeColor(footerText, 'textColor')
       footerText.centerAlignText()
       footerStack.addSpacer()
 
@@ -1640,12 +1639,12 @@ class UIRender extends Core {
       const nameStack = this.addStackTo(headerLeftStack, 'vertical')
       const carText = nameStack.addText(data.seriesName)
       this.setFontFamilyStyle(carText, 22, 'bold')
-      this.setWidgetNodeColor(carText, 'textColor', 'Large')
+      this.setWidgetNodeColor(carText, 'textColor')
       // 功率显示
       const powerStack = this.addStackTo(headerLeftStack, 'vertical')
       const powerText = powerStack.addText(data.carModelName)
       this.setFontFamilyStyle(powerText, 14, 'regular')
-      this.setWidgetNodeColor(powerText, 'textColor', 'Large')
+      this.setWidgetNodeColor(powerText, 'textColor')
       // 俩侧分割
       rowHeader.addSpacer()
       // 顶部右侧
@@ -1660,7 +1659,7 @@ class UIRender extends Core {
       const carLogo = await this.getMyCarLogo(this.myCarLogoUrl)
       const carLogoImage = carLogoStack.addImage(carLogo)
       carLogoImage.imageSize = new Size(this.getLogoSize('width') * 1.5, this.getLogoSize('height') * 1.5)
-      if (this.getLogoHasTint()) this.setWidgetNodeColor(carLogoImage, 'tintColor', 'Large')
+      if (this.getLogoHasTint()) this.setWidgetNodeColor(carLogoImage, 'tintColor')
       headerRightStack.spacing = 5
       // 车牌信息
       if (data.showPlate) {
@@ -1669,7 +1668,7 @@ class UIRender extends Core {
         plateNoStack.addSpacer()
         const plateNoText = plateNoStack.addText(data.carPlateNo)
         this.setFontFamilyStyle(plateNoText, 12, 'regular')
-        this.setWidgetNodeColor(plateNoText, 'textColor', 'Large')
+        this.setWidgetNodeColor(plateNoText, 'textColor')
       }
       // endregion
       // region mainStack
@@ -1685,13 +1684,13 @@ class UIRender extends Core {
       enduranceImageStack.bottomAlignContent()
       const enduranceImage = enduranceImageStack.addImage(await this.getSFSymbolImage('flag.circle'))
       enduranceImage.imageSize = new Size(18, 18)
-      this.setWidgetNodeColor(enduranceImage, 'tintColor', 'Large')
+      this.setWidgetNodeColor(enduranceImage, 'tintColor')
       enduranceStack.addSpacer(5)
       const enduranceTextStack = this.addStackTo(enduranceStack, 'horizontal')
       enduranceTextStack.bottomAlignContent()
       const enduranceText = enduranceTextStack.addText(data.fuelRange + 'km')
       this.setFontFamilyStyle(enduranceText, 14, 'bold')
-      this.setWidgetNodeColor(enduranceText, 'textColor', 'Large')
+      this.setWidgetNodeColor(enduranceText, 'textColor')
       if (
         data.fuelLevel && data.fuelLevel <= 20 ||
         data.socLevel && data.socLevel <= 20
@@ -1710,7 +1709,7 @@ class UIRender extends Core {
       if (data.socLevel) fuelIcon = 'bolt.circle'
       const fuelImage = fuelImageStack.addImage(await this.getSFSymbolImage(fuelIcon))
       fuelImage.imageSize = new Size(18, 18)
-      this.setWidgetNodeColor(fuelImage, 'tintColor', 'Large')
+      this.setWidgetNodeColor(fuelImage, 'tintColor')
       if (
         data.fuelLevel && data.fuelLevel <= 20 ||
         data.socLevel && data.socLevel <= 20
@@ -1724,7 +1723,7 @@ class UIRender extends Core {
       if (data.fuelLevel) {
         const fuelText1 = fuelTextStack1.addText(data.fuelLevel + '%')
         this.setFontFamilyStyle(fuelText1, 14, 'regular')
-        this.setWidgetNodeColor(fuelText1, 'textColor', 'Large')
+        this.setWidgetNodeColor(fuelText1, 'textColor')
         fuelStack.addSpacer(5)
         if (
           data.fuelLevel && data.fuelLevel <= 20 ||
@@ -1739,7 +1738,7 @@ class UIRender extends Core {
         fuelTextStack2.bottomAlignContent()
         const fuelText2 = fuelTextStack2.addText(data.socLevel + '%')
         this.setFontFamilyStyle(fuelText2, data.fuelLevel ? 12 : 14, 'regular')
-        this.setWidgetNodeColor(fuelText2, 'textColor', 'Large')
+        this.setWidgetNodeColor(fuelText2, 'textColor')
         if (
           data.fuelLevel && data.fuelLevel <= 20 ||
           data.socLevel && data.socLevel <= 20
@@ -1756,13 +1755,13 @@ class UIRender extends Core {
       mileageImageStack.bottomAlignContent()
       const mileageImage = mileageImageStack.addImage(await this.getSFSymbolImage('car.circle'))
       mileageImage.imageSize = new Size(18, 18)
-      this.setWidgetNodeColor(mileageImage, 'tintColor', 'Large')
+      this.setWidgetNodeColor(mileageImage, 'tintColor')
       mileageStack.addSpacer(5)
       const mileageTextStack = this.addStackTo(mileageStack, 'horizontal')
       mileageTextStack.bottomAlignContent()
       const mileageText = mileageTextStack.addText(data.mileage + 'km')
       this.setFontFamilyStyle(mileageText, 14, 'regular')
-      this.setWidgetNodeColor(mileageText, 'textColor', 'Large')
+      this.setWidgetNodeColor(mileageText, 'textColor')
       // endregion
       rowLeftStack.addSpacer(5)
       // region 机油数据
@@ -1776,7 +1775,7 @@ class UIRender extends Core {
         if (Number(data.oilLevel) <= 12.5) {
           oilImage.tintColor = this.dangerColor()
         } else {
-          this.setWidgetNodeColor(oilImage, 'tintColor', 'Large')
+          this.setWidgetNodeColor(oilImage, 'tintColor')
         }
         oilStack.addSpacer(5)
         const oilTextStack = this.addStackTo(oilStack, 'horizontal')
@@ -1786,7 +1785,7 @@ class UIRender extends Core {
         if (Number(data.oilLevel) <= 12.5) {
           oilText.textColor = this.dangerColor()
         } else {
-          this.setWidgetNodeColor(oilText, 'textColor', 'Large')
+          this.setWidgetNodeColor(oilText, 'textColor')
         }
         rowLeftStack.addSpacer(5)
       }
@@ -1799,7 +1798,7 @@ class UIRender extends Core {
       const lockedImage = lockedImageStack.addImage(await this.getSFSymbolImage('lock.circle'))
       lockedImage.imageSize = new Size(18, 18)
       if (this.getLockSuccessStyle()) lockedImage.tintColor = this.successColor()
-      else this.setWidgetNodeColor(lockedImage, 'tintColor', 'Large')
+      else this.setWidgetNodeColor(lockedImage, 'tintColor')
       if (!data.isLocked) lockedImage.tintColor = this.dangerColor()
       lockedStack.addSpacer(5)
       const lockedTextStack = this.addStackTo(lockedStack, 'horizontal')
@@ -1807,7 +1806,7 @@ class UIRender extends Core {
       const lockedText = lockedTextStack.addText(data.isLocked ? '已锁车' : '未锁车')
       this.setFontFamilyStyle(lockedText, 14, 'regular')
       if (this.getLockSuccessStyle()) lockedText.textColor = this.successColor()
-      else this.setWidgetNodeColor(lockedText, 'textColor', 'Large')
+      else this.setWidgetNodeColor(lockedText, 'textColor')
       if (!data.isLocked) lockedText.textColor = this.dangerColor()
       // endregion
       rowLeftStack.addSpacer(5)
@@ -1818,13 +1817,13 @@ class UIRender extends Core {
       dateTimeImageStack.bottomAlignContent()
       const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('arrow.clockwise.icloud'))
       dateTimeImage.imageSize = new Size(18, 18)
-      this.setWidgetNodeColor(dateTimeImage, 'tintColor', 'Large')
+      this.setWidgetNodeColor(dateTimeImage, 'tintColor')
       dateTimeStack.addSpacer(5)
       const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal')
       dateTimeTextStack.bottomAlignContent()
       const dateTimeText = dateTimeTextStack.addText(this.formatDate(data.updateTimeStamp, 'MM-dd HH:mm'))
       this.setFontFamilyStyle(dateTimeText, 14, 'regular')
-      this.setWidgetNodeColor(dateTimeText, 'textColor', 'Large')
+      this.setWidgetNodeColor(dateTimeText, 'textColor')
       // endregion
       rowLeftStack.addSpacer(5)
       // region 刷新日期
@@ -1834,13 +1833,13 @@ class UIRender extends Core {
       updateImageStack.bottomAlignContent()
       const updateImage = updateImageStack.addImage(await this.getSFSymbolImage('clock.arrow.2.circlepath'))
       updateImage.imageSize = new Size(18, 18)
-      this.setWidgetNodeColor(updateImage, 'tintColor', 'Large')
+      this.setWidgetNodeColor(updateImage, 'tintColor')
       updateStack.addSpacer(5)
       const updateTextStack = this.addStackTo(updateStack, 'horizontal')
       updateTextStack.bottomAlignContent()
       const updateText = updateTextStack.addText(this.formatDate(data.updateNowDate, 'MM-dd HH:mm'))
       this.setFontFamilyStyle(updateText, 14, 'regular')
-      this.setWidgetNodeColor(updateText, 'textColor', 'Large')
+      this.setWidgetNodeColor(updateText, 'textColor')
       // endregion
       // endregion
       mainStack.addSpacer()
@@ -1893,20 +1892,20 @@ class UIRender extends Core {
         statusItemStack.cornerRadius = 10
         statusItemStack.borderWidth = 2
         if (this.getLockSuccessStyle()) statusItemStack.borderColor = this.successColor(0.5)
-        else this.setWidgetNodeColor(statusItemStack, 'borderColor', 'Large', 0.5)
+        else this.setWidgetNodeColor(statusItemStack, 'borderColor', 0.5)
         if (this.getLockSuccessStyle()) statusItemStack.backgroundColor = this.successColor(0.25)
-        else this.setWidgetNodeColor(statusItemStack, 'backgroundColor', 'Large', 0.25)
+        else this.setWidgetNodeColor(statusItemStack, 'backgroundColor', 0.25)
 
         statusItemStack.centerAlignContent()
         const statusItemImage = statusItemStack.addImage(await this.getSFSymbolImage('checkmark.shield.fill'))
         statusItemImage.imageSize = new Size(12, 12)
         if (this.getLockSuccessStyle()) statusItemImage.tintColor = this.successColor()
-        else this.setWidgetNodeColor(statusItemImage, 'tintColor', 'Large')
+        else this.setWidgetNodeColor(statusItemImage, 'tintColor')
         statusItemStack.addSpacer(2)
         const statusItemText = statusItemStack.addText('当前车窗已全关闭')
         this.setFontFamilyStyle(statusItemText, 12)
         if (this.getLockSuccessStyle()) statusItemText.textColor = this.successColor()
-        else this.setWidgetNodeColor(statusItemText, 'textColor', 'Large')
+        else this.setWidgetNodeColor(statusItemText, 'textColor')
         statusItemText.centerAlignText()
         statusInfoStack.addSpacer()
       }
@@ -1919,7 +1918,7 @@ class UIRender extends Core {
       footerWrapperStack.setPadding(0, 0, 0, 0)
       const footerStack = this.addStackTo(footerWrapperStack, 'horizontal')
       footerStack.cornerRadius = this.getLocationBorderRadius()
-      this.setWidgetNodeColor(footerStack, 'borderColor', 'Large', 0.25)
+      this.setWidgetNodeColor(footerStack, 'borderColor', 0.25)
       footerStack.borderWidth = 2
       footerStack.setPadding(0, 0, 0, 0)
       footerStack.centerAlignContent()
@@ -1939,7 +1938,7 @@ class UIRender extends Core {
       const locationText = footerRightStack.addText(rightText)
       this.setFontFamilyStyle(locationText, 12)
       locationText.centerAlignText()
-      this.setWidgetNodeColor(locationText, 'textColor', 'Large')
+      this.setWidgetNodeColor(locationText, 'textColor')
       footerRightStack.addSpacer()
       footerStack.addSpacer()
       // 有地理数据时候展示一言
@@ -1950,7 +1949,7 @@ class UIRender extends Core {
         oneStack.centerAlignContent()
         const oneText = oneStack.addText(data.myOne)
         this.setFontFamilyStyle(oneText, 12)
-        this.setWidgetNodeColor(oneText, 'textColor', 'Large')
+        this.setWidgetNodeColor(oneText, 'textColor')
         oneText.centerAlignText()
         oneStack.addSpacer()
       }
