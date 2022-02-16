@@ -10,7 +10,7 @@ class Widget extends DataRender {
     super(arg)
     this.name = '一汽大众挂件'
     this.desc = '一汽大众车辆桌面组件展示'
-    this.version = '2.1.8'
+    this.version = '2.1.9'
 
     this.appName = 'BootstrapApp'
     this.appVersion = '1.0'
@@ -215,14 +215,15 @@ class Widget extends DataRender {
     const alert = new Alert()
     alert.title = '设置车牌'
     alert.message = '请设置您的车辆牌照信息，不填牌照默认关闭牌照展示'
-    alert.addTextField('车牌信息', this.settings['showPlate'])
+    alert.addTextField('车牌信息', this.settings['carPlateNo'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
     if (id === -1) return await this.actionUIRenderSettings()
     // 写入车牌信息
-    if(alert.textFieldValue(0) !== '') {
+    const carPlateNo = alert.textFieldValue(0)
+    if(carPlateNo) {
       this.settings['carPlateNo'] = alert.textFieldValue(0)
       this.settings['showPlate'] = true
     } else {
