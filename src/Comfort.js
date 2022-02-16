@@ -10,7 +10,7 @@ class Widget extends UIRender {
     super(arg)
     this.name = 'Joiner 挂件'
     this.desc = 'Joiner 车辆桌面组件展示'
-    this.version = '1.0.7'
+    this.version = '1.0.8'
 
     this.myCarPhotoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png'
     this.myCarLogoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
@@ -142,21 +142,21 @@ class Widget extends UIRender {
 
   /**
    * 重写车牌显示
-   * 提示：因为一汽大众暂时没有办法自动获取车辆基础信息
    * @returns {Promise<void>}
    */
   async showPlate() {
     const alert = new Alert()
     alert.title = '设置车牌'
     alert.message = '请设置您的车辆牌照信息，不填牌照默认关闭牌照展示'
-    alert.addTextField('车牌信息', this.settings['showPlate'])
+    alert.addTextField('车牌信息', this.settings['carPlateNo'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
     if (id === -1) return await this.actionUIRenderSettings()
     // 写入车牌信息
-    if(alert.textFieldValue(0) !== '') {
+    const carPlateNo = alert.textFieldValue(0)
+    if(carPlateNo) {
       this.settings['carPlateNo'] = alert.textFieldValue(0)
       this.settings['showPlate'] = true
     } else {
