@@ -503,6 +503,21 @@ class UIRender extends Core {
         icon: '🚙'
       },
       {
+        name: 'setMyCarLogo',
+        text: '自定义 LOGO 图片',
+        icon: '🥅'
+      },
+      {
+        name: 'setMyCarLogoSize',
+        text: '设置 LOGO 大小',
+        icon: '🔫'
+      },
+      {
+        name: 'setMyOne',
+        text: '自定义一言一句',
+        icon: '📝'
+      },
+      {
         name: 'setAMapKey',
         text: '设置车辆位置',
         icon: '🎯'
@@ -530,24 +545,9 @@ class UIRender extends Core {
 
     const menuList = [
       {
-        name: 'setMyCarLogo',
-        text: '自定义 LOGO 图片',
-        icon: '🎱'
-      },
-      {
-        name: 'setMyCarLogoSize',
-        text: '设置 LOGO 大小',
-        icon: '🔫'
-      },
-      {
         name: 'setBackgroundConfig',
         text: '自定义组件背景',
         icon: '🎨'
-      },
-      {
-        name: 'setMyOne',
-        text: '自定义一言一句',
-        icon: '📝'
       },
       {
         name: 'setFontFamily',
@@ -663,7 +663,7 @@ class UIRender extends Core {
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
-    if (id === -1) return await this.actionUIRenderSettings()
+    if (id === -1) return await this.actionPreferenceSettings()
     // 选择图片
     try {
       const image = await Photos.fromLibrary()
@@ -683,11 +683,11 @@ class UIRender extends Core {
     if (size === 1) {
       this.settings['logoTintType'] = 'fontColor'
       await this.saveSettings()
-      return await this.actionUIRenderSettings()
+      return await this.actionPreferenceSettings()
     }
     this.settings['logoTintType'] = 'default'
     await this.saveSettings()
-    return await this.actionUIRenderSettings()
+    return await this.actionPreferenceSettings()
   }
 
   /**
@@ -705,14 +705,14 @@ class UIRender extends Core {
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
-    if (id === -1) return await this.actionUIRenderSettings()
+    if (id === -1) return await this.actionPreferenceSettings()
     const logoWidth = alert.textFieldValue(0) || this.logoWidth
     const logoHeight = alert.textFieldValue(1) || this.logoHeight
 
     this.settings['logoWidth'] = logoWidth
     this.settings['logoHeight'] = logoHeight
     await this.saveSettings()
-    return await this.actionUIRenderSettings()
+    return await this.actionPreferenceSettings()
   }
 
   /**
@@ -993,11 +993,11 @@ class UIRender extends Core {
     alert.addCancelAction('取消')
 
     const id = await alert.presentAlert()
-    if (id === -1) return await this.actionUIRenderSettings()
+    if (id === -1) return await this.actionPreferenceSettings()
     this.settings['myOne'] = alert.textFieldValue(0)
     await this.saveSettings()
 
-    return await this.actionUIRenderSettings()
+    return await this.actionPreferenceSettings()
   }
 
   /**

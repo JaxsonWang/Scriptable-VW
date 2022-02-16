@@ -10,7 +10,7 @@ class Widget extends DataRender {
     super(arg)
     this.name = 'Audi 挂件'
     this.desc = 'Audi 车辆桌面组件展示'
-    this.version = '2.3.0'
+    this.version = '2.3.1'
 
     this.appName = 'MyAuDi'
     this.appVersion = '3.0.2'
