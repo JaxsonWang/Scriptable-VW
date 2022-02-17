@@ -4,7 +4,7 @@
   "description": "scriptable dev javascript",
   "scripts": {
     "watch": "node app",
-    "debug:All": "yarn build:FVW-Audi && yarn build:FVW && yarn build:SVW && yarn build:Comfort",
+    "build:All": "yarn build:FVW-Audi && yarn build:FVW && yarn build:SVW && yarn build:Comfort",
     "debug:FVW-Audi": "FILE=FVW-Audi DEBUG=true rollup -c --watch",
     "build:FVW-Audi": "FILE=FVW-Audi rollup -c",
     "debug:FVW": "FILE=FVW DEBUG=true rollup -c --watch",

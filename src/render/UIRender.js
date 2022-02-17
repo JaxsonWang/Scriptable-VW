@@ -1648,9 +1648,10 @@ class UIRender extends Core {
       // 俩侧分割
       rowHeader.addSpacer()
       // 顶部右侧
-      // todo 不存在车牌号固定宽度
-      const headerRightStackWidth = data.carPlateNo ? data.carPlateNo.length * 12 : 75
-      const headerRightStackHeight = this.logoHeight * 1.5 + 25
+      const logoWidth = this.getLogoSize('width') * 1.5
+      const logoHeight = this.getLogoSize('height') * 1.5
+      const headerRightStackWidth = data.showPlate ? data.carPlateNo ? data.carPlateNo.length * 12 : logoWidth : logoWidth + 10
+      const headerRightStackHeight = data.showPlate ? logoHeight + 25 : logoHeight
       const headerRightStack = this.addStackTo(rowHeader, 'vertical')
       headerRightStack.size = new Size(headerRightStackWidth, headerRightStackHeight)
       // Logo
@@ -1659,7 +1660,7 @@ class UIRender extends Core {
       carLogoStack.addSpacer()
       const carLogo = await this.getMyCarLogo(this.myCarLogoUrl)
       const carLogoImage = carLogoStack.addImage(carLogo)
-      carLogoImage.imageSize = new Size(this.getLogoSize('width') * 1.5, this.getLogoSize('height') * 1.5)
+      carLogoImage.imageSize = new Size(logoWidth, logoHeight)
       if (this.getLogoHasTint()) this.setWidgetNodeColor(carLogoImage, 'tintColor')
       headerRightStack.spacing = 5
       // 车牌信息
