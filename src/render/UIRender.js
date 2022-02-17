@@ -1648,7 +1648,8 @@ class UIRender extends Core {
       // 俩侧分割
       rowHeader.addSpacer()
       // 顶部右侧
-      const headerRightStackWidth = data.carPlateNo.length * 12
+      // todo 不存在车牌号固定宽度
+      const headerRightStackWidth = data.carPlateNo ? data.carPlateNo.length * 12 : 75
       const headerRightStackHeight = this.logoHeight * 1.5 + 25
       const headerRightStack = this.addStackTo(rowHeader, 'vertical')
       headerRightStack.size = new Size(headerRightStackWidth, headerRightStackHeight)
