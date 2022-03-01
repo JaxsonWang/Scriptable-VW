@@ -10,7 +10,7 @@ class Widget extends UIRender {
     super(arg)
     this.name = 'Joiner 挂件'
     this.desc = 'Joiner 车辆桌面组件展示'
-    this.version = '1.0.9'
+    this.version = '1.1.0'
 
     this.myCarPhotoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png'
     this.myCarLogoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
@@ -24,6 +24,7 @@ class Widget extends UIRender {
       if (this.settings['isLogin']) this.registerAction('偏好配置', this.actionPreferenceSettings)
       if (this.settings['isLogin']) this.registerAction('界面微调', this.actionUIRenderSettings)
       if (this.settings['isLogin']) this.registerAction('重置组件', this.actionLogOut)
+      if (this.settings['isLogin']) this.registerAction('预览组件', this.actionTriggerPreview)
       this.registerAction('调试日志', this.actionDebug)
       this.registerAction('主题下载', this.actionDownloadThemes)
       this.registerAction('检查更新', this.actionCheckUpdate)
@@ -137,7 +138,15 @@ class Widget extends UIRender {
    * 检查更新
    */
   async actionCheckUpdate() {
-    await this.checkUpdate('Comfort-Joiner.js', 'comfort-version')
+    await this.checkUpdate('comfort-version')
+  }
+
+  /**
+   * 预览组件
+   * @returns {Promise<void>}
+   */
+  async actionTriggerPreview() {
+    await this.actionPreview(Widget)
   }
 
   /**

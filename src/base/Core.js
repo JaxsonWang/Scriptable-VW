@@ -218,6 +218,41 @@ class Core {
   async actionAbout() {
     Safari.open( 'https://joiner.i95.me/about.html')
   }
+
+  /**
+   * 预览组件
+   * @param {Widget} Widget
+   * @return {Promise<void>}
+   */
+  async actionPreview(Widget) {
+    const alert = new Alert()
+    alert.title = '预览组件'
+    alert.message = '用于调试和测试组件样式'
+
+    const menuList = [{
+      name: 'Small',
+      text: '小尺寸'
+    }, {
+      name: 'Medium',
+      text: '中尺寸'
+    }, {
+      name: 'Large',
+      text: '大尺寸'
+    }]
+
+    menuList.forEach(item => {
+      alert.addAction(item.text)
+    })
+
+    alert.addCancelAction('退出菜单')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    // 执行函数
+    const widget = new Widget(args.widgetParameter || '')
+    widget.widgetFamily = (menuList[id].name).toLowerCase()
+    const w = await widget.render()
+    await w['present' + menuList[id].name]()
+  }
 }
 
 export default Core

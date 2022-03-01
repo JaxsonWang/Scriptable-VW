@@ -10,7 +10,7 @@ class Widget extends DataRender {
     super(arg)
     this.name = '一汽大众挂件'
     this.desc = '一汽大众车辆桌面组件展示'
-    this.version = '2.2.0'
+    this.version = '2.2.1'
 
     this.appName = 'BootstrapApp'
     this.appVersion = '1.0'
@@ -28,6 +28,7 @@ class Widget extends DataRender {
       if (this.settings['isLogin']) this.registerAction('界面微调', this.actionUIRenderSettings)
       if (this.settings['isLogin']) this.registerAction('刷新数据', this.actionRefreshData)
       if (this.settings['isLogin']) this.registerAction('登出重置', this.actionLogOut)
+      if (this.settings['isLogin']) this.registerAction('预览组件', this.actionTriggerPreview)
       if (this.settings['isLogin']) this.registerAction('调试日志', this.actionDebug)
       this.registerAction('主题下载', this.actionDownloadThemes)
       this.registerAction('检查更新', this.actionCheckUpdate)
@@ -203,7 +204,15 @@ class Widget extends DataRender {
    * 检查更新
    */
   async actionCheckUpdate() {
-    await this.checkUpdate('FVW-Joiner.js', 'fvw-version')
+    await this.checkUpdate('fvw-version')
+  }
+
+  /**
+   * 预览组件
+   * @returns {Promise<void>}
+   */
+  async actionTriggerPreview() {
+    await this.actionPreview(Widget)
   }
 
   /**

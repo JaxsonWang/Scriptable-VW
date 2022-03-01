@@ -10,7 +10,7 @@ class Widget extends DataRender {
     super(arg)
     this.name = 'Audi 挂件'
     this.desc = 'Audi 车辆桌面组件展示'
-    this.version = '2.3.2'
+    this.version = '2.3.3'
 
     this.appName = 'MyAuDi'
     this.appVersion = '3.0.2'
@@ -28,6 +28,7 @@ class Widget extends DataRender {
       if (this.settings['isLogin']) this.registerAction('界面微调', this.actionUIRenderSettings)
       if (this.settings['isLogin']) this.registerAction('刷新数据', this.actionRefreshData)
       if (this.settings['isLogin']) this.registerAction('登出重置', this.actionLogOut)
+      if (this.settings['isLogin']) this.registerAction('预览组件', this.actionTriggerPreview)
       if (this.settings['isLogin']) this.registerAction('调试日志', this.actionDebug)
       this.registerAction('主题下载', this.actionDownloadThemes)
       this.registerAction('检查更新', this.actionCheckUpdate)
@@ -236,7 +237,15 @@ class Widget extends DataRender {
    * 检查更新
    */
   async actionCheckUpdate() {
-    await this.checkUpdate('FVW-Audi-Joiner.js', 'fvw-audi-version')
+    await this.checkUpdate('fvw-audi-version')
+  }
+
+  /**
+   * 预览组件
+   * @returns {Promise<void>}
+   */
+  async actionTriggerPreview() {
+    await this.actionPreview(Widget)
   }
 
   /**

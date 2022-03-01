@@ -13,13 +13,13 @@ class Widget extends Core {
     this.desc = '依赖 Joiner 组件，额外支持全新风格主题'
 
     this.appSettings = this.settings['parentSettings'] ? this.getSettings(true, md5(this.settings['parentSettings'])) : null
-    this.version = '1.0.3'
+    this.version = '1.0.4'
 
     if (config.runsInApp) {
       this.registerAction('引用组件', this.setParentSettings)
       if (this.settings['parentSettings'] && this.appSettings['isLogin']) this.registerAction('偏好配置', this.actionPreferenceSettings)
       this.registerAction('检查更新', this.actionCheckUpdate)
-      this.registerAction('预览组件', this.actionPreview)
+      this.registerAction('预览组件', this.actionTriggerPreview)
       this.registerAction('当前版本: v' + this.version, this.actionAbout)
     }
   }
@@ -294,6 +294,10 @@ class Widget extends Core {
       {
         name: 'SVW-Joiner',
         text: '上汽大众'
+      },
+      {
+        name: 'Comfort-Joiner',
+        text: '体验版'
       }
     ]
     menuList.forEach(item => {
@@ -437,34 +441,8 @@ class Widget extends Core {
    * 预览组件
    * @returns {Promise<void>}
    */
-  async actionPreview() {
-    const alert = new Alert()
-    alert.title = '预览组件'
-    alert.message = '用于调试和测试组件样式'
-
-    const menuList = [{
-      name: 'Small',
-      text: '小尺寸'
-    }, {
-      name: 'Medium',
-      text: '中尺寸'
-    }, {
-      name: 'Large',
-      text: '大尺寸'
-    }]
-
-    menuList.forEach(item => {
-      alert.addAction(item.text)
-    })
-
-    alert.addCancelAction('退出菜单')
-    const id = await alert.presentSheet()
-    if (id === -1) return
-    // 执行函数
-    const widget = new Widget(args.widgetParameter || '')
-    widget.widgetFamily = (menuList[id].name).toLowerCase()
-    const w = await widget.render()
-    await w['present' + menuList[id].name]()
+  async actionTriggerPreview() {
+    await this.actionPreview(Widget)
   }
 
   /**

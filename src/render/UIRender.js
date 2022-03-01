@@ -237,12 +237,13 @@ class UIRender extends Core {
    * @param {number} alpha
    */
   setWidgetNodeColor(widget, type = 'textColor', alpha = 1) {
-    if (this.settings['backgroundPhotoMode']) {
+    const widgetFamily = this.widgetFamily === 'small' ? 'Small' : this.widgetFamily === 'medium' ? 'Medium' : 'Large'
+    if (this.settings['backgroundPhoto' + widgetFamily]) {
       const textColor = this.settings['backgroundImageTextColor'] || '#ffffff'
       widget[type] = new Color(textColor, alpha)
     } else {
-      const lightTextColor = this.settings['lightTextColor'] ? this.settings['lightTextColor'] : '#000000'
-      const darkTextColor = this.settings['darkTextColor'] ? this.settings['darkTextColor'] : '#ffffff'
+      const lightTextColor = this.settings['lightTextColor'] || '#000000'
+      const darkTextColor = this.settings['darkTextColor'] || '#ffffff'
       widget[type] = Color.dynamic(new Color(lightTextColor, alpha), new Color(darkTextColor, alpha))
     }
   }
@@ -914,7 +915,6 @@ class UIRender extends Core {
       const imagePath = FileManager.local().joinPath(FileManager.local().documentsDirectory(), `backgroundPhoto${widgetSize}_${this.SETTING_KEY}`)
       await FileManager.local().writeImage(imagePath, imgCrop)
       this.settings['backgroundPhoto' + widgetSize] = imagePath
-      this.settings['backgroundPhotoMode'] = true
       await this.saveSettings()
       await this.setImageBackground()
     } catch (error) {
@@ -939,7 +939,6 @@ class UIRender extends Core {
       const imagePath = FileManager.local().joinPath(FileManager.local().documentsDirectory(), `backgroundPhoto${widgetSize}_${this.SETTING_KEY}`)
       await FileManager.local().writeImage(imagePath, image)
       this.settings['backgroundPhoto' + widgetSize] = imagePath
-      this.settings['backgroundPhotoMode'] = true
       await this.saveSettings()
       await this.setImageBackground()
     } catch (error) {
@@ -975,7 +974,6 @@ class UIRender extends Core {
     this.settings['backgroundPhotoSmall'] = undefined
     this.settings['backgroundPhotoMedium'] = undefined
     this.settings['backgroundPhotoLarge'] = undefined
-    this.settings['backgroundPhotoMode'] = false
     await this.saveSettings()
     await this.setImageBackground()
   }
@@ -1186,7 +1184,8 @@ class UIRender extends Core {
   /**
    * 检查更新
    */
-  async checkUpdate(fileName, jsonName) {
+  async checkUpdate(jsonName) {
+    const fileName = Script.name() + '.js'
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
     const request = new Request(`https://gitee.com/JaxsonWang/scriptable-audi/raw/master/${jsonName}.json`)
     const response = await request.loadJSON()
