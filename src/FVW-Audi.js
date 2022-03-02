@@ -10,7 +10,7 @@ class Widget extends DataRender {
     super(arg)
     this.name = 'Audi 挂件'
     this.desc = 'Audi 车辆桌面组件展示'
-    this.version = '2.3.3'
+    this.version = '2.3.4'
 
     this.appName = 'MyAuDi'
     this.appVersion = '3.0.2'
@@ -49,8 +49,8 @@ class Widget extends DataRender {
       body: JSON.stringify({
         loginChannelEnum: 'APP',
         loginTypeEnum: 'ACCOUNT_PASSWORD',
-        account: this.settings['username'],
-        password: this.settings['password']
+        account: this.settings['username'].trim(),
+        password: this.settings['password'].trim()
       })
     }
     try {
@@ -165,7 +165,7 @@ class Widget extends DataRender {
         ...{
           'X-ACCESS-TOKEN': this.settings['userAccessToken'],
           'X-CHANNEL': 'IOS',
-          'x-mobile': this.settings['username']
+          'x-mobile': this.settings['username'].trim()
         },
         ...this.requestHeader()
       }

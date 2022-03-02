@@ -216,7 +216,32 @@ class Core {
    * 关于组件
    */
   async actionAbout() {
-    Safari.open( 'https://joiner.i95.me/about.html')
+    const alert = new Alert()
+    alert.title = '关于组件'
+
+    const menuList = [
+      {
+        url: 'https://joiner.i95.me/about.html',
+        text: 'Joiner 小组件官网'
+      },
+      {
+        url: 'https://www.yuque.com/docs/share/ee1d0306-e22d-479f-a2e3-7d347aaf06b1',
+        text: '申请高德地图 Web 服务密钥'
+      },
+      {
+        url: 'https://qr.alipay.com/fkx16611d9qgth0qzixse66',
+        text: '支持作者'
+      }
+    ]
+
+    menuList.forEach(item => {
+      alert.addAction(item.text)
+    })
+
+    alert.addCancelAction('取消设置')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    Safari.open(menuList[id].url)
   }
 
   /**

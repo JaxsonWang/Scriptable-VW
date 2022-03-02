@@ -188,7 +188,7 @@ class UIRender extends Core {
   getCarAddressImage(debug = false) {
     const longitude = this.settings['longitude']
     const latitude = this.settings['latitude']
-    const aMapKey = this.settings['aMapKey']
+    const aMapKey = this.settings['aMapKey'].trim()
     const aMapUrl = `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=100*60&scale=2&zoom=12&traffic=1`
     if (debug) {
       console.log('位置图片请求地址：')
@@ -1247,7 +1247,7 @@ class UIRender extends Core {
       }
     }
 
-    const aMapKey = this.settings['aMapKey']
+    const aMapKey = this.settings['aMapKey'].trim()
     const options = {
       url: `https://restapi.amap.com/v3/geocode/regeo?key=${aMapKey}&location=${longitude},${latitude}&radius=1000&extensions=base&batch=false&roadlevel=0`,
       method: 'GET'

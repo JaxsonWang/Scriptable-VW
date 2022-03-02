@@ -10,7 +10,7 @@ class Widget extends DataRender {
     super(arg)
     this.name = '一汽大众挂件'
     this.desc = '一汽大众车辆桌面组件展示'
-    this.version = '2.2.1'
+    this.version = '2.2.2'
 
     this.appName = 'BootstrapApp'
     this.appVersion = '1.0'
@@ -47,8 +47,8 @@ class Widget extends DataRender {
       method: 'POST',
       headers: this.requestHeader(),
       body: JSON.stringify({
-        password: this.settings['password'],
-        account: this.settings['username'],
+        password: this.settings['password'].trim(),
+        account: this.settings['username'].trim(),
         scope: 'openid profile mbb'
       })
     }

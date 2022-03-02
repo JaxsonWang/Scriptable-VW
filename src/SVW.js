@@ -10,7 +10,7 @@ class Widget extends DataRender {
     super(arg)
     this.name = '上汽大众挂件'
     this.desc = '上汽大众车辆桌面组件展示'
-    this.version = '2.1.1'
+    this.version = '2.1.2'
 
     this.appName = 'BootstrapApp'
     this.appVersion = '1.0'
@@ -47,8 +47,8 @@ class Widget extends DataRender {
       method: 'POST',
       headers: this.requestHeader(),
       body: JSON.stringify({
-        pwd: this.settings['password'],
-        mobile: this.settings['username'],
+        pwd: this.settings['password'].trim(),
+        mobile: this.settings['username'].trim(),
         picContent: '',
         picTicket: '',
         deviceId: this.settings['clientID'],
