@@ -227,10 +227,6 @@ class Core {
       {
         url: 'https://www.yuque.com/docs/share/ee1d0306-e22d-479f-a2e3-7d347aaf06b1',
         text: '申请高德地图 Web 服务密钥'
-      },
-      {
-        url: 'https://qr.alipay.com/fkx16611d9qgth0qzixse66',
-        text: '支持作者'
       }
     ]
 
@@ -242,6 +238,14 @@ class Core {
     const id = await alert.presentSheet()
     if (id === -1) return
     Safari.open(menuList[id].url)
+  }
+
+  /**
+   * 关于作者
+   * @return {Promise<void>}
+   */
+  async actionAuthor() {
+    Safari.open('https://qr.alipay.com/fkx16611d9qgth0qzixse66')
   }
 
   /**

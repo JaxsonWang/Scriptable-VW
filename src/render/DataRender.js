@@ -172,6 +172,73 @@ class DataRender extends UIRender {
   }
 
   /**
+   * 车辆操作
+   */
+  async actionOperations() {
+    const alert = new Alert()
+    alert.title = '控车操作'
+    alert.message = '请求时间很慢，毕竟请求还有经过国外服务器，还不一定能响应，凑合用吧。'
+
+    const menuList = [
+      {
+        type: 'HONK_ONLY',
+        time: 10,
+        text: '鸣笛10秒'
+      },
+      {
+        type: 'HONK_ONLY',
+        time: 20,
+        text: '鸣笛20秒'
+      },
+      {
+        type: 'HONK_ONLY',
+        time: 30,
+        text: '鸣笛30秒'
+      },
+      {
+        type: 'FLASH_ONLY',
+        time: 10,
+        text: '闪灯10秒'
+      },
+      {
+        type: 'FLASH_ONLY',
+        time: 20,
+        text: '闪灯20秒'
+      },
+      {
+        type: 'FLASH_ONLY',
+        time: 30,
+        text: '闪灯30秒'
+      },
+      {
+        type: 'HONK_AND_FLASH',
+        time: 10,
+        text: '鸣笛和闪灯10秒'
+      },
+      {
+        type: 'HONK_AND_FLASH',
+        time: 20,
+        text: '鸣笛和闪灯20秒'
+      },
+      {
+        type: 'HONK_AND_FLASH',
+        time: 30,
+        text: '鸣笛和闪灯30秒'
+      }
+    ]
+
+    menuList.forEach(item => {
+      alert.addAction(item.text)
+    })
+
+    alert.addCancelAction('退出菜单')
+    const id = await alert.presentSheet()
+    if (id === -1) return
+    // 执行函数
+    await this.handleHonkAndFlash(menuList[id].type, menuList[id].time)
+  }
+
+  /**
    * 获取数据
    * @param {boolean} debug 开启日志输出
    * @return {Promise<Object>}
@@ -459,6 +526,77 @@ class DataRender extends UIRender {
         longitude: this.settings['longitude'],
         latitude: this.settings['latitude']
       }
+    }
+  }
+
+  /**
+   * 车辆操作
+   * @param type 类型
+   * @param time 请求时间
+   * @return {Promise<void>}
+   */
+  async handleHonkAndFlash(type, time) {
+    const options = {
+      url: `${this.settings['ApiBaseURI']}/bs/rhf/v1/vehicles/${this.settings['carVIN']}/honkAndFlash`,
+      method: 'GET',
+      headers: {
+        ...{
+          'Authorization': 'Bearer ' + this.settings['authToken'],
+          'X-App-Name': this.appName,
+          'X-App-Version': '113',
+          'Accept-Language': 'de-DE'
+        },
+        ...this.requestHeader()
+      },
+      body: JSON.stringify({
+        honkAndFlashRequest: {
+          userPosition: {
+            longitude: this.settings['longitude'],
+            latitude: this.settings['latitude']
+          },
+          serviceOperationCode: type,
+          serviceDuration: time
+        }
+      })
+    }
+    try {
+      const response = await this.http(options)
+      if (debug) {
+        console.log('当前车辆状态接口返回数据：')
+        console.log(response)
+      }
+      // 判断接口状态
+      if (response.error) {
+        // 接口异常
+        switch (response.error.errorCode) {
+        case 'gw.error.authentication':
+          console.error(`获取车辆状态失败：${response.error.errorCode} - ${response.error.description}`)
+          await this.getTokenRequest('authAccessToken')
+          await this.getVehiclesStatus()
+          break
+        case 'mbbc.rolesandrights.unauthorized':
+          await this.notify('unauthorized 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽奥迪应用查看！')
+          break
+        case 'mbbc.rolesandrights.unknownService':
+          await this.notify('unknownService 错误', '请联系开发者！')
+          break
+        case 'mbbc.rolesandrights.unauthorizedUserDisabled':
+          await this.notify('unauthorizedUserDisabled 错误', '未经授权的用户已禁用！')
+          break
+        default:
+          await this.notify('未知错误' + response.error.errorCode, '未知错误:' + response.error.description)
+        }
+        return this.settings['vehicleData']
+      } else {
+        // 接口获取数据成功
+        const vehicleData = response.StoredVehicleDataResponse.vehicleData.data
+        this.settings['vehicleData'] = this.handleVehiclesData(vehicleData)
+        await this.saveSettings(false)
+        return this.handleVehiclesData(vehicleData)
+      }
+    } catch (error) {
+      console.error(error)
+      return this.settings['vehicleData']
     }
   }
 }
