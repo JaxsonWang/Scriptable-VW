@@ -16,6 +16,7 @@ class UIRender extends Core {
 
     this.defaultMyOne = ''
     this.locationBorderRadius = 15
+    this.locationMapZoom = 12
   }
 
   /**
@@ -189,7 +190,7 @@ class UIRender extends Core {
     const longitude = this.settings['longitude']
     const latitude = this.settings['latitude']
     const aMapKey = this.settings['aMapKey'].trim()
-    const aMapUrl = `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=100*60&scale=2&zoom=12&traffic=1`
+    const aMapUrl = `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=100*60&scale=2&zoom=${this.getLocationMapZoom()}&traffic=1`
     if (debug) {
       console.log('位置图片请求地址：')
       console.log(aMapUrl)
@@ -219,6 +220,14 @@ class UIRender extends Core {
    */
   getLocationBorderRadius() {
     return parseInt(this.settings['locationBorderRadius'], 10) || this.locationBorderRadius
+  }
+
+  /**
+   * 地图缩放比例
+   * @returns {number|number}
+   */
+  getLocationMapZoom() {
+    return parseInt(this.settings['locationMapZoom'], 10) || this.locationMapZoom
   }
 
   /**
@@ -564,6 +573,11 @@ class UIRender extends Core {
         name: 'setLargeLocationBorderRadius',
         text: '大组件边界弧度',
         icon: '🍺'
+      },
+      {
+        name: 'setMapZoom',
+        text: '设置地图缩放',
+        icon: '🍎'
       },
       {
         name: 'showPlate',
@@ -1124,6 +1138,26 @@ class UIRender extends Core {
     const id = await alert.presentAlert()
     if (id === -1) return await this.actionUIRenderSettings()
     this.settings['locationBorderRadius'] = alert.textFieldValue(0)
+    await this.saveSettings()
+
+    return await this.actionUIRenderSettings()
+  }
+
+  /**
+   * 设置大组件地图缩放
+   * @returns {Promise<void>}
+   */
+  async setMapZoom() {
+    const alert = new Alert()
+    alert.title = '设置缩放比例'
+    alert.message = `大组件下方地图缩放数字越小缩放越大，默认是 ${this.locationMapZoom}，请输入数字类型。`
+    alert.addTextField('缩放大小', this.settings['locationMapZoom'])
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.actionUIRenderSettings()
+    this.settings['locationMapZoom'] = alert.textFieldValue(0)
     await this.saveSettings()
 
     return await this.actionUIRenderSettings()

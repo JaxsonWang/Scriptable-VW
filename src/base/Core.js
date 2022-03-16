@@ -221,13 +221,31 @@ class Core {
 
     const menuList = [
       {
+        type: 'function',
+        name: 'actionCheckUpdate',
+        text: '检查更新'
+      },
+      {
+        type: 'url',
         url: 'https://joiner.i95.me/about.html',
         text: 'Joiner 小组件官网'
       },
       {
+        type: 'url',
         url: 'https://www.yuque.com/docs/share/ee1d0306-e22d-479f-a2e3-7d347aaf06b1',
         text: '申请高德地图 Web 服务密钥'
-      }
+      },
+      {
+        text: '版权说明',
+        title: '版权说明',
+        message: '\n' +
+          'Joiner 小组件是开源免费的，由大众系粉丝车主兴趣开发，所有责任与一汽奥迪、一汽大众、上汽大众等大众集团车企无关。\n' +
+          'Joiner 小组件不会收集您的个人账户信息，所有账号信息将存在 iCloud 或者 iPhone 上但也请您妥善保管自己的账号。\n' +
+          'Joiner 小组件会不定期推出新功能，如果车企官方推出了小组件，Joiner 将会停止更新与支持。\n' +
+          '如果市面上第三方开发组件和本组件没有任何关系，请认证开发者《淮城一只猫》所开发的 Joiner 小组件。\n' +
+          'Joiner 小组件是开源的，可以随时审查代码：https://github.com/JaxsonWang/Scriptable-VW \n',
+        type: 'text'
+      },
     ]
 
     menuList.forEach(item => {
@@ -237,7 +255,20 @@ class Core {
     alert.addCancelAction('取消设置')
     const id = await alert.presentSheet()
     if (id === -1) return
-    Safari.open(menuList[id].url)
+    switch (menuList[id].type) {
+      case 'url':
+        Safari.open(menuList[id].url)
+        break
+      case 'text':
+        const alert = new Alert()
+        alert.title = menuList[id].title
+        alert.message = menuList[id].message
+        await alert.presentSheet()
+        break
+      case 'function':
+        await this[menuList[id].name]()
+        break
+    }
   }
 
   /**

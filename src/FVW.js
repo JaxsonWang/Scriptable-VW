@@ -31,7 +31,6 @@ class Widget extends DataRender {
       if (this.settings['isLogin']) this.registerAction('预览组件', this.actionTriggerPreview)
       if (this.settings['isLogin']) this.registerAction('调试日志', this.actionDebug)
       this.registerAction('主题下载', this.actionDownloadThemes)
-      this.registerAction('检查更新', this.actionCheckUpdate)
       this.registerAction('淮城一只猫', this.actionAuthor)
       this.registerAction('当前版本: v' + this.version, this.actionAbout)
     }

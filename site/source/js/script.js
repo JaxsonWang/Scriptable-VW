@@ -52,20 +52,9 @@
       document.getElementById('open').focus()
     })
 
-    // $.ajax({
-    //   type : 'get',
-    //   async: false,
-    //   dataType : 'json',
-    //   url: 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/version.json?jsoncallback=callback',
-    //   success: function(response){
-    //     console.log(response)
-    //   }
-    // })
-
     // 列表刷新
     var token = '?access_token=2e5dab8d64977e068397ac68f8766780'
     getGiteeTree('https://gitee.com/api/v5/repos/JaxsonWang/scriptable-audi/git/trees/master' + token, ['assets', 'fvw-audi-version.json', 'fvw-version.json', 'svw-version.json', 'comfort-version.json'], function(dataRoo1) {
-      console.log(dataRoo1)
       getGiteeTree(dataRoo1[0].url + token, ['audi_cars'], function(dataRoo2) {
         if (document.querySelector('.audi-car-images-list')) {
           getGiteeTree(dataRoo2[0].url + token, null, function(dataRoo3) {
