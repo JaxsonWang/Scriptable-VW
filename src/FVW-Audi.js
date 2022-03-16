@@ -27,7 +27,7 @@ class Widget extends DataRender {
       if (this.settings['isLogin']) this.registerAction('偏好配置', this.actionPreferenceSettings)
       if (this.settings['isLogin']) this.registerAction('界面微调', this.actionUIRenderSettings)
       if (this.settings['isLogin']) this.registerAction('刷新数据', this.actionRefreshData)
-      if (this.settings['isLogin']) this.registerAction('车辆操作', this.actionOperations)
+      // if (this.settings['isLogin']) this.registerAction('车辆操作', this.actionOperations)
       if (this.settings['isLogin']) this.registerAction('登出重置', this.actionLogOut)
       if (this.settings['isLogin']) this.registerAction('预览组件', this.actionTriggerPreview)
       if (this.settings['isLogin']) this.registerAction('调试日志', this.actionDebug)
