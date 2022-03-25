@@ -10,7 +10,7 @@ class Widget extends DataRender {
     super(arg)
     this.name = 'Audi 挂件'
     this.desc = 'Audi 车辆桌面组件展示'
-    this.version = '2.3.4'
+    this.version = '2.3.5'
 
     this.appName = 'MyAuDi'
     this.appVersion = '3.0.2'
@@ -63,7 +63,7 @@ class Widget extends DataRender {
       if (response.code === 0) {
         await this.notify('登录成功', '正在从服务器获取车辆数据，请耐心等待！')
         // 解构数据
-        const { accessToken, idToken } = response.data
+        const {accessToken, idToken} = response.data
         this.settings['userAccessToken'] = accessToken
         this.settings['userIDToken'] = idToken
         await this.saveSettings(false)
@@ -92,12 +92,12 @@ class Widget extends DataRender {
     // 根据交换token请求参数不同
     let requestParams = ''
     switch (type) {
-      case 'refreshAuthToken':
-        requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(this.settings['userIDToken'])}&scope=${encodeURIComponent('sc2:fal')}`
-        break
-      case 'authAccessToken':
-        requestParams = `grant_type=${encodeURIComponent('refresh_token')}&token=${encodeURIComponent(this.settings['refreshAuthToken'])}&scope=${encodeURIComponent('sc2:fal')}&vin=${this.settings['carVIN']}`
-        break
+    case 'refreshAuthToken':
+      requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(this.settings['userIDToken'])}&scope=${encodeURIComponent('sc2:fal')}`
+      break
+    case 'authAccessToken':
+      requestParams = `grant_type=${encodeURIComponent('refresh_token')}&token=${encodeURIComponent(this.settings['refreshAuthToken'])}&scope=${encodeURIComponent('sc2:fal')}&vin=${this.settings['carVIN']}`
+      break
     }
 
     const requestHeader = JSON.parse(JSON.stringify(this.requestHeader()))
@@ -121,17 +121,21 @@ class Widget extends DataRender {
       // 判断接口状态
       if (response.error) {
         switch (response.error) {
-          case 'invalid_grant':
-            if (/expired/g.test(response.error_description)) {
-              console.warn('IDToken 数据过期，正在重新获取数据中，请耐心等待...')
-              await this.getTokenRequest('refreshAuthToken', debug)
-            } else {
-              console.error('Token 授权无效，请联系开发者：')
-              console.error(`${response.error_description} - ${response.error_description}`)
-            }
-            break
-          default:
-            console.error('交换 Token 请求失败：' + response.error + ' - ' + response.error_description)
+        case 'invalid_grant':
+          if (/expired/g.test(response.error_description)) {
+            console.warn('RefreshToken 数据过期，正在重新获取数据中，请耐心等待...')
+            await this.getTokenRequest('refreshAuthToken', debug)
+          } else {
+            console.error('Token 授权无效，请联系开发者：')
+            console.error(`${response.error_description} - ${response.error_description}`)
+          }
+          break
+        case 'invalid_request':
+          console.warn('IDToken 数据过期，正在重新登录中，请耐心等待...')
+          await this.handleLoginRequest(debug)
+          break
+        default:
+          console.error('交换 Token 请求失败：' + response.error + ' - ' + response.error_description)
         }
       } else {
         // 获取密钥数据成功，存储数据
@@ -177,8 +181,8 @@ class Widget extends DataRender {
       console.log(response)
       // 判断接口状态
       if (response.code === 0) {
-        const { vehicleDto } = response.data
-        const { plateNo, seriesName, carModelName, vin } = vehicleDto
+        const {vehicleDto} = response.data
+        const {plateNo, seriesName, carModelName, vin} = vehicleDto
         this.settings['carPlateNo'] = plateNo
         this.settings['seriesName'] = seriesName
         this.settings['carModelName'] = carModelName
