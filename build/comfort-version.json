@@ -1,0 +1,9 @@
+{
+  "inherit": true,
+  "version": "1.1.1",
+  "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/Comfort-Joiner.js",
+  "changelog": [
+    "1. 支持地图缩放参数支持",
+    "2. 更新版权支持"
+  ]
+}

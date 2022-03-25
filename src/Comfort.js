@@ -12,8 +12,8 @@ class Widget extends UIRender {
     this.desc = 'Joiner 车辆桌面组件展示'
     this.version = '1.1.1'
 
-    this.myCarPhotoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png'
-    this.myCarLogoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
+    this.myCarPhotoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/fvw_audi_default.png'
+    this.myCarLogoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/logo_20211127.png'
     this.logoWidth = 40
     this.logoHeight = 14
 

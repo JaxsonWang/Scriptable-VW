@@ -1,0 +1,8 @@
+{
+  "inherit": true,
+  "version": "1.0.4",
+  "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/Simple.js",
+  "changelog": [
+    "1. 新增引用组件设置支持"
+  ]
+}

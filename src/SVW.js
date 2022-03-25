@@ -15,8 +15,8 @@ class Widget extends DataRender {
     this.appName = 'BootstrapApp'
     this.appVersion = '1.0'
 
-    this.myCarPhotoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/svw_default_passat.png'
-    this.myCarLogoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_logo.png'
+    this.myCarPhotoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/svw_default.png'
+    this.myCarLogoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/vw_logo.png'
     this.logoWidth = 14
     this.logoHeight = 14
 

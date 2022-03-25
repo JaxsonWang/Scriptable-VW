@@ -62,7 +62,6 @@
             for (var i = 0; i < dataRoo3.length; i++) {
               imageArr.push(dataRoo3[i].path)
             }
-            renderAudiImageList(imageArr)
           })
         }
       })
@@ -130,15 +129,3 @@ function getGiteeTree(url, name, callback) {
   })
 }
 
-function renderAudiImageList(arr) {
-  if (arr && arr.length !== 0) {
-    arr.forEach(item => {
-      var create = document.createElement('p')
-      create.className = 'py-0'
-      create.innerHTML = item.replace('.png', '').replace(/_/g, ' ') + '：<a href="https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/audi_cars/'+ encodeURI(item) +'" target="_blank">点击下载</a>'
-      document.querySelector('.audi-car-images-list').appendChild(create)
-    })
-  } else {
-    document.querySelector('.audi-car-images-list').innerHTML = '暂无数据'
-  }
-}

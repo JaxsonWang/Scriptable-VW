@@ -211,13 +211,13 @@ class Widget extends Core {
     const scriptName = this.appSettings['scriptName']
     switch (scriptName) {
       case 'FVW-Audi-Joiner':
-        myCarPhoto = await this.getImageByUrl('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png')
+        myCarPhoto = await this.getImageByUrl('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/fvw_audi_default.png')
         break
       case 'FVW-Joiner':
-        myCarPhoto = await this.getImageByUrl('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_default_1.png')
+        myCarPhoto = await this.getImageByUrl('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/fvw_default.png')
         break
       case 'SVW-Joiner':
-        myCarPhoto = await this.getImageByUrl('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/svw_default_passat.png')
+        myCarPhoto = await this.getImageByUrl('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/svw_default.png')
         break
     }
     if (this.appSettings['myCarPhoto']) myCarPhoto = await FileManager.local().readImage(this.appSettings['myCarPhoto'])
@@ -234,13 +234,13 @@ class Widget extends Core {
     const scriptName = this.appSettings['scriptName']
     switch (scriptName) {
       case 'FVW-Audi-Joiner':
-        myCarLogo = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png'
+        myCarLogo = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/logo_20211127.png'
         break
       case 'FVW-Joiner':
-        myCarLogo = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_logo.png'
+        myCarLogo = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/vw_logo.png'
         break
       case 'SVW-Joiner':
-        myCarLogo = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_logo.png'
+        myCarLogo = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/vw_logo.png'
         break
     }
     return myCarLogo
@@ -270,7 +270,7 @@ class Widget extends Core {
    * @returns {Promise<Image>}
    */
   async getSFSymbolImage(sfSymbolName) {
-    return await this.getImageByUrl(`https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/fvw_audi_joiner/sf_icons/${sfSymbolName}@2x.png`)
+    return await this.getImageByUrl(`https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/joiner_v2/${sfSymbolName}@2x.png`)
   }
 
   /**
@@ -415,7 +415,7 @@ class Widget extends Core {
    */
   async actionCheckUpdate() {
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
-    const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/themes/simple-theme.json')
+    const request = new Request('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/themes/simple-theme.json')
     const response = await request.loadJSON()
     console.log(`远程版本：${response?.version}`)
     if (response?.version === this.version) return this.notify('无需更新', '远程版本一致，暂无更新')
@@ -451,7 +451,7 @@ class Widget extends Core {
    * @return {string}
    */
   simpleTemplatePath(name) {
-    return 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/simple_template/' + name + '.png'
+    return 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/simple/' + name + '.png'
   }
 
   /**
