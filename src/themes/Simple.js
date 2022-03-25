@@ -13,7 +13,7 @@ class Widget extends Core {
     this.desc = '依赖 Joiner 组件，额外支持全新风格主题'
 
     this.appSettings = this.settings['parentSettings'] ? this.getSettings(true, md5(this.settings['parentSettings'])) : null
-    this.version = '1.0.4'
+    this.version = '1.0.5'
 
     if (config.runsInApp) {
       this.registerAction('引用组件', this.setParentSettings)
@@ -415,7 +415,7 @@ class Widget extends Core {
    */
   async actionCheckUpdate() {
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
-    const request = new Request('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/themes/simple-theme.json')
+    const request = new Request('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/simple-theme.json')
     const response = await request.loadJSON()
     console.log(`远程版本：${response?.version}`)
     if (response?.version === this.version) return this.notify('无需更新', '远程版本一致，暂无更新')

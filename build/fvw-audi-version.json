@@ -1,9 +1,10 @@
 {
   "inherit": true,
-  "version": "2.3.4",
+  "version": "2.3.5",
   "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/FVW-Audi-Joiner.js",
   "changelog": [
-    "1. 支持地图缩放参数支持",
-    "2. 更新版权支持"
+    "1. 更新资源源地址",
+    "2. 支持文字和图标描述展示",
+    "3. 修复 Token 失效导致数据及时不刷新问题"
   ]
 }

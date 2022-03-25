@@ -805,7 +805,7 @@ class UIRender extends Core {
    * @returns {Promise<Image>}
    */
   async getSFSymbolImage(sfSymbolName) {
-    return await this.getImageByUrl(`https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/fvw_audi_joiner/sf_icons/${sfSymbolName}@2x.png`)
+    return await this.getImageByUrl(`https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/joiner_v2/${sfSymbolName}@2x.png`)
   }
 
   /**
@@ -838,7 +838,7 @@ class UIRender extends Core {
   async actionDownloadThemes() {
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']();
 
-    const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/themes/themes.json');
+    const request = new Request('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/themes.json');
     const response = await request.loadJSON();
     const themes = response['themes'];
 
@@ -1026,6 +1026,11 @@ class UIRender extends Core {
         name: 'setAMapKey',
         text: '设置车辆位置',
         icon: '🎯'
+      },
+      {
+        name: 'setShowType',
+        text: '信息描述风格',
+        icon: '🌭'
       }
     ];
 
@@ -1508,6 +1513,30 @@ class UIRender extends Core {
   }
 
   /**
+   * 设置显示风格
+   * @returns {Promise<void>}
+   */
+  async setShowType() {
+    const alert = new Alert();
+    alert.title = '设置显示风格';
+    alert.message = '在组件信息根据你的选择进行展示';
+    alert.addAction('文字描述');
+    alert.addCancelAction('图标描述');
+
+    const id = await alert.presentAlert();
+    if (id === -1) {
+      // 默认 显示图标描述
+      this.settings['showType'] = false;
+      await this.saveSettings();
+      return await this.actionUIRenderSettings()
+    }
+    // 显示文字描述
+    this.settings['showType'] = true;
+    await this.saveSettings();
+    return await this.actionPreferenceSettings()
+  }
+
+  /**
    * 设置车辆位置
    * @returns {Promise<void>}
    */
@@ -1716,7 +1745,7 @@ class UIRender extends Core {
   async checkUpdate(jsonName) {
     const fileName = Script.name() + '.js';
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']();
-    const request = new Request(`https://gitee.com/JaxsonWang/scriptable-audi/raw/master/${jsonName}.json`);
+    const request = new Request(`https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/${jsonName}.json`);
     const response = await request.loadJSON();
     console.log(`远程版本：${response?.version}`);
     if (response?.version === this.version) return this.notify('无需更新', '远程版本一致，暂无更新')
@@ -2043,9 +2072,15 @@ class UIRender extends Core {
       carInfoStack.centerAlignContent();
       const carInfoImageStack = this.addStackTo(carInfoStack, 'vertical');
       carInfoImageStack.bottomAlignContent();
-      const carInfoImage = carInfoImageStack.addImage(await this.getSFSymbolImage('gauge'));
-      carInfoImage.imageSize = new Size(14, 14);
-      this.setWidgetNodeColor(carInfoImage, 'tintColor');
+      if (this.settings['showType']) {
+        const carInfoText = carInfoImageStack.addText('续航里程:');
+        this.setFontFamilyStyle(carInfoText, 12);
+        this.setWidgetNodeColor(carInfoText, 'textColor');
+      } else {
+        const carInfoImage = carInfoImageStack.addImage(await this.getSFSymbolImage('gauge'));
+        carInfoImage.imageSize = new Size(14, 14);
+        this.setWidgetNodeColor(carInfoImage, 'tintColor');
+      }
       carInfoStack.addSpacer(5);
       const carInfoTextStack = this.addStackTo(carInfoStack, 'horizontal');
       carInfoTextStack.bottomAlignContent();
@@ -2094,9 +2129,15 @@ class UIRender extends Core {
       mileageStack.bottomAlignContent();
       const mileageImageStack = this.addStackTo(mileageStack, 'vertical');
       mileageImageStack.bottomAlignContent();
-      const mileageImage = mileageImageStack.addImage(await this.getSFSymbolImage('car'));
-      mileageImage.imageSize = new Size(14, 14);
-      this.setWidgetNodeColor(mileageImage, 'tintColor');
+      if (this.settings['showType']) {
+        const mileageText = mileageImageStack.addText('行程里程:');
+        this.setFontFamilyStyle(mileageText, 12);
+        this.setWidgetNodeColor(mileageText, 'textColor');
+      } else {
+        const mileageImage = mileageImageStack.addImage(await this.getSFSymbolImage('car'));
+        mileageImage.imageSize = new Size(14, 14);
+        this.setWidgetNodeColor(mileageImage, 'tintColor');
+      }
       mileageStack.addSpacer(5);
       const mileageTextStack = this.addStackTo(mileageStack, 'horizontal');
       mileageTextStack.bottomAlignContent();
@@ -2110,9 +2151,15 @@ class UIRender extends Core {
       dateTimeStack.bottomAlignContent();
       const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical');
       dateTimeImageStack.bottomAlignContent();
-      const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('arrow.clockwise.icloud'));
-      dateTimeImage.imageSize = new Size(15, 15);
-      this.setWidgetNodeColor(dateTimeImage, 'tintColor');
+      if (this.settings['showType']) {
+        const dateTimeText = dateTimeImageStack.addText('刷新时间:');
+        this.setFontFamilyStyle(dateTimeText, 12);
+        this.setWidgetNodeColor(dateTimeText, 'textColor');
+      } else {
+        const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('arrow.clockwise.icloud'));
+        dateTimeImage.imageSize = new Size(15, 15);
+        this.setWidgetNodeColor(dateTimeImage, 'tintColor');
+      }
       dateTimeStack.addSpacer(5);
       const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal');
       dateTimeTextStack.bottomAlignContent();
@@ -2212,9 +2259,15 @@ class UIRender extends Core {
       enduranceStack.bottomAlignContent();
       const enduranceImageStack = this.addStackTo(enduranceStack, 'vertical');
       enduranceImageStack.bottomAlignContent();
-      const enduranceImage = enduranceImageStack.addImage(await this.getSFSymbolImage('flag.circle'));
-      enduranceImage.imageSize = new Size(18, 18);
-      this.setWidgetNodeColor(enduranceImage, 'tintColor');
+      if (this.settings['showType']) {
+        const enduranceText = enduranceImageStack.addText('续航里程:');
+        this.setFontFamilyStyle(enduranceText, 14);
+        this.setWidgetNodeColor(enduranceText, 'textColor');
+      } else {
+        const enduranceImage = enduranceImageStack.addImage(await this.getSFSymbolImage('flag.circle'));
+        enduranceImage.imageSize = new Size(18, 18);
+        this.setWidgetNodeColor(enduranceImage, 'tintColor');
+      }
       enduranceStack.addSpacer(5);
       const enduranceTextStack = this.addStackTo(enduranceStack, 'horizontal');
       enduranceTextStack.bottomAlignContent();
@@ -2235,11 +2288,17 @@ class UIRender extends Core {
       fuelStack.bottomAlignContent();
       const fuelImageStack = this.addStackTo(fuelStack, 'vertical');
       fuelImageStack.bottomAlignContent();
-      let fuelIcon = 'fuelpump.circle';
-      if (data.socLevel) fuelIcon = 'bolt.circle';
-      const fuelImage = fuelImageStack.addImage(await this.getSFSymbolImage(fuelIcon));
-      fuelImage.imageSize = new Size(18, 18);
-      this.setWidgetNodeColor(fuelImage, 'tintColor');
+      if (this.settings['showType']) {
+        const fuelText = fuelImageStack.addText('燃料剩余:');
+        this.setFontFamilyStyle(fuelText, 14);
+        this.setWidgetNodeColor(fuelText, 'textColor');
+      } else {
+        let fuelIcon = 'fuelpump.circle';
+        if (data.socLevel) fuelIcon = 'bolt.circle';
+        const fuelImage = fuelImageStack.addImage(await this.getSFSymbolImage(fuelIcon));
+        fuelImage.imageSize = new Size(18, 18);
+        this.setWidgetNodeColor(fuelImage, 'tintColor');
+      }
       if (
         data.fuelLevel && data.fuelLevel <= 20 ||
         data.socLevel && data.socLevel <= 20
@@ -2283,9 +2342,15 @@ class UIRender extends Core {
       mileageStack.bottomAlignContent();
       const mileageImageStack = this.addStackTo(mileageStack, 'vertical');
       mileageImageStack.bottomAlignContent();
-      const mileageImage = mileageImageStack.addImage(await this.getSFSymbolImage('car.circle'));
-      mileageImage.imageSize = new Size(18, 18);
-      this.setWidgetNodeColor(mileageImage, 'tintColor');
+      if (this.settings['showType']) {
+        const mileageText = mileageImageStack.addText('行程里程:');
+        this.setFontFamilyStyle(mileageText, 14);
+        this.setWidgetNodeColor(mileageText, 'textColor');
+      } else {
+        const mileageImage = mileageImageStack.addImage(await this.getSFSymbolImage('car.circle'));
+        mileageImage.imageSize = new Size(18, 18);
+        this.setWidgetNodeColor(mileageImage, 'tintColor');
+      }
       mileageStack.addSpacer(5);
       const mileageTextStack = this.addStackTo(mileageStack, 'horizontal');
       mileageTextStack.bottomAlignContent();
@@ -2300,12 +2365,18 @@ class UIRender extends Core {
         oilStack.bottomAlignContent();
         const oilImageStack = this.addStackTo(oilStack, 'vertical');
         oilImageStack.bottomAlignContent();
-        const oilImage = oilImageStack.addImage(await this.getSFSymbolImage('drop.circle'));
-        oilImage.imageSize = new Size(18, 18);
-        if (Number(data.oilLevel) <= 12.5) {
-          oilImage.tintColor = this.dangerColor();
+        if (this.settings['showType']) {
+          const oilText = oilImageStack.addText('机油剩余:');
+          this.setFontFamilyStyle(oilText, 14);
+          this.setWidgetNodeColor(oilText, 'textColor');
         } else {
-          this.setWidgetNodeColor(oilImage, 'tintColor');
+          const oilImage = oilImageStack.addImage(await this.getSFSymbolImage('drop.circle'));
+          oilImage.imageSize = new Size(18, 18);
+          if (Number(data.oilLevel) <= 12.5) {
+            oilImage.tintColor = this.dangerColor();
+          } else {
+            this.setWidgetNodeColor(oilImage, 'tintColor');
+          }
         }
         oilStack.addSpacer(5);
         const oilTextStack = this.addStackTo(oilStack, 'horizontal');
@@ -2325,11 +2396,17 @@ class UIRender extends Core {
       lockedStack.bottomAlignContent();
       const lockedImageStack = this.addStackTo(lockedStack, 'vertical');
       lockedImageStack.bottomAlignContent();
-      const lockedImage = lockedImageStack.addImage(await this.getSFSymbolImage('lock.circle'));
-      lockedImage.imageSize = new Size(18, 18);
-      if (this.getLockSuccessStyle()) lockedImage.tintColor = this.successColor();
-      else this.setWidgetNodeColor(lockedImage, 'tintColor');
-      if (!data.isLocked) lockedImage.tintColor = this.dangerColor();
+      if (this.settings['showType']) {
+        const lockedText = lockedImageStack.addText('车辆状态:');
+        this.setFontFamilyStyle(lockedText, 14);
+        this.setWidgetNodeColor(lockedText, 'textColor');
+      } else {
+        const lockedImage = lockedImageStack.addImage(await this.getSFSymbolImage('lock.circle'));
+        lockedImage.imageSize = new Size(18, 18);
+        if (this.getLockSuccessStyle()) lockedImage.tintColor = this.successColor();
+        else this.setWidgetNodeColor(lockedImage, 'tintColor');
+        if (!data.isLocked) lockedImage.tintColor = this.dangerColor();
+      }
       lockedStack.addSpacer(5);
       const lockedTextStack = this.addStackTo(lockedStack, 'horizontal');
       lockedTextStack.bottomAlignContent();
@@ -2345,9 +2422,15 @@ class UIRender extends Core {
       dateTimeStack.bottomAlignContent();
       const dateTimeImageStack = this.addStackTo(dateTimeStack, 'vertical');
       dateTimeImageStack.bottomAlignContent();
-      const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('arrow.clockwise.icloud'));
-      dateTimeImage.imageSize = new Size(18, 18);
-      this.setWidgetNodeColor(dateTimeImage, 'tintColor');
+      if (this.settings['showType']) {
+        const dateTimeText = dateTimeImageStack.addText('云端刷新:');
+        this.setFontFamilyStyle(dateTimeText, 14);
+        this.setWidgetNodeColor(dateTimeText, 'textColor');
+      } else {
+        const dateTimeImage = dateTimeImageStack.addImage(await this.getSFSymbolImage('arrow.clockwise.icloud'));
+        dateTimeImage.imageSize = new Size(18, 18);
+        this.setWidgetNodeColor(dateTimeImage, 'tintColor');
+      }
       dateTimeStack.addSpacer(5);
       const dateTimeTextStack = this.addStackTo(dateTimeStack, 'horizontal');
       dateTimeTextStack.bottomAlignContent();
@@ -2361,9 +2444,15 @@ class UIRender extends Core {
       updateStack.bottomAlignContent();
       const updateImageStack = this.addStackTo(updateStack, 'vertical');
       updateImageStack.bottomAlignContent();
-      const updateImage = updateImageStack.addImage(await this.getSFSymbolImage('clock.arrow.2.circlepath'));
-      updateImage.imageSize = new Size(18, 18);
-      this.setWidgetNodeColor(updateImage, 'tintColor');
+      if (this.settings['showType']) {
+        const updateText = updateImageStack.addText('本地刷新:');
+        this.setFontFamilyStyle(updateText, 14);
+        this.setWidgetNodeColor(updateText, 'textColor');
+      } else {
+        const updateImage = updateImageStack.addImage(await this.getSFSymbolImage('clock.arrow.2.circlepath'));
+        updateImage.imageSize = new Size(18, 18);
+        this.setWidgetNodeColor(updateImage, 'tintColor');
+      }
       updateStack.addSpacer(5);
       const updateTextStack = this.addStackTo(updateStack, 'horizontal');
       updateTextStack.bottomAlignContent();
@@ -2498,7 +2587,7 @@ class UIRender extends Core {
   async renderEmpty() {
     const widget = new ListWidget();
 
-    widget.backgroundImage = await this.shadowImage(await this.getImageByUrl('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png'));
+    widget.backgroundImage = await this.shadowImage(await this.getImageByUrl('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/fvw_audi_default.png'));
 
     const text = widget.addText('欢迎使用 Joiner 系列汽车组件');
     switch (this.widgetFamily) {
@@ -3173,13 +3262,13 @@ class Widget extends DataRender {
     super(arg);
     this.name = '上汽大众挂件';
     this.desc = '上汽大众车辆桌面组件展示';
-    this.version = '2.1.2';
+    this.version = '2.1.3';
 
     this.appName = 'BootstrapApp';
     this.appVersion = '1.0';
 
-    this.myCarPhotoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/svw_default_passat.png';
-    this.myCarLogoUrl = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_logo.png';
+    this.myCarPhotoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/svw_default.png';
+    this.myCarLogoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/vw_logo.png';
     this.logoWidth = 14;
     this.logoHeight = 14;
 

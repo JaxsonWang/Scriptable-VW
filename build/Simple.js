@@ -373,7 +373,67 @@ class Core {
    * 关于组件
    */
   async actionAbout() {
-    Safari.open( 'https://joiner.i95.me/about.html');
+    const alert = new Alert();
+    alert.title = '关于组件';
+
+    const menuList = [
+      {
+        type: 'function',
+        name: 'actionCheckUpdate',
+        text: '检查更新'
+      },
+      {
+        type: 'url',
+        url: 'https://joiner.i95.me/about.html',
+        text: 'Joiner 小组件官网'
+      },
+      {
+        type: 'url',
+        url: 'https://www.yuque.com/docs/share/ee1d0306-e22d-479f-a2e3-7d347aaf06b1',
+        text: '申请高德地图 Web 服务密钥'
+      },
+      {
+        text: '版权说明',
+        title: '版权说明',
+        message: '\n' +
+          'Joiner 小组件是开源免费的，由大众系粉丝车主兴趣开发，所有责任与一汽奥迪、一汽大众、上汽大众等大众集团车企无关。\n' +
+          'Joiner 小组件不会收集您的个人账户信息，所有账号信息将存在 iCloud 或者 iPhone 上但也请您妥善保管自己的账号。\n' +
+          'Joiner 小组件会不定期推出新功能，如果车企官方推出了小组件，Joiner 将会停止更新与支持。\n' +
+          '如果市面上第三方开发组件和本组件没有任何关系，请认证开发者《淮城一只猫》所开发的 Joiner 小组件。\n' +
+          'Joiner 小组件是开源的，可以随时审查代码：https://github.com/JaxsonWang/Scriptable-VW \n',
+        type: 'text'
+      },
+    ];
+
+    menuList.forEach(item => {
+      alert.addAction(item.text);
+    });
+
+    alert.addCancelAction('取消设置');
+    const id = await alert.presentSheet();
+    if (id === -1) return
+    switch (menuList[id].type) {
+      case 'url':
+        Safari.open(menuList[id].url);
+        break
+      case 'text':
+        const alert = new Alert();
+        alert.title = menuList[id].title;
+        alert.message = menuList[id].message;
+        await alert.presentSheet();
+        break
+      case 'function':
+        await this[menuList[id].name]();
+        break
+    }
+  }
+
+  /**
+   * 关于作者
+   * @return {Promise<void>}
+   */
+  async actionAuthor() {
+    Safari.open('https://qr.alipay.com/fkx16611d9qgth0qzixse66');
   }
 
   /**
@@ -467,7 +527,7 @@ class Widget extends Core {
     this.desc = '依赖 Joiner 组件，额外支持全新风格主题';
 
     this.appSettings = this.settings['parentSettings'] ? this.getSettings(true, md5(this.settings['parentSettings'])) : null;
-    this.version = '1.0.4';
+    this.version = '1.0.5';
 
     if (config.runsInApp) {
       this.registerAction('引用组件', this.setParentSettings);
@@ -665,13 +725,13 @@ class Widget extends Core {
     const scriptName = this.appSettings['scriptName'];
     switch (scriptName) {
       case 'FVW-Audi-Joiner':
-        myCarPhoto = await this.getImageByUrl('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/default.png');
+        myCarPhoto = await this.getImageByUrl('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/fvw_audi_default.png');
         break
       case 'FVW-Joiner':
-        myCarPhoto = await this.getImageByUrl('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_default_1.png');
+        myCarPhoto = await this.getImageByUrl('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/fvw_default.png');
         break
       case 'SVW-Joiner':
-        myCarPhoto = await this.getImageByUrl('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/svw_default_passat.png');
+        myCarPhoto = await this.getImageByUrl('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/svw_default.png');
         break
     }
     if (this.appSettings['myCarPhoto']) myCarPhoto = await FileManager.local().readImage(this.appSettings['myCarPhoto']);
@@ -688,13 +748,13 @@ class Widget extends Core {
     const scriptName = this.appSettings['scriptName'];
     switch (scriptName) {
       case 'FVW-Audi-Joiner':
-        myCarLogo = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/logo_20211127.png';
+        myCarLogo = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/logo_20211127.png';
         break
       case 'FVW-Joiner':
-        myCarLogo = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_logo.png';
+        myCarLogo = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/vw_logo.png';
         break
       case 'SVW-Joiner':
-        myCarLogo = 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/images/vw_logo.png';
+        myCarLogo = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/vw_logo.png';
         break
     }
     return myCarLogo
@@ -724,7 +784,7 @@ class Widget extends Core {
    * @returns {Promise<Image>}
    */
   async getSFSymbolImage(sfSymbolName) {
-    return await this.getImageByUrl(`https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/fvw_audi_joiner/sf_icons/${sfSymbolName}@2x.png`)
+    return await this.getImageByUrl(`https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/joiner_v2/${sfSymbolName}@2x.png`)
   }
 
   /**
@@ -869,7 +929,7 @@ class Widget extends Core {
    */
   async actionCheckUpdate() {
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']();
-    const request = new Request('https://gitee.com/JaxsonWang/scriptable-audi/raw/master/themes/simple-theme.json');
+    const request = new Request('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/simple-theme.json');
     const response = await request.loadJSON();
     console.log(`远程版本：${response?.version}`);
     if (response?.version === this.version) return this.notify('无需更新', '远程版本一致，暂无更新')
@@ -905,7 +965,7 @@ class Widget extends Core {
    * @return {string}
    */
   simpleTemplatePath(name) {
-    return 'https://gitee.com/JaxsonWang/scriptable-audi/raw/master/assets/simple_template/' + name + '.png'
+    return 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/simple/' + name + '.png'
   }
 
   /**
