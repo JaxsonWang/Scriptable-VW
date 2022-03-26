@@ -2059,10 +2059,10 @@ class UIRender extends Core {
         const padding = deviceScreen.width - 80
         footerStack.size = new Size(padding, 60)
         // 地图图片
-        footerStack.backgroundImage = await this.getImageByUrl(leftImage)
+        footerStack.backgroundImage = await this.getImageByUrl(leftImage, false)
       } else {
         const footerLeftStack = this.addStackTo(footerStack, 'vertical')
-        const locationImage = await this.getImageByUrl(leftImage)
+        const locationImage = await this.getImageByUrl(leftImage, false)
         const locationImageStack = footerLeftStack.addImage(locationImage)
         locationImageStack.imageSize = new Size(100, 60)
         locationImageStack.centerAlignImage()
