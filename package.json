@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "scriptable dev javascript",
   "scripts": {
+    "purge": "sh purge.sh",
     "watch": "node app",
     "build:All": "yarn build:FVW-Audi && yarn build:FVW && yarn build:SVW && yarn build:Comfort",
     "debug:FVW-Audi": "FILE=FVW-Audi DEBUG=true rollup -c --watch",
