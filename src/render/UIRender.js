@@ -183,14 +183,16 @@ class UIRender extends Core {
 
   /**
    * 获取车辆地址位置静态图片
+   * @param {Object} location 位置
    * @param {boolean} debug 开启日志输出
    * @return {string}
    */
-  getCarAddressImage(debug = false) {
-    const longitude = this.settings['longitude']
-    const latitude = this.settings['latitude']
-    const aMapKey = this.settings['aMapKey'].trim()
-    const aMapUrl = `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=100*60&scale=2&zoom=${this.getLocationMapZoom()}&traffic=1`
+  getCarAddressImage(location, debug = false) {
+    const longitude = location.longitude || this.settings['longitude']
+    const latitude = location.latitude || this.settings['latitude']
+    const aMapKey = this.settings['aMapKey']?.trim() || 'c078fb16379c25bc0aad8633d82cf1dd'
+    const size = this.settings['largeMapType'] ? '500*280' : '100*60'
+    const aMapUrl = `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=${size}&scale=2&zoom=${this.getLocationMapZoom()}&traffic=1`
     if (debug) {
       console.log('位置图片请求地址：')
       console.log(aMapUrl)
@@ -580,6 +582,11 @@ class UIRender extends Core {
         name: 'setLargeLocationBorderRadius',
         text: '大组件边界弧度',
         icon: '🍺'
+      },
+      {
+        name: 'setLargeMapType',
+        text: '大组件地图风格',
+        icon: '🌏'
       },
       {
         name: 'setMapZoom',
@@ -1142,13 +1149,25 @@ class UIRender extends Core {
   }
 
   /**
+   * 设置大组件地图展示风格
+   * @returns {Promise<void>}
+   */
+  async setLargeMapType() {
+    const message = '用于大组件展示地图风格'
+    const menus = ['默认', '全地图']
+    this.settings['largeMapType'] = Boolean(await this.generateAlert('提示', message, menus))
+    await this.saveSettings()
+    return await this.actionUIRenderSettings()
+  }
+
+  /**
    * 设置大组件地图缩放
    * @returns {Promise<void>}
    */
   async setMapZoom() {
     const alert = new Alert()
     alert.title = '设置缩放比例'
-    alert.message = `大组件下方地图缩放数字越小缩放越大，默认是 ${this.locationMapZoom}，请输入数字类型。`
+    alert.message = `大组件下方地图缩放数字越小缩放越大，范围在（1 ~ 17），默认是 ${this.locationMapZoom}，请输入数字类型。`
     alert.addTextField('缩放大小', this.settings['locationMapZoom'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
@@ -1251,12 +1270,13 @@ class UIRender extends Core {
 
   /**
    * 获取车辆地理位置信息
+   * @param {Object} location 经纬度
    * @param {boolean} debug 开启日志输出
    * @return {Promise<{simpleAddress, completeAddress}|{simpleAddress: *, completeAddress: *}>}
    */
-  async getCarAddressInfo(debug = false) {
-    const longitude = this.settings['longitude']
-    const latitude = this.settings['latitude']
+  async getCarAddressInfo(location, debug = false) {
+    const longitude = location.longitude || this.settings['longitude']
+    const latitude = location.latitude || this.settings['latitude']
 
     // 经纬度异常判断
     if (
@@ -1279,7 +1299,7 @@ class UIRender extends Core {
       }
     }
 
-    const aMapKey = this.settings['aMapKey'].trim()
+    const aMapKey = this.settings['aMapKey']?.trim() || 'c078fb16379c25bc0aad8633d82cf1dd'
     const options = {
       url: `https://restapi.amap.com/v3/geocode/regeo?key=${aMapKey}&location=${longitude},${latitude}&radius=1000&extensions=base&batch=false&roadlevel=0`,
       method: 'GET'
@@ -2025,7 +2045,7 @@ class UIRender extends Core {
       // endregion
       // 地图/一言展示
       const leftImage = data.largeLocationPicture
-      const rightText = data.showLocation ? data.completeAddress : data.myOne
+      const rightText = data.completeAddress
       const footerWrapperStack = this.addStackTo(widget, 'horizontal')
       footerWrapperStack.setPadding(0, 0, 0, 0)
       const footerStack = this.addStackTo(footerWrapperStack, 'horizontal')
@@ -2034,37 +2054,39 @@ class UIRender extends Core {
       footerStack.borderWidth = 2
       footerStack.setPadding(0, 0, 0, 0)
       footerStack.centerAlignContent()
-      // 地图图片
-      if (data.showLocation) {
+      if (this.settings['largeMapType']) {
+        const deviceScreen = Device.screenSize()
+        const padding = deviceScreen.width - 80
+        footerStack.size = new Size(padding, 60)
+        // 地图图片
+        footerStack.backgroundImage = await this.getImageByUrl(leftImage)
+      } else {
         const footerLeftStack = this.addStackTo(footerStack, 'vertical')
-        const locationImage = await this.getImageByUrl(leftImage, !data.showLocation)
+        const locationImage = await this.getImageByUrl(leftImage)
         const locationImageStack = footerLeftStack.addImage(locationImage)
         locationImageStack.imageSize = new Size(100, 60)
         locationImageStack.centerAlignImage()
         footerStack.addSpacer()
+        // 地理位置
+        const footerRightStack = this.addStackTo(footerStack, 'horizontal')
+        footerRightStack.addSpacer()
+        const locationText = footerRightStack.addText(rightText)
+        this.setFontFamilyStyle(locationText, 12)
+        locationText.centerAlignText()
+        this.setWidgetNodeColor(locationText, 'textColor')
+        footerRightStack.addSpacer()
       }
-      // 地理位置
-      const footerRightStack = this.addStackTo(footerStack, 'horizontal')
-      if (!data.showLocation) footerStack.setPadding(25, 20, 25, 20)
-      footerRightStack.addSpacer()
-      const locationText = footerRightStack.addText(rightText)
-      this.setFontFamilyStyle(locationText, 12)
-      locationText.centerAlignText()
-      this.setWidgetNodeColor(locationText, 'textColor')
-      footerRightStack.addSpacer()
       footerStack.addSpacer()
-      // 有地理数据时候展示一言
-      if (data.showLocation) {
-        const oneStack = this.addStackTo(widget, 'horizontal')
-        oneStack.setPadding(10, 0, 0, 0)
-        oneStack.addSpacer()
-        oneStack.centerAlignContent()
-        const oneText = oneStack.addText(data.myOne)
-        this.setFontFamilyStyle(oneText, 12)
-        this.setWidgetNodeColor(oneText, 'textColor')
-        oneText.centerAlignText()
-        oneStack.addSpacer()
-      }
+      // 一言
+      const oneStack = this.addStackTo(widget, 'horizontal')
+      oneStack.setPadding(10, 0, 0, 0)
+      oneStack.addSpacer()
+      oneStack.centerAlignContent()
+      const oneText = oneStack.addText(data.myOne)
+      this.setFontFamilyStyle(oneText, 12)
+      this.setWidgetNodeColor(oneText, 'textColor')
+      oneText.centerAlignText()
+      oneStack.addSpacer()
 
       return widget
     } catch (error) {
