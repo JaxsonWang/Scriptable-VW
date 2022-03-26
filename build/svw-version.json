@@ -1,9 +1,10 @@
 {
   "inherit": true,
-  "version": "2.1.3",
+  "version": "2.1.4",
   "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/SVW-Joiner.js",
   "changelog": [
     "1. 更新资源源地址",
-    "2. 支持文字和图标描述展示"
+    "2. 支持文字和图标描述展示",
+    "3. 优化参数"
   ]
 }

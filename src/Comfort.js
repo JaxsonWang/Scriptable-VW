@@ -10,7 +10,7 @@ class Widget extends UIRender {
     super(arg)
     this.name = 'Joiner 挂件'
     this.desc = 'Joiner 车辆桌面组件展示'
-    this.version = '1.1.2'
+    this.version = '1.1.3'
 
     this.myCarPhotoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/fvw_audi_default.png'
     this.myCarLogoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/logo_20211127.png'

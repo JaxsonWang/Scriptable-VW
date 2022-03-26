@@ -1,10 +1,11 @@
 {
   "inherit": true,
-  "version": "2.3.5",
+  "version": "2.3.6",
   "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/FVW-Audi-Joiner.js",
   "changelog": [
     "1. 更新资源源地址",
     "2. 支持文字和图标描述展示",
-    "3. 修复 Token 失效导致数据及时不刷新问题"
+    "3. 修复 Token 失效导致数据及时不刷新问题",
+    "4. 优化参数"
   ]
 }

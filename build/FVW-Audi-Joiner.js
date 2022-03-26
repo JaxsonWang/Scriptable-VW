@@ -773,12 +773,14 @@ class UIRender extends Core {
 
   /**
    * Alert 弹窗封装
+   * @param title
    * @param message
    * @param options
    * @returns {Promise<number>}
    */
-  async generateAlert(message, options) {
+  async generateAlert(title = 'Joiner 提示', message, options) {
     const alert = new Alert();
+    alert.title = title;
     alert.message = message;
     for (const option of options) {
       alert.addAction(option);
@@ -1194,7 +1196,7 @@ class UIRender extends Core {
       '原彩色：保持图片颜色\n' +
       '字体色：和字体颜色统一';
     const sizes = ['原彩色', '字体色'];
-    const size = await this.generateAlert(message, sizes);
+    const size = await this.generateAlert('提示', message, sizes);
     if (size === 1) {
       this.settings['logoTintType'] = 'fontColor';
       await this.saveSettings();
@@ -1356,7 +1358,7 @@ class UIRender extends Core {
   async setTransparentBackground() {
     let message = '开始之前，请转到主屏幕并进入桌面编辑模式，滚动到最右边的空页面，然后截图！';
     const exitOptions = ['前去截图', '继续'];
-    const shouldExit = await this.generateAlert(message, exitOptions);
+    const shouldExit = await this.generateAlert('提示', message, exitOptions);
     if (!shouldExit) return
 
     // Get screenshot and determine phone size.
@@ -1366,7 +1368,7 @@ class UIRender extends Core {
       const phone = this.phoneSizes()[height];
       if (!phone) {
         message = '您选择的照片好像不是正确的截图，或者您的机型暂时不支持。';
-        await this.generateAlert(message,['OK']);
+        await this.generateAlert('提示', message,['OK']);
         return await this.setImageBackground()
       }
 
@@ -1374,7 +1376,7 @@ class UIRender extends Core {
       message = '您创建组件的是什么规格？';
       const sizes = ['小组件', '中组件', '大组件'];
       const _sizes = ['Small', 'Medium', 'Large'];
-      const size = await this.generateAlert(message, sizes);
+      const size = await this.generateAlert('提示', message, sizes);
       const widgetSize = _sizes[size];
 
       message = '在桌面上组件存在什么位置？';
@@ -1391,7 +1393,7 @@ class UIRender extends Core {
           crop.h = phone.small;
           positions = ['Top left', 'Top right', 'Middle left', 'Middle right', 'Bottom left', 'Bottom right'];
           _positions = ['左上角', '右上角', '中间左', '中间右', '左下角', '右下角'];
-          position = await this.generateAlert(message, _positions);
+          position = await this.generateAlert('提示', message, _positions);
 
           // Convert the two words into two keys for the phone size dictionary.
           const keys = positions[position].toLowerCase().split(' ');
@@ -1406,7 +1408,7 @@ class UIRender extends Core {
           crop.x = phone.left;
           positions = ['Top', 'Middle', 'Bottom'];
           _positions = ['顶部', '中部', '底部'];
-          position = await this.generateAlert(message, _positions);
+          position = await this.generateAlert('提示', message, _positions);
           const key = positions[position].toLowerCase();
           crop.y = phone[key];
           break
@@ -1416,7 +1418,7 @@ class UIRender extends Core {
           crop.x = phone.left;
           positions = ['Top', 'Bottom'];
           _positions = ['顶部', '底部'];
-          position = await this.generateAlert(message, _positions);
+          position = await this.generateAlert('提示', message, _positions);
 
           // Large widgets at the bottom have the 'middle' y-value.
           crop.y = position ? phone.middle : phone.top;
@@ -1446,7 +1448,7 @@ class UIRender extends Core {
       let message = '您创建组件的是什么规格？';
       const sizes = ['小组件', '中组件', '大组件'];
       const _sizes = ['Small','Medium','Large'];
-      const size = await this.generateAlert(message, sizes);
+      const size = await this.generateAlert('提示', message, sizes);
       const widgetSize = _sizes[size];
 
       const image = await Photos.fromLibrary();
@@ -1517,21 +1519,10 @@ class UIRender extends Core {
    * @returns {Promise<void>}
    */
   async setShowType() {
-    const alert = new Alert();
-    alert.title = '设置显示风格';
-    alert.message = '在组件信息根据你的选择进行展示';
-    alert.addAction('文字描述');
-    alert.addCancelAction('图标描述');
-
-    const id = await alert.presentAlert();
-    if (id === -1) {
-      // 默认 显示图标描述
-      this.settings['showType'] = false;
-      await this.saveSettings();
-      return await this.actionUIRenderSettings()
-    }
-    // 显示文字描述
-    this.settings['showType'] = true;
+    const message = '设置组件信息根据你的选择进行展示？';
+    const menus = ['图标描述', '文字描述'];
+    // 默认 显示图标描述
+    this.settings['showType'] = Boolean(await this.generateAlert('组件信息描述', message, menus));
     await this.saveSettings();
     return await this.actionPreferenceSettings()
   }
@@ -1561,21 +1552,10 @@ class UIRender extends Core {
    * @returns {Promise<void>}
    */
   async showPlate() {
-    const alert = new Alert();
-    alert.title = '是否显示车牌显示';
-    alert.message = this.settings['showPlate'] ? '当前车牌显示状态已开启' : '当前车牌显示状态已关闭';
-    alert.addAction('开启');
-    alert.addCancelAction('关闭');
-
-    const id = await alert.presentAlert();
-    if (id === -1) {
-      // 关闭车牌显示
-      this.settings['showPlate'] = false;
-      await this.saveSettings();
-      return await this.actionUIRenderSettings()
-    }
-    // 开启车牌显示
-    this.settings['showPlate'] = true;
+    const title = '是否显示车牌显示';
+    const message = this.settings['showPlate'] ? '当前车牌显示状态已开启' : '当前车牌显示状态已关闭';
+    const menus = ['关闭显示', '开启显示'];
+    this.settings['showPlate'] = Boolean(await this.generateAlert(title, message, menus));
     await this.saveSettings();
     return await this.actionUIRenderSettings()
   }
@@ -1585,21 +1565,10 @@ class UIRender extends Core {
    * @returns {Promise<void>}
    */
   async showOil() {
-    const alert = new Alert();
-    alert.title = '是否显示机油数据';
-    alert.message = (this.settings['showOil'] ? '当前机油显示状态已开启' : '当前机油显示状态已关闭') + '，机油数据仅供参考，长时间停车会造成机油数据不准确，请悉知！';
-    alert.addAction('开启');
-    alert.addCancelAction('关闭');
-
-    const id = await alert.presentAlert();
-    if (id === -1) {
-      // 关闭车牌显示
-      this.settings['showOil'] = false;
-      await this.saveSettings();
-      return await this.actionUIRenderSettings()
-    }
-    // 开启车牌显示
-    this.settings['showOil'] = true;
+    const title = '是否显示机油数据';
+    const message = (this.settings['showOil'] ? '当前机油显示状态已开启' : '当前机油显示状态已关闭') + '，机油数据仅供参考，长时间停车会造成机油数据不准确，请悉知！';
+    const menus = ['关闭显示', '开启显示'];
+    this.settings['showOil'] = Boolean(await this.generateAlert(title, message, menus));
     await this.saveSettings();
     return await this.actionUIRenderSettings()
   }
@@ -1636,7 +1605,7 @@ class UIRender extends Core {
   async setLockSuccessStyle() {
     const message = '用于设置锁车提示风格，可以设置绿色或者字体色俩种风格';
     const sizes = ['绿色', '字体色'];
-    const size = await this.generateAlert(message, sizes);
+    const size = await this.generateAlert('提示', message, sizes);
     if (size === 1) {
       this.settings['lockSuccessStyle'] = 'fontColor';
       await this.saveSettings();
@@ -2263,10 +2232,22 @@ class UIRender extends Core {
         const enduranceText = enduranceImageStack.addText('续航里程:');
         this.setFontFamilyStyle(enduranceText, 14);
         this.setWidgetNodeColor(enduranceText, 'textColor');
+        if (
+          data.fuelLevel && data.fuelLevel <= 20 ||
+          data.socLevel && data.socLevel <= 20
+        ) {
+          enduranceText.textColor = this.dangerColor();
+        }
       } else {
         const enduranceImage = enduranceImageStack.addImage(await this.getSFSymbolImage('flag.circle'));
         enduranceImage.imageSize = new Size(18, 18);
         this.setWidgetNodeColor(enduranceImage, 'tintColor');
+        if (
+          data.fuelLevel && data.fuelLevel <= 20 ||
+          data.socLevel && data.socLevel <= 20
+        ) {
+          enduranceImage.tintColor = this.dangerColor();
+        }
       }
       enduranceStack.addSpacer(5);
       const enduranceTextStack = this.addStackTo(enduranceStack, 'horizontal');
@@ -2274,13 +2255,7 @@ class UIRender extends Core {
       const enduranceText = enduranceTextStack.addText(data.fuelRange + 'km');
       this.setFontFamilyStyle(enduranceText, 14, 'bold');
       this.setWidgetNodeColor(enduranceText, 'textColor');
-      if (
-        data.fuelLevel && data.fuelLevel <= 20 ||
-        data.socLevel && data.socLevel <= 20
-      ) {
-        enduranceImage.tintColor = this.dangerColor();
-        enduranceText.textColor = this.dangerColor();
-      }
+      if (data.fuelLevel && data.fuelLevel <= 20 || data.socLevel && data.socLevel <= 20) enduranceText.textColor = this.dangerColor();
       // endregion
       rowLeftStack.addSpacer(5);
       // region 燃料信息
@@ -2292,18 +2267,24 @@ class UIRender extends Core {
         const fuelText = fuelImageStack.addText('燃料剩余:');
         this.setFontFamilyStyle(fuelText, 14);
         this.setWidgetNodeColor(fuelText, 'textColor');
+        if (
+          data.fuelLevel && data.fuelLevel <= 20 ||
+          data.socLevel && data.socLevel <= 20
+        ) {
+          fuelText.textColor = this.dangerColor();
+        }
       } else {
         let fuelIcon = 'fuelpump.circle';
         if (data.socLevel) fuelIcon = 'bolt.circle';
         const fuelImage = fuelImageStack.addImage(await this.getSFSymbolImage(fuelIcon));
         fuelImage.imageSize = new Size(18, 18);
         this.setWidgetNodeColor(fuelImage, 'tintColor');
-      }
-      if (
-        data.fuelLevel && data.fuelLevel <= 20 ||
-        data.socLevel && data.socLevel <= 20
-      ) {
-        fuelImage.tintColor = this.dangerColor();
+        if (
+          data.fuelLevel && data.fuelLevel <= 20 ||
+          data.socLevel && data.socLevel <= 20
+        ) {
+          fuelImage.tintColor = this.dangerColor();
+        }
       }
       fuelStack.addSpacer(5);
       // 汽油
@@ -3262,7 +3243,7 @@ class Widget extends DataRender {
     super(arg);
     this.name = 'Audi 挂件';
     this.desc = 'Audi 车辆桌面组件展示';
-    this.version = '2.3.5';
+    this.version = '2.3.6';
 
     this.appName = 'MyAuDi';
     this.appVersion = '3.0.2';
