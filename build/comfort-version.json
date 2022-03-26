@@ -1,7 +1,7 @@
 {
   "inherit": true,
   "version": "1.1.2",
-  "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/Comfort-Joiner.js",
+  "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/Comfort-Joiner.js",
   "changelog": [
     "1. 更新资源源地址",
     "2. 支持文字和图标描述展示"

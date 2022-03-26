@@ -805,7 +805,7 @@ class UIRender extends Core {
    * @returns {Promise<Image>}
    */
   async getSFSymbolImage(sfSymbolName) {
-    return await this.getImageByUrl(`https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/joiner_v2/${sfSymbolName}@2x.png`)
+    return await this.getImageByUrl(`https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/joiner_v2/${sfSymbolName}@2x.png`)
   }
 
   /**
@@ -838,7 +838,7 @@ class UIRender extends Core {
   async actionDownloadThemes() {
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']();
 
-    const request = new Request('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/themes.json');
+    const request = new Request('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/themes.json');
     const response = await request.loadJSON();
     const themes = response['themes'];
 
@@ -1745,7 +1745,7 @@ class UIRender extends Core {
   async checkUpdate(jsonName) {
     const fileName = Script.name() + '.js';
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']();
-    const request = new Request(`https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/${jsonName}.json`);
+    const request = new Request(`https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/${jsonName}.json`);
     const response = await request.loadJSON();
     console.log(`远程版本：${response?.version}`);
     if (response?.version === this.version) return this.notify('无需更新', '远程版本一致，暂无更新')
@@ -2587,7 +2587,7 @@ class UIRender extends Core {
   async renderEmpty() {
     const widget = new ListWidget();
 
-    widget.backgroundImage = await this.shadowImage(await this.getImageByUrl('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/fvw_audi_default.png'));
+    widget.backgroundImage = await this.shadowImage(await this.getImageByUrl('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/fvw_audi_default.png'));
 
     const text = widget.addText('欢迎使用 Joiner 系列汽车组件');
     switch (this.widgetFamily) {
@@ -3267,8 +3267,8 @@ class Widget extends DataRender {
     this.appName = 'BootstrapApp';
     this.appVersion = '1.0';
 
-    this.myCarPhotoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/fvw_default.png';
-    this.myCarLogoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/assets/images/vw_logo.png';
+    this.myCarPhotoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/fvw_default.png';
+    this.myCarLogoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/vw_logo.png';
     this.logoWidth = 14;
     this.logoHeight = 14;
 

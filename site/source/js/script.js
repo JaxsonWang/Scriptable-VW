@@ -50,16 +50,16 @@
     })
 
     // 列表刷新
-    getScriptVersion('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/comfort-version.json', function(response) {
+    getScriptVersion('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/comfort-version.json', function(response) {
       document.querySelector('#comfort-version').innerHTML = '体验版：v' + response.version
     })
-    getScriptVersion('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/fvw-audi-version.json', function(response) {
+    getScriptVersion('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/fvw-audi-version.json', function(response) {
       document.querySelector('#fvw-audi-version').innerHTML = '一汽奥迪：v' + response.version
     })
-    getScriptVersion('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/fvw-version.json', function(response) {
+    getScriptVersion('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/fvw-version.json', function(response) {
       document.querySelector('#fvw-version').innerHTML = '一汽大众：v' + response.version
     })
-    getScriptVersion('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@master/build/svw-version.json', function(response) {
+    getScriptVersion('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/svw-version.json', function(response) {
       document.querySelector('#svw-version').innerHTML = '上汽大众：v' + response.version
     })
   })
