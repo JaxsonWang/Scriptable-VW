@@ -1,6 +1,7 @@
 #!/bin/bash
 
 url_arr=(
+  'https://purge.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/'
   'https://purge.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/Comfort-Joiner.js'
   'https://purge.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/FVW-Audi-Joiner.js'
   'https://purge.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/FVW-Joiner.js'
