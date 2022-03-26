@@ -545,7 +545,7 @@ class UIRender extends Core {
     const draw = new DrawContext();
     draw.size = new Size(rect.width, rect.height);
 
-    draw.drawImageAtPoint(img,new Point(-rect.x, -rect.y));
+    draw.drawImageAtPoint(img, new Point(-rect.x, -rect.y));
     return draw.getImage()
   }
 
@@ -1037,7 +1037,7 @@ class UIRender extends Core {
     ];
 
     menuList.forEach(item => {
-      alert.addAction(item.icon + ' ' +item.text);
+      alert.addAction(item.icon + ' ' + item.text);
     });
 
     alert.addCancelAction('取消设置');
@@ -1094,7 +1094,7 @@ class UIRender extends Core {
     ];
 
     menuList.forEach(item => {
-      alert.addAction(item.icon + ' ' +item.text);
+      alert.addAction(item.icon + ' ' + item.text);
     });
 
     alert.addCancelAction('取消设置');
@@ -1257,7 +1257,7 @@ class UIRender extends Core {
     }];
 
     menuList.forEach(item => {
-      alert.addAction(item.icon + ' ' +item.text);
+      alert.addAction(item.icon + ' ' + item.text);
     });
 
     alert.addCancelAction('取消设置');
@@ -1342,7 +1342,7 @@ class UIRender extends Core {
     }];
 
     menuList.forEach(item => {
-      alert.addAction(item.icon + ' ' +item.text);
+      alert.addAction(item.icon + ' ' + item.text);
     });
 
     alert.addCancelAction('取消设置');
@@ -1368,7 +1368,7 @@ class UIRender extends Core {
       const phone = this.phoneSizes()[height];
       if (!phone) {
         message = '您选择的照片好像不是正确的截图，或者您的机型暂时不支持。';
-        await this.generateAlert('提示', message,['OK']);
+        await this.generateAlert('提示', message, ['OK']);
         return await this.setImageBackground()
       }
 
@@ -1383,7 +1383,7 @@ class UIRender extends Core {
       message += (height === 1136 ? ' （备注：当前设备只支持两行小组件，所以下边选项中的「中间」和「底部」的选项是一致的）' : '');
 
       // Determine image crop based on phone size.
-      const crop = { w: '', h: '', x: '', y: '' };
+      const crop = {w: '', h: '', x: '', y: ''};
       let positions = '';
       let _positions = '';
       let position = '';
@@ -1447,7 +1447,7 @@ class UIRender extends Core {
     try {
       let message = '您创建组件的是什么规格？';
       const sizes = ['小组件', '中组件', '大组件'];
-      const _sizes = ['Small','Medium','Large'];
+      const _sizes = ['Small', 'Medium', 'Large'];
       const size = await this.generateAlert('提示', message, sizes);
       const widgetSize = _sizes[size];
 
@@ -2049,6 +2049,12 @@ class UIRender extends Core {
         const carInfoImage = carInfoImageStack.addImage(await this.getSFSymbolImage('gauge'));
         carInfoImage.imageSize = new Size(14, 14);
         this.setWidgetNodeColor(carInfoImage, 'tintColor');
+        if (
+          data.fuelLevel && data.fuelLevel <= 20 ||
+          data.socLevel && data.socLevel <= 20
+        ) {
+          carInfoImage.tintColor = this.dangerColor();
+        }
       }
       carInfoStack.addSpacer(5);
       const carInfoTextStack = this.addStackTo(carInfoStack, 'horizontal');
@@ -2061,7 +2067,6 @@ class UIRender extends Core {
         data.socLevel && data.socLevel <= 20
       ) {
         enduranceText.textColor = this.dangerColor();
-        carInfoImage.tintColor = this.dangerColor();
       }
       if (data.fuelLevel) {
         carInfoTextStack.spacing = 4;
@@ -2255,7 +2260,9 @@ class UIRender extends Core {
       const enduranceText = enduranceTextStack.addText(data.fuelRange + 'km');
       this.setFontFamilyStyle(enduranceText, 14, 'bold');
       this.setWidgetNodeColor(enduranceText, 'textColor');
-      if (data.fuelLevel && data.fuelLevel <= 20 || data.socLevel && data.socLevel <= 20) enduranceText.textColor = this.dangerColor();
+      if (data.fuelLevel && data.fuelLevel <= 20 || data.socLevel && data.socLevel <= 20) {
+        enduranceText.textColor = this.dangerColor();
+      }
       // endregion
       rowLeftStack.addSpacer(5);
       // region 燃料信息
@@ -2642,7 +2649,7 @@ class Widget extends UIRender {
     super(arg);
     this.name = 'Joiner 挂件';
     this.desc = 'Joiner 车辆桌面组件展示';
-    this.version = '1.1.3';
+    this.version = '1.1.4';
 
     this.myCarPhotoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/fvw_audi_default.png';
     this.myCarLogoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/logo_20211127.png';

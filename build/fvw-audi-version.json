@@ -1,6 +1,6 @@
 {
   "inherit": true,
-  "version": "2.3.6",
+  "version": "2.3.7",
   "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/FVW-Audi-Joiner.js",
   "changelog": [
     "1. 更新资源源地址",
