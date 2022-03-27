@@ -2048,6 +2048,7 @@ class UIRender extends Core {
       const rightText = data.completeAddress
       const footerWrapperStack = this.addStackTo(widget, 'horizontal')
       footerWrapperStack.setPadding(0, 0, 0, 0)
+      if (this.settings['largeMapType']) footerWrapperStack.addSpacer()
       const footerStack = this.addStackTo(footerWrapperStack, 'horizontal')
       footerStack.cornerRadius = this.getLocationBorderRadius()
       this.setWidgetNodeColor(footerStack, 'borderColor', 0.25)
@@ -2056,10 +2057,11 @@ class UIRender extends Core {
       footerStack.centerAlignContent()
       if (this.settings['largeMapType']) {
         const deviceScreen = Device.screenSize()
-        const padding = deviceScreen.width - 80
+        const padding = deviceScreen.width - 120
         footerStack.size = new Size(padding, 60)
         // 地图图片
         footerStack.backgroundImage = await this.getImageByUrl(leftImage, false)
+        if (this.settings['largeMapType']) footerWrapperStack.addSpacer()
       } else {
         const footerLeftStack = this.addStackTo(footerStack, 'vertical')
         const locationImage = await this.getImageByUrl(leftImage, false)
