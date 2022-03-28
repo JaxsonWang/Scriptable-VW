@@ -265,6 +265,8 @@ class DataRender extends UIRender {
       longitude: location.longitude,
       latitude: location.latitude
     }
+    this.settings['phoneLongitude'] = location.longitude
+    this.settings['phoneLatitude'] = location.latitude
     const vehiclesPosition = await this.getVehiclesPosition(debug)
 
     const data = {
@@ -289,9 +291,9 @@ class DataRender extends UIRender {
       windowStatus: getVehiclesStatusData.windowStatus || [],
       showLocation,
       showPlate,
-      // 获取车辆经纬度
+      // 获取车辆经纬度 / 手机经纬度
       ...(showLocation ? vehiclesPosition : phonePosition),
-      // 获取车辆位置信息
+      // 获取车辆位置信息 / 手机位置信息
       ...await this.getCarAddressInfo(showLocation ? vehiclesPosition : phonePosition, debug),
       // 获取静态位置图片
       largeLocationPicture: this.getCarAddressImage(showLocation ? vehiclesPosition : phonePosition, debug)
@@ -500,8 +502,8 @@ class DataRender extends UIRender {
         }
         if (longitude === 0 || latitude === 0) {
           console.warn('获取车辆经纬度失败')
-          this.settings['longitude'] = 0
-          this.settings['latitude'] = 0
+          this.settings['longitude'] = undefined
+          this.settings['latitude'] = undefined
           return {
             longitude: this.settings['longitude'],
             latitude: this.settings['latitude']
@@ -527,8 +529,8 @@ class DataRender extends UIRender {
       }
     } catch (error) {
       console.error(error)
-      this.settings['longitude'] = -1
-      this.settings['latitude'] = -1
+      this.settings['longitude'] = undefined
+      this.settings['latitude'] = undefined
       return {
         longitude: this.settings['longitude'],
         latitude: this.settings['latitude']

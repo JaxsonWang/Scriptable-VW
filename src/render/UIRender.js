@@ -188,11 +188,12 @@ class UIRender extends Core {
    * @return {string}
    */
   getCarAddressImage(location, debug = false) {
-    const longitude = location.longitude || this.settings['longitude']
-    const latitude = location.latitude || this.settings['latitude']
+    const longitude = location?.longitude || this.settings['longitude'] || this.settings['phoneLongitude']
+    const latitude = location?.latitude || this.settings['latitude'] || this.settings['phoneLatitude']
+
     const aMapKey = this.settings['aMapKey']?.trim() || 'c078fb16379c25bc0aad8633d82cf1dd'
     const size = this.settings['largeMapType'] ? '500*280' : '100*60'
-    const aMapUrl = `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=${size}&scale=2&zoom=${this.getLocationMapZoom()}&traffic=1`
+    const aMapUrl = `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=${size}&scale=1&zoom=${this.getLocationMapZoom()}&traffic=1`
     if (debug) {
       console.log('位置图片请求地址：')
       console.log(aMapUrl)
@@ -1189,9 +1190,6 @@ class UIRender extends Core {
     alert.message = '如果发现数据延迟，选择对应函数获取最新数据，同样也是获取日志分享给开发者使用。'
 
     const menuList = [{
-      name: 'getData',
-      text: '全部信息'
-    }, {
       name: 'handleLoginRequest',
       text: '用户信息数据'
     }, {
@@ -1275,27 +1273,14 @@ class UIRender extends Core {
    * @return {Promise<{simpleAddress, completeAddress}|{simpleAddress: *, completeAddress: *}>}
    */
   async getCarAddressInfo(location, debug = false) {
-    const longitude = location.longitude || this.settings['longitude']
-    const latitude = location.latitude || this.settings['latitude']
+    const longitude = location?.longitude || this.settings['longitude'] || this.settings['phoneLongitude']
+    const latitude = location?.latitude || this.settings['latitude'] || this.settings['phoneLatitude']
 
     // 经纬度异常判断
-    if (
-      longitude === undefined ||
-      latitude === undefined ||
-      longitude === 0 ||
-      latitude === 0
-    ) {
+    if (longitude === undefined || latitude === undefined) {
       return {
         simpleAddress: '暂无位置信息',
         completeAddress: '暂无位置信息'
-      }
-    } else if (
-      longitude === -1 ||
-      latitude === -1
-    ) {
-      return {
-        simpleAddress: '当前车辆可能正在行驶中...',
-        completeAddress: '当前车辆可能正在行驶中...'
       }
     }
 
@@ -2044,8 +2029,6 @@ class UIRender extends Core {
       rowRightStack.addSpacer()
       // endregion
       // 地图/一言展示
-      const leftImage = data.largeLocationPicture
-      const rightText = data.completeAddress
       const footerWrapperStack = this.addStackTo(widget, 'horizontal')
       footerWrapperStack.setPadding(0, 0, 0, 0)
       if (this.settings['largeMapType']) footerWrapperStack.addSpacer()
@@ -2057,14 +2040,16 @@ class UIRender extends Core {
       footerStack.centerAlignContent()
       if (this.settings['largeMapType']) {
         const deviceScreen = Device.screenSize()
-        const padding = deviceScreen.width - 120
-        footerStack.size = new Size(padding, 60)
         // 地图图片
-        footerStack.backgroundImage = await this.getImageByUrl(leftImage, false)
+        footerStack.backgroundImage = await this.getImageByUrl(data.largeLocationPicture, false)
+        // 填充内容
+        const footerFillStack = this.addStackTo(footerStack, 'vertical')
+        footerFillStack.size = new Size(1, 60)
+        footerFillStack.addText(' ')
         if (this.settings['largeMapType']) footerWrapperStack.addSpacer()
       } else {
         const footerLeftStack = this.addStackTo(footerStack, 'vertical')
-        const locationImage = await this.getImageByUrl(leftImage, false)
+        const locationImage = await this.getImageByUrl(data.largeLocationPicture, false)
         const locationImageStack = footerLeftStack.addImage(locationImage)
         locationImageStack.imageSize = new Size(100, 60)
         locationImageStack.centerAlignImage()
@@ -2072,7 +2057,7 @@ class UIRender extends Core {
         // 地理位置
         const footerRightStack = this.addStackTo(footerStack, 'horizontal')
         footerRightStack.addSpacer()
-        const locationText = footerRightStack.addText(rightText)
+        const locationText = footerRightStack.addText(data.completeAddress)
         this.setFontFamilyStyle(locationText, 12)
         locationText.centerAlignText()
         this.setWidgetNodeColor(locationText, 'textColor')
