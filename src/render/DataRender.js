@@ -255,6 +255,7 @@ class DataRender extends UIRender {
     }
 
     const showLocation = this.settings['aMapKey'] !== '' && this.settings['aMapKey'] !== undefined
+    const showLocationFormat = this.settings['locationFormat'] !== '' && this.settings['locationFormat'] !== undefined
     const showPlate = this.settings['showPlate'] || false
     const showOil = this.settings['showOil'] || false
 
@@ -300,6 +301,7 @@ class DataRender extends UIRender {
       doorStatus: getVehiclesStatusData.doorStatus || [],
       windowStatus: getVehiclesStatusData.windowStatus || [],
       showLocation,
+      showLocationFormat,
       showPlate,
       // 获取车辆经纬度 / 手机经纬度
       ...(showLocation ? vehiclesPosition : phonePosition),

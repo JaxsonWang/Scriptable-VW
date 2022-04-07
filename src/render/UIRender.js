@@ -538,6 +538,11 @@ class UIRender extends Core {
         icon: '🎯'
       },
       {
+        name: 'setLocationFormat',
+        text: '位置信息格式',
+        icon: '💫'
+      },
+      {
         name: 'setShowType',
         text: '信息描述风格',
         icon: '🌭'
@@ -1061,6 +1066,26 @@ class UIRender extends Core {
   }
 
   /**
+   * 位置信息格式
+   * @returns {Promise<void>}
+   */
+  async setLocationFormat() {
+    const alert = new Alert()
+    alert.title = '位置信息格式'
+    alert.message = '请输入组件所需要的位置信息格式，格式如下【国|省|市|区|街道|社区|建筑|门牌】\n如不填写则默认显示标准位置信息'
+    alert.addTextField('位置信息格式', this.settings['locationFormat'])
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.actionPreferenceSettings()
+    this.settings['locationFormat'] = alert.textFieldValue(0)
+    await this.saveSettings()
+
+    return await this.actionPreferenceSettings()
+  }
+
+  /**
    * 车牌显示
    * @returns {Promise<void>}
    */
@@ -1273,7 +1298,7 @@ class UIRender extends Core {
    * 获取车辆地理位置信息
    * @param {Object} location 经纬度
    * @param {boolean} debug 开启日志输出
-   * @return {Promise<{simpleAddress, completeAddress}|{simpleAddress: *, completeAddress: *}>}
+   * @return {Promise<{customAddress, completeAddress}|{customAddress: *, completeAddress: *}>}
    */
   async getCarAddressInfo(location, debug = false) {
     const longitude = location?.longitude || this.settings['longitude'] || this.settings['phoneLongitude']
@@ -1282,7 +1307,7 @@ class UIRender extends Core {
     // 经纬度异常判断
     if (longitude === undefined || latitude === undefined) {
       return {
-        simpleAddress: '暂无位置信息',
+        customAddress: '暂无位置信息',
         completeAddress: '暂无位置信息'
       }
     }
@@ -1296,40 +1321,80 @@ class UIRender extends Core {
       const response = await this.http(options)
       if (response.status === '1') {
         const addressComponent = response.regeocode.addressComponent
-        const simpleAddress = addressComponent.district + addressComponent.township || '暂无位置信息'
+        let customAddress = ''
+        const format = this.settings['locationFormat']?.split('|')?.map(item => {
+          switch (item) {
+          case '国':
+            item = 'country'
+            break
+          case '省':
+            item = 'province'
+            break
+          case '市':
+            item = 'city'
+            break
+          case '区':
+            item = 'district'
+            break
+          case '街道':
+            item = 'township'
+            break
+          case '社区':
+            item = 'neighborhood'
+            break
+          case '建筑':
+            item = 'building'
+            break
+          case '门牌':
+            item = 'streetNumber'
+            break
+          }
+          return item
+        })
+        format.forEach(item => {
+          if (item === 'neighborhood') {
+            customAddress += addressComponent[item].name
+          } else if (item === 'building') {
+            customAddress += addressComponent[item].name
+          } else if (item === 'streetNumber') {
+            customAddress += (addressComponent[item].street + addressComponent[item].number)
+          } else {
+            customAddress += addressComponent[item]
+          }
+        })
         const completeAddress = response.regeocode.formatted_address || '暂无位置信息'
-        this.settings['simpleAddress'] = simpleAddress
+        this.settings['customAddress'] = customAddress
         this.settings['completeAddress'] = completeAddress
         await this.saveSettings(false)
         console.log('获取车辆地理位置信息成功')
         if (debug) {
           console.log('当前车辆地理位置：')
-          console.log('简洁地址：' + simpleAddress)
+          console.log('自定义地址：' + customAddress)
           console.log('详细地址：' + completeAddress)
           console.log('车辆地理位置返回数据：')
           console.log(response)
         }
         return {
-          simpleAddress,
+          customAddress,
           completeAddress
         }
       } else {
         console.error('获取车辆位置失败，请检查高德地图 key 是否填写正常')
         await this.notify('逆编码地理位置失败', '请检查高德地图 key 是否填写正常')
-        this.settings['simpleAddress'] = '暂无位置信息'
+        this.settings['customAddress'] = '暂无位置信息'
         this.settings['completeAddress'] = '暂无位置信息'
         return {
-          simpleAddress: this.settings['simpleAddress'],
+          customAddress: this.settings['customAddress'],
           completeAddress: this.settings['completeAddress']
         }
       }
     } catch (error) {
       await this.notify('请求失败', '提示：' + error)
       console.error(error)
-      this.settings['simpleAddress'] = '暂无位置信息'
+      this.settings['customAddress'] = '暂无位置信息'
       this.settings['completeAddress'] = '暂无位置信息'
       return {
-        simpleAddress: this.settings['simpleAddress'],
+        customAddress: this.settings['customAddress'],
         completeAddress: this.settings['completeAddress']
       }
     }
@@ -1662,7 +1727,7 @@ class UIRender extends Core {
       carPhotoStack.centerAlignImage()
       // endregion
       // endregion
-      const footTextData = data.showLocation ? data.completeAddress : data.myOne
+      const footTextData = data.showLocation ? data.showLocationFormat ? data.customAddress : data.completeAddress : data.myOne
       const footerStack = this.addStackTo(widget, 'horizontal')
       footerStack.setPadding(5, 0, 0, 0)
       footerStack.centerAlignContent()
@@ -2060,7 +2125,8 @@ class UIRender extends Core {
         // 地理位置
         const footerRightStack = this.addStackTo(footerStack, 'horizontal')
         footerRightStack.addSpacer()
-        const locationText = footerRightStack.addText(data.completeAddress)
+        const addressText = data.showLocationFormat ? data.customAddress : data.completeAddress
+        const locationText = footerRightStack.addText(addressText)
         this.setFontFamilyStyle(locationText, 12)
         locationText.centerAlignText()
         this.setWidgetNodeColor(locationText, 'textColor')
