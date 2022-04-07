@@ -1190,6 +1190,9 @@ class UIRender extends Core {
     alert.message = '如果发现数据延迟，选择对应函数获取最新数据，同样也是获取日志分享给开发者使用。'
 
     const menuList = [{
+      name: 'getData',
+      text: '组件数据'
+    }, {
       name: 'handleLoginRequest',
       text: '用户信息数据'
     }, {

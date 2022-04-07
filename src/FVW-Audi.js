@@ -23,7 +23,7 @@ class Widget extends DataRender {
     this.defaultMyOne = '世间美好，与您环环相扣'
 
     if (config.runsInApp) {
-      if (!this.settings['isLogin']) this.registerAction('账户登录', this.actionAccountLogin)
+      this.registerAction('账户登录', this.actionAccountLogin)
       if (this.settings['isLogin']) this.registerAction('偏好配置', this.actionPreferenceSettings)
       if (this.settings['isLogin']) this.registerAction('界面微调', this.actionUIRenderSettings)
       if (this.settings['isLogin']) this.registerAction('刷新数据', this.actionRefreshData)

@@ -260,13 +260,23 @@ class DataRender extends UIRender {
 
     const getVehiclesStatusData = await this.getVehiclesStatus(debug)
 
-    const location = await Location.current()
-    const phonePosition = {
-      longitude: location.longitude,
-      latitude: location.latitude
+    let phonePosition
+    try {
+      const location = await Location.current()
+      phonePosition = {
+        longitude: location.longitude || 0,
+        latitude: location.latitude || 0
+      }
+      this.settings['phoneLongitude'] = location.longitude
+      this.settings['phoneLatitude'] = location.latitude
+      await this.saveSettings(false)
+    } catch(error) {
+      phonePosition = {
+        longitude: this.settings['phoneLongitude'],
+        latitude: this.settings['phoneLatitude']
+      }
     }
-    this.settings['phoneLongitude'] = location.longitude
-    this.settings['phoneLatitude'] = location.latitude
+
     const vehiclesPosition = await this.getVehiclesPosition(debug)
 
     const data = {
