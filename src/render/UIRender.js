@@ -1072,7 +1072,7 @@ class UIRender extends Core {
   async setLocationFormat() {
     const alert = new Alert()
     alert.title = '位置信息格式'
-    alert.message = '请输入组件所需要的位置信息格式，格式如下【国|省|市|区|街道|社区|建筑|门牌】\n如不填写则默认显示标准位置信息'
+    alert.message = '请输入组件所需要的位置信息格式，格式如下【国|省|市|区|乡镇|街道|社区|建筑】\n如不填写则默认显示标准位置信息'
     alert.addTextField('位置信息格式', this.settings['locationFormat'])
     alert.addAction('确定')
     alert.addCancelAction('取消')
@@ -1324,44 +1324,46 @@ class UIRender extends Core {
         let customAddress = ''
         const format = this.settings['locationFormat']?.split('|')?.map(item => {
           switch (item) {
-          case '国':
-            item = 'country'
-            break
-          case '省':
-            item = 'province'
-            break
-          case '市':
-            item = 'city'
-            break
-          case '区':
-            item = 'district'
-            break
-          case '街道':
-            item = 'township'
-            break
-          case '社区':
-            item = 'neighborhood'
-            break
-          case '建筑':
-            item = 'building'
-            break
-          case '门牌':
-            item = 'streetNumber'
-            break
+            case '国':
+              item = 'country'
+              break
+            case '省':
+              item = 'province'
+              break
+            case '市':
+              item = 'city'
+              break
+            case '区':
+              item = 'district'
+              break
+            case '乡镇':
+              item = 'township'
+              break
+            case '社区':
+              item = 'neighborhood'
+              break
+            case '街道':
+              item = 'streetNumber'
+              break
+            case '建筑':
+              item = 'building'
+              break
           }
           return item
         })
-        format.forEach(item => {
-          if (item === 'neighborhood') {
-            customAddress += addressComponent[item].name
-          } else if (item === 'building') {
-            customAddress += addressComponent[item].name
-          } else if (item === 'streetNumber') {
-            customAddress += (addressComponent[item].street + addressComponent[item].number)
-          } else {
-            customAddress += addressComponent[item]
-          }
-        })
+        if (Array.isArray(format)) {
+          format.forEach(item => {
+            if (item === 'neighborhood') {
+              customAddress += (addressComponent[item].name || '')
+            } else if (item === 'building') {
+              customAddress += (addressComponent[item].name || '')
+            } else if (item === 'streetNumber') {
+              customAddress += ((addressComponent[item].street || '') + (addressComponent[item].number || ''))
+            } else {
+              customAddress += (addressComponent[item] || '')
+            }
+          })
+        }
         const completeAddress = response.regeocode.formatted_address || '暂无位置信息'
         this.settings['customAddress'] = customAddress
         this.settings['completeAddress'] = completeAddress
