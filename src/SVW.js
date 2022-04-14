@@ -10,7 +10,7 @@ class Widget extends DataRender {
     super(arg)
     this.name = '上汽大众挂件'
     this.desc = '上汽大众车辆桌面组件展示'
-    this.version = '2.1.5'
+    this.version = '2.1.6'
 
     this.appName = 'BootstrapApp'
     this.appVersion = '1.0'

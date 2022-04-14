@@ -1,10 +1,9 @@
 {
   "inherit": true,
-  "version": "1.1.4",
+  "version": "1.1.5",
   "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/Comfort-Joiner.js",
   "changelog": [
-    "1. 更新资源源地址",
-    "2. 支持文字和图标描述展示",
-    "3. 优化参数"
+    "1. 添加自定义地址格式支持",
+    "2. 添加大组件地图展示风格"
   ]
 }

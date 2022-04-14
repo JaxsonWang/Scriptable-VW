@@ -678,14 +678,17 @@ class UIRender extends Core {
 
   /**
    * 获取车辆地址位置静态图片
+   * @param {Object} location 位置
    * @param {boolean} debug 开启日志输出
    * @return {string}
    */
-  getCarAddressImage(debug = false) {
-    const longitude = this.settings['longitude'];
-    const latitude = this.settings['latitude'];
-    const aMapKey = this.settings['aMapKey'].trim();
-    const aMapUrl = `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=100*60&scale=2&zoom=${this.getLocationMapZoom()}&traffic=1`;
+  getCarAddressImage(location, debug = false) {
+    const longitude = location?.longitude || this.settings['longitude'] || this.settings['phoneLongitude'];
+    const latitude = location?.latitude || this.settings['latitude'] || this.settings['phoneLatitude'];
+
+    const aMapKey = this.settings['aMapKey']?.trim() || 'c078fb16379c25bc0aad8633d82cf1dd';
+    const size = this.settings['largeMapType'] ? '500*280' : '100*60';
+    const aMapUrl = `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=${size}&scale=1&zoom=${this.getLocationMapZoom()}&traffic=1`;
     if (debug) {
       console.log('位置图片请求地址：');
       console.log(aMapUrl);
@@ -1030,6 +1033,11 @@ class UIRender extends Core {
         icon: '🎯'
       },
       {
+        name: 'setLocationFormat',
+        text: '位置信息格式',
+        icon: '💫'
+      },
+      {
         name: 'setShowType',
         text: '信息描述风格',
         icon: '🌭'
@@ -1075,6 +1083,11 @@ class UIRender extends Core {
         name: 'setLargeLocationBorderRadius',
         text: '大组件边界弧度',
         icon: '🍺'
+      },
+      {
+        name: 'setLargeMapType',
+        text: '大组件地图风格',
+        icon: '🌏'
       },
       {
         name: 'setMapZoom',
@@ -1548,6 +1561,26 @@ class UIRender extends Core {
   }
 
   /**
+   * 位置信息格式
+   * @returns {Promise<void>}
+   */
+  async setLocationFormat() {
+    const alert = new Alert();
+    alert.title = '位置信息格式';
+    alert.message = '请输入组件所需要的位置信息格式，格式如下【国|省|市|区|乡镇|街道|社区|建筑】\n如不填写则默认显示标准位置信息';
+    alert.addTextField('位置信息格式', this.settings['locationFormat']);
+    alert.addAction('确定');
+    alert.addCancelAction('取消');
+
+    const id = await alert.presentAlert();
+    if (id === -1) return await this.actionPreferenceSettings()
+    this.settings['locationFormat'] = alert.textFieldValue(0);
+    await this.saveSettings();
+
+    return await this.actionPreferenceSettings()
+  }
+
+  /**
    * 车牌显示
    * @returns {Promise<void>}
    */
@@ -1637,13 +1670,25 @@ class UIRender extends Core {
   }
 
   /**
+   * 设置大组件地图展示风格
+   * @returns {Promise<void>}
+   */
+  async setLargeMapType() {
+    const message = '用于大组件展示地图风格';
+    const menus = ['默认', '全地图'];
+    this.settings['largeMapType'] = Boolean(await this.generateAlert('提示', message, menus));
+    await this.saveSettings();
+    return await this.actionUIRenderSettings()
+  }
+
+  /**
    * 设置大组件地图缩放
    * @returns {Promise<void>}
    */
   async setMapZoom() {
     const alert = new Alert();
     alert.title = '设置缩放比例';
-    alert.message = `大组件下方地图缩放数字越小缩放越大，默认是 ${this.locationMapZoom}，请输入数字类型。`;
+    alert.message = `大组件下方地图缩放数字越小缩放越大，范围在（1 ~ 17），默认是 ${this.locationMapZoom}，请输入数字类型。`;
     alert.addTextField('缩放大小', this.settings['locationMapZoom']);
     alert.addAction('确定');
     alert.addCancelAction('取消');
@@ -1666,7 +1711,7 @@ class UIRender extends Core {
 
     const menuList = [{
       name: 'getData',
-      text: '全部信息'
+      text: '组件数据'
     }, {
       name: 'handleLoginRequest',
       text: '用户信息数据'
@@ -1746,35 +1791,23 @@ class UIRender extends Core {
 
   /**
    * 获取车辆地理位置信息
+   * @param {Object} location 经纬度
    * @param {boolean} debug 开启日志输出
-   * @return {Promise<{simpleAddress, completeAddress}|{simpleAddress: *, completeAddress: *}>}
+   * @return {Promise<{customAddress, completeAddress}|{customAddress: *, completeAddress: *}>}
    */
-  async getCarAddressInfo(debug = false) {
-    const longitude = this.settings['longitude'];
-    const latitude = this.settings['latitude'];
+  async getCarAddressInfo(location, debug = false) {
+    const longitude = location?.longitude || this.settings['longitude'] || this.settings['phoneLongitude'];
+    const latitude = location?.latitude || this.settings['latitude'] || this.settings['phoneLatitude'];
 
     // 经纬度异常判断
-    if (
-      longitude === undefined ||
-      latitude === undefined ||
-      longitude === 0 ||
-      latitude === 0
-    ) {
+    if (longitude === undefined || latitude === undefined) {
       return {
-        simpleAddress: '暂无位置信息',
+        customAddress: '暂无位置信息',
         completeAddress: '暂无位置信息'
-      }
-    } else if (
-      longitude === -1 ||
-      latitude === -1
-    ) {
-      return {
-        simpleAddress: '当前车辆可能正在行驶中...',
-        completeAddress: '当前车辆可能正在行驶中...'
       }
     }
 
-    const aMapKey = this.settings['aMapKey'].trim();
+    const aMapKey = this.settings['aMapKey']?.trim() || 'c078fb16379c25bc0aad8633d82cf1dd';
     const options = {
       url: `https://restapi.amap.com/v3/geocode/regeo?key=${aMapKey}&location=${longitude},${latitude}&radius=1000&extensions=base&batch=false&roadlevel=0`,
       method: 'GET'
@@ -1783,40 +1816,82 @@ class UIRender extends Core {
       const response = await this.http(options);
       if (response.status === '1') {
         const addressComponent = response.regeocode.addressComponent;
-        const simpleAddress = addressComponent.district + addressComponent.township || '暂无位置信息';
+        let customAddress = '';
+        const format = this.settings['locationFormat']?.split('|')?.map(item => {
+          switch (item) {
+            case '国':
+              item = 'country';
+              break
+            case '省':
+              item = 'province';
+              break
+            case '市':
+              item = 'city';
+              break
+            case '区':
+              item = 'district';
+              break
+            case '乡镇':
+              item = 'township';
+              break
+            case '社区':
+              item = 'neighborhood';
+              break
+            case '街道':
+              item = 'streetNumber';
+              break
+            case '建筑':
+              item = 'building';
+              break
+          }
+          return item
+        });
+        if (Array.isArray(format)) {
+          format.forEach(item => {
+            if (item === 'neighborhood') {
+              customAddress += (addressComponent[item].name || '');
+            } else if (item === 'building') {
+              customAddress += (addressComponent[item].name || '');
+            } else if (item === 'streetNumber') {
+              customAddress += ((addressComponent[item].street || '') + (addressComponent[item].number || ''));
+            } else {
+              customAddress += (addressComponent[item] || '');
+            }
+          });
+        }
         const completeAddress = response.regeocode.formatted_address || '暂无位置信息';
-        this.settings['simpleAddress'] = simpleAddress;
+        this.settings['customAddress'] = customAddress;
         this.settings['completeAddress'] = completeAddress;
         await this.saveSettings(false);
         console.log('获取车辆地理位置信息成功');
         if (debug) {
           console.log('当前车辆地理位置：');
-          console.log('简洁地址：' + simpleAddress);
+          console.log('自定义地址：' + customAddress);
           console.log('详细地址：' + completeAddress);
           console.log('车辆地理位置返回数据：');
           console.log(response);
         }
         return {
-          simpleAddress,
+          customAddress,
           completeAddress
         }
       } else {
         console.error('获取车辆位置失败，请检查高德地图 key 是否填写正常');
         await this.notify('逆编码地理位置失败', '请检查高德地图 key 是否填写正常');
-        this.settings['simpleAddress'] = '暂无位置信息';
+        this.settings['customAddress'] = '暂无位置信息';
         this.settings['completeAddress'] = '暂无位置信息';
         return {
-          simpleAddress: this.settings['simpleAddress'],
+          customAddress: this.settings['customAddress'],
           completeAddress: this.settings['completeAddress']
         }
       }
     } catch (error) {
       await this.notify('请求失败', '提示：' + error);
       console.error(error);
-      this.settings['simpleAddress'] = '暂无位置信息';
+      this.settings['customAddress'] = '暂无位置信息';
       this.settings['completeAddress'] = '暂无位置信息';
       return {
-        simpleAddress: this.settings['simpleAddress'],
+        customAddress: this.settings['customAddress'],
         completeAddress: this.settings['completeAddress']
       }
     }
@@ -2149,7 +2224,7 @@ class UIRender extends Core {
       carPhotoStack.centerAlignImage();
       // endregion
       // endregion
-      const footTextData = data.showLocation ? data.completeAddress : data.myOne;
+      const footTextData = data.showLocation ? data.showLocationFormat ? data.customAddress : data.completeAddress : data.myOne;
       const footerStack = this.addStackTo(widget, 'horizontal');
       footerStack.setPadding(5, 0, 0, 0);
       footerStack.centerAlignContent();
@@ -2519,47 +2594,52 @@ class UIRender extends Core {
       rowRightStack.addSpacer();
       // endregion
       // 地图/一言展示
-      const leftImage = data.largeLocationPicture;
-      const rightText = data.showLocation ? data.completeAddress : data.myOne;
       const footerWrapperStack = this.addStackTo(widget, 'horizontal');
       footerWrapperStack.setPadding(0, 0, 0, 0);
+      if (this.settings['largeMapType']) footerWrapperStack.addSpacer();
       const footerStack = this.addStackTo(footerWrapperStack, 'horizontal');
       footerStack.cornerRadius = this.getLocationBorderRadius();
       this.setWidgetNodeColor(footerStack, 'borderColor', 0.25);
       footerStack.borderWidth = 2;
       footerStack.setPadding(0, 0, 0, 0);
       footerStack.centerAlignContent();
-      // 地图图片
-      if (data.showLocation) {
+      if (this.settings['largeMapType']) {
+        const deviceScreen = Device.screenSize();
+        // 地图图片
+        footerStack.backgroundImage = await this.getImageByUrl(data.largeLocationPicture, false);
+        // 填充内容
+        const footerFillStack = this.addStackTo(footerStack, 'vertical');
+        footerFillStack.size = new Size(1, 60);
+        footerFillStack.addText(' ');
+        if (this.settings['largeMapType']) footerWrapperStack.addSpacer();
+      } else {
         const footerLeftStack = this.addStackTo(footerStack, 'vertical');
-        const locationImage = await this.getImageByUrl(leftImage, !data.showLocation);
+        const locationImage = await this.getImageByUrl(data.largeLocationPicture, false);
         const locationImageStack = footerLeftStack.addImage(locationImage);
         locationImageStack.imageSize = new Size(100, 60);
         locationImageStack.centerAlignImage();
         footerStack.addSpacer();
+        // 地理位置
+        const footerRightStack = this.addStackTo(footerStack, 'horizontal');
+        footerRightStack.addSpacer();
+        const addressText = data.showLocationFormat ? data.customAddress : data.completeAddress;
+        const locationText = footerRightStack.addText(addressText);
+        this.setFontFamilyStyle(locationText, 12);
+        locationText.centerAlignText();
+        this.setWidgetNodeColor(locationText, 'textColor');
+        footerRightStack.addSpacer();
       }
-      // 地理位置
-      const footerRightStack = this.addStackTo(footerStack, 'horizontal');
-      if (!data.showLocation) footerStack.setPadding(25, 20, 25, 20);
-      footerRightStack.addSpacer();
-      const locationText = footerRightStack.addText(rightText);
-      this.setFontFamilyStyle(locationText, 12);
-      locationText.centerAlignText();
-      this.setWidgetNodeColor(locationText, 'textColor');
-      footerRightStack.addSpacer();
       footerStack.addSpacer();
-      // 有地理数据时候展示一言
-      if (data.showLocation) {
-        const oneStack = this.addStackTo(widget, 'horizontal');
-        oneStack.setPadding(10, 0, 0, 0);
-        oneStack.addSpacer();
-        oneStack.centerAlignContent();
-        const oneText = oneStack.addText(data.myOne);
-        this.setFontFamilyStyle(oneText, 12);
-        this.setWidgetNodeColor(oneText, 'textColor');
-        oneText.centerAlignText();
-        oneStack.addSpacer();
-      }
+      // 一言
+      const oneStack = this.addStackTo(widget, 'horizontal');
+      oneStack.setPadding(10, 0, 0, 0);
+      oneStack.addSpacer();
+      oneStack.centerAlignContent();
+      const oneText = oneStack.addText(data.myOne);
+      this.setFontFamilyStyle(oneText, 12);
+      this.setWidgetNodeColor(oneText, 'textColor');
+      oneText.centerAlignText();
+      oneStack.addSpacer();
 
       return widget
     } catch (error) {
@@ -2851,10 +2931,30 @@ class DataRender extends UIRender {
     }
 
     const showLocation = this.settings['aMapKey'] !== '' && this.settings['aMapKey'] !== undefined;
+    const showLocationFormat = this.settings['locationFormat'] !== '' && this.settings['locationFormat'] !== undefined;
     const showPlate = this.settings['showPlate'] || false;
     const showOil = this.settings['showOil'] || false;
 
     const getVehiclesStatusData = await this.getVehiclesStatus(debug);
+
+    let phonePosition;
+    try {
+      const location = await Location.current();
+      phonePosition = {
+        longitude: location.longitude || 0,
+        latitude: location.latitude || 0
+      };
+      this.settings['phoneLongitude'] = location.longitude;
+      this.settings['phoneLatitude'] = location.latitude;
+      await this.saveSettings(false);
+    } catch(error) {
+      phonePosition = {
+        longitude: this.settings['phoneLongitude'],
+        latitude: this.settings['phoneLatitude']
+      };
+    }
+
+    const vehiclesPosition = await this.getVehiclesPosition(debug);
 
     const data = {
       carPlateNo: this.settings['carPlateNo'],
@@ -2877,13 +2977,14 @@ class DataRender extends UIRender {
       doorStatus: getVehiclesStatusData.doorStatus || [],
       windowStatus: getVehiclesStatusData.windowStatus || [],
       showLocation,
+      showLocationFormat,
       showPlate,
-      // 获取车辆经纬度
-      ...(showLocation ? await this.getVehiclesPosition(debug) : {}),
-      // 获取车辆位置信息
-      ...(showLocation ? await this.getCarAddressInfo(debug) : {}),
+      // 获取车辆经纬度 / 手机经纬度
+      ...(showLocation ? vehiclesPosition : phonePosition),
+      // 获取车辆位置信息 / 手机位置信息
+      ...await this.getCarAddressInfo(showLocation ? vehiclesPosition : phonePosition, debug),
       // 获取静态位置图片
-      largeLocationPicture: showLocation ? this.getCarAddressImage(debug) : this.myCarLogoUrl,
+      largeLocationPicture: this.getCarAddressImage(showLocation ? vehiclesPosition : phonePosition, debug)
     };
     // 保存数据
     this.settings['widgetData'] = data;
@@ -3089,8 +3190,8 @@ class DataRender extends UIRender {
         }
         if (longitude === 0 || latitude === 0) {
           console.warn('获取车辆经纬度失败');
-          this.settings['longitude'] = 0;
-          this.settings['latitude'] = 0;
+          this.settings['longitude'] = undefined;
+          this.settings['latitude'] = undefined;
           return {
             longitude: this.settings['longitude'],
             latitude: this.settings['latitude']
@@ -3116,8 +3217,8 @@ class DataRender extends UIRender {
       }
     } catch (error) {
       console.error(error);
-      this.settings['longitude'] = -1;
-      this.settings['latitude'] = -1;
+      this.settings['longitude'] = undefined;
+      this.settings['latitude'] = undefined;
       return {
         longitude: this.settings['longitude'],
         latitude: this.settings['latitude']
@@ -3250,7 +3351,7 @@ class Widget extends DataRender {
     super(arg);
     this.name = '一汽大众挂件';
     this.desc = '一汽大众车辆桌面组件展示';
-    this.version = '2.2.5';
+    this.version = '2.2.6';
 
     this.appName = 'BootstrapApp';
     this.appVersion = '1.0';
@@ -3263,7 +3364,7 @@ class Widget extends DataRender {
     this.defaultMyOne = '与你一路同行';
 
     if (config.runsInApp) {
-      if (!this.settings['isLogin']) this.registerAction('账户登录', this.actionAccountLogin);
+      this.registerAction('账户登录', this.actionAccountLogin);
       if (this.settings['isLogin']) this.registerAction('偏好配置', this.actionPreferenceSettings);
       if (this.settings['isLogin']) this.registerAction('界面微调', this.actionUIRenderSettings);
       if (this.settings['isLogin']) this.registerAction('刷新数据', this.actionRefreshData);
