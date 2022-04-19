@@ -261,23 +261,6 @@ class DataRender extends UIRender {
 
     const getVehiclesStatusData = await this.getVehiclesStatus(debug)
 
-    let phonePosition
-    try {
-      const location = await Location.current()
-      phonePosition = {
-        longitude: location.longitude || 0,
-        latitude: location.latitude || 0
-      }
-      this.settings['phoneLongitude'] = location.longitude
-      this.settings['phoneLatitude'] = location.latitude
-      await this.saveSettings(false)
-    } catch(error) {
-      phonePosition = {
-        longitude: this.settings['phoneLongitude'],
-        latitude: this.settings['phoneLatitude']
-      }
-    }
-
     const vehiclesPosition = await this.getVehiclesPosition(debug)
 
     const data = {
@@ -303,12 +286,12 @@ class DataRender extends UIRender {
       showLocation,
       showLocationFormat,
       showPlate,
-      // 获取车辆经纬度 / 手机经纬度
-      ...(showLocation ? vehiclesPosition : phonePosition),
+      // 获取车辆经纬度
+      ...vehiclesPosition,
       // 获取车辆位置信息 / 手机位置信息
-      ...await this.getCarAddressInfo(showLocation ? vehiclesPosition : phonePosition, debug),
+      ...await this.getCarAddressInfo(vehiclesPosition, debug),
       // 获取静态位置图片
-      largeLocationPicture: this.getCarAddressImage(showLocation ? vehiclesPosition : phonePosition, debug)
+      largeLocationPicture: this.getCarAddressImage(vehiclesPosition, debug)
     }
     // 保存数据
     this.settings['widgetData'] = data
