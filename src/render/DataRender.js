@@ -287,11 +287,11 @@ class DataRender extends UIRender {
       showLocationFormat,
       showPlate,
       // 获取车辆经纬度
-      ...vehiclesPosition,
+      ...showLocation ? vehiclesPosition : {},
       // 获取车辆位置信息 / 手机位置信息
-      ...await this.getCarAddressInfo(vehiclesPosition, debug),
+      ...showLocation ? await this.getCarAddressInfo(vehiclesPosition, debug) : {},
       // 获取静态位置图片
-      largeLocationPicture: this.getCarAddressImage(vehiclesPosition, debug)
+      ...showLocation ? { largeLocationPicture: this.getCarAddressImage(vehiclesPosition, debug) } : {}
     }
     // 保存数据
     this.settings['widgetData'] = data
