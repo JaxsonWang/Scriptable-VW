@@ -683,10 +683,10 @@ class UIRender extends Core {
    * @return {string}
    */
   getCarAddressImage(location, debug = false) {
-    const longitude = location?.longitude || this.settings['longitude'] || this.settings['phoneLongitude'];
-    const latitude = location?.latitude || this.settings['latitude'] || this.settings['phoneLatitude'];
+    const longitude = location?.longitude || this.settings['longitude'];
+    const latitude = location?.latitude || this.settings['latitude'];
 
-    const aMapKey = this.settings['aMapKey']?.trim() || 'c078fb16379c25bc0aad8633d82cf1dd';
+    const aMapKey = this.settings['aMapKey']?.trim();
     const size = this.settings['largeMapType'] ? '500*280' : '100*60';
     const aMapUrl = `https://restapi.amap.com/v3/staticmap?key=${aMapKey}&markers=mid,0xFF0000,0:${longitude},${latitude}&size=${size}&scale=1&zoom=${this.getLocationMapZoom()}&traffic=1`;
     if (debug) {
@@ -1567,7 +1567,7 @@ class UIRender extends Core {
   async setLocationFormat() {
     const alert = new Alert();
     alert.title = '位置信息格式';
-    alert.message = '请输入组件所需要的位置信息格式，格式如下【国|省|市|区|乡镇|街道|社区|建筑】\n如不填写则默认显示标准位置信息';
+    alert.message = '请输入组件所需要的位置信息格式，格式如下【国|省|市|区|乡镇|街道|社区|建筑|区域】\n如不填写则默认显示标准位置信息';
     alert.addTextField('位置信息格式', this.settings['locationFormat']);
     alert.addAction('确定');
     alert.addCancelAction('取消');
@@ -1796,8 +1796,8 @@ class UIRender extends Core {
    * @return {Promise<{customAddress, completeAddress}|{customAddress: *, completeAddress: *}>}
    */
   async getCarAddressInfo(location, debug = false) {
-    const longitude = location?.longitude || this.settings['longitude'] || this.settings['phoneLongitude'];
-    const latitude = location?.latitude || this.settings['latitude'] || this.settings['phoneLatitude'];
+    const longitude = location?.longitude || this.settings['longitude'];
+    const latitude = location?.latitude || this.settings['latitude'];
 
     // 经纬度异常判断
     if (longitude === undefined || latitude === undefined) {
@@ -1807,15 +1807,16 @@ class UIRender extends Core {
       }
     }
 
-    const aMapKey = this.settings['aMapKey']?.trim() || 'c078fb16379c25bc0aad8633d82cf1dd';
+    const aMapKey = this.settings['aMapKey']?.trim();
     const options = {
-      url: `https://restapi.amap.com/v3/geocode/regeo?key=${aMapKey}&location=${longitude},${latitude}&radius=1000&extensions=base&batch=false&roadlevel=0`,
+      url: `https://restapi.amap.com/v3/geocode/regeo?key=${aMapKey}&location=${longitude},${latitude}&radius=1000&extensions=all&batch=false&roadlevel=0`,
       method: 'GET'
     };
     try {
       const response = await this.http(options);
       if (response.status === '1') {
         const addressComponent = response.regeocode.addressComponent;
+        const aois = response.regeocode.aois;
         let customAddress = '';
         const format = this.settings['locationFormat']?.split('|')?.map(item => {
           switch (item) {
@@ -1843,6 +1844,9 @@ class UIRender extends Core {
             case '建筑':
               item = 'building';
               break
+            case '区域':
+              item = 'aois';
+              break
           }
           return item
         });
@@ -1853,7 +1857,9 @@ class UIRender extends Core {
             } else if (item === 'building') {
               customAddress += (addressComponent[item].name || '');
             } else if (item === 'streetNumber') {
-              customAddress += ((addressComponent[item].street || '') + (addressComponent[item].number || ''));
+              customAddress += (addressComponent[item].street || '');
+            } else if (item === 'aois') {
+              customAddress += (aois[0]?.name || '');
             } else {
               customAddress += (addressComponent[item] || '');
             }
@@ -2593,43 +2599,46 @@ class UIRender extends Core {
       }
       rowRightStack.addSpacer();
       // endregion
-      // 地图/一言展示
-      const footerWrapperStack = this.addStackTo(widget, 'horizontal');
-      footerWrapperStack.setPadding(0, 0, 0, 0);
-      if (this.settings['largeMapType']) footerWrapperStack.addSpacer();
-      const footerStack = this.addStackTo(footerWrapperStack, 'horizontal');
-      footerStack.cornerRadius = this.getLocationBorderRadius();
-      this.setWidgetNodeColor(footerStack, 'borderColor', 0.25);
-      footerStack.borderWidth = 2;
-      footerStack.setPadding(0, 0, 0, 0);
-      footerStack.centerAlignContent();
-      if (this.settings['largeMapType']) {
-        const deviceScreen = Device.screenSize();
-        // 地图图片
-        footerStack.backgroundImage = await this.getImageByUrl(data.largeLocationPicture, false);
-        // 填充内容
-        const footerFillStack = this.addStackTo(footerStack, 'vertical');
-        footerFillStack.size = new Size(1, 60);
-        footerFillStack.addText(' ');
+      // region 地图
+      if (data.showLocation) {
+        const footerWrapperStack = this.addStackTo(widget, 'horizontal');
+        footerWrapperStack.setPadding(0, 0, 0, 0);
         if (this.settings['largeMapType']) footerWrapperStack.addSpacer();
-      } else {
-        const footerLeftStack = this.addStackTo(footerStack, 'vertical');
-        const locationImage = await this.getImageByUrl(data.largeLocationPicture, false);
-        const locationImageStack = footerLeftStack.addImage(locationImage);
-        locationImageStack.imageSize = new Size(100, 60);
-        locationImageStack.centerAlignImage();
+        const footerStack = this.addStackTo(footerWrapperStack, 'horizontal');
+        footerStack.cornerRadius = this.getLocationBorderRadius();
+        this.setWidgetNodeColor(footerStack, 'borderColor', 0.25);
+        footerStack.borderWidth = 2;
+        footerStack.setPadding(0, 0, 0, 0);
+        footerStack.centerAlignContent();
+        if (this.settings['largeMapType']) {
+          const deviceScreen = Device.screenSize();
+          // 地图图片
+          footerStack.backgroundImage = await this.getImageByUrl(data.largeLocationPicture, false);
+          // 填充内容
+          const footerFillStack = this.addStackTo(footerStack, 'vertical');
+          footerFillStack.size = new Size(1, 60);
+          footerFillStack.addText(' ');
+          if (this.settings['largeMapType']) footerWrapperStack.addSpacer();
+        } else {
+          const footerLeftStack = this.addStackTo(footerStack, 'vertical');
+          const locationImage = await this.getImageByUrl(data.largeLocationPicture, false);
+          const locationImageStack = footerLeftStack.addImage(locationImage);
+          locationImageStack.imageSize = new Size(100, 60);
+          locationImageStack.centerAlignImage();
+          footerStack.addSpacer();
+          // 地理位置
+          const footerRightStack = this.addStackTo(footerStack, 'horizontal');
+          footerRightStack.addSpacer();
+          const addressText = data.showLocationFormat ? data.customAddress : data.completeAddress;
+          const locationText = footerRightStack.addText(addressText);
+          this.setFontFamilyStyle(locationText, 12);
+          locationText.centerAlignText();
+          this.setWidgetNodeColor(locationText, 'textColor');
+          footerRightStack.addSpacer();
+        }
         footerStack.addSpacer();
-        // 地理位置
-        const footerRightStack = this.addStackTo(footerStack, 'horizontal');
-        footerRightStack.addSpacer();
-        const addressText = data.showLocationFormat ? data.customAddress : data.completeAddress;
-        const locationText = footerRightStack.addText(addressText);
-        this.setFontFamilyStyle(locationText, 12);
-        locationText.centerAlignText();
-        this.setWidgetNodeColor(locationText, 'textColor');
-        footerRightStack.addSpacer();
       }
-      footerStack.addSpacer();
+      // endregion
       // 一言
       const oneStack = this.addStackTo(widget, 'horizontal');
       oneStack.setPadding(10, 0, 0, 0);
@@ -2729,7 +2738,7 @@ class Widget extends UIRender {
     super(arg);
     this.name = 'Joiner 挂件';
     this.desc = 'Joiner 车辆桌面组件展示';
-    this.version = '1.1.5';
+    this.version = '1.1.6';
 
     this.myCarPhotoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/fvw_audi_default.png';
     this.myCarLogoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/logo_20211127.png';
