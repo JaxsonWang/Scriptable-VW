@@ -1,0 +1,148 @@
+@@include('header.htm')
+
+@@include('blocks/navigation.htm', {"home":"active"})
+
+<section class="section gradient-banner">
+	<div class="shapes-container">
+		<div class="shape" data-aos="fade-down-left" data-aos-duration="1500" data-aos-delay="100"></div>
+		<div class="shape" data-aos="fade-down" data-aos-duration="1000" data-aos-delay="100"></div>
+		<div class="shape" data-aos="fade-up-right" data-aos-duration="1000" data-aos-delay="200"></div>
+		<div class="shape" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="200"></div>
+		<div class="shape" data-aos="fade-down-left" data-aos-duration="1000" data-aos-delay="100"></div>
+		<div class="shape" data-aos="fade-down-left" data-aos-duration="1000" data-aos-delay="100"></div>
+		<div class="shape" data-aos="zoom-in" data-aos-duration="1000" data-aos-delay="300"></div>
+		<div class="shape" data-aos="fade-down-right" data-aos-duration="500" data-aos-delay="200"></div>
+		<div class="shape" data-aos="fade-down-right" data-aos-duration="500" data-aos-delay="100"></div>
+		<div class="shape" data-aos="zoom-out" data-aos-duration="2000" data-aos-delay="500"></div>
+		<div class="shape" data-aos="fade-up-right" data-aos-duration="500" data-aos-delay="200"></div>
+		<div class="shape" data-aos="fade-down-left" data-aos-duration="500" data-aos-delay="100"></div>
+		<div class="shape" data-aos="fade-up" data-aos-duration="500" data-aos-delay="0"></div>
+		<div class="shape" data-aos="fade-down" data-aos-duration="500" data-aos-delay="0"></div>
+		<div class="shape" data-aos="fade-up-right" data-aos-duration="500" data-aos-delay="100"></div>
+		<div class="shape" data-aos="fade-down-left" data-aos-duration="500" data-aos-delay="0"></div>
+	</div>
+	<div class="container">
+		<div class="row align-items-center">
+      <div class="col-md-6 text-center">
+        <img class="img-fluid" src="images/mobile.png" alt="screenshot">
+      </div>
+			<div class="col-md-6 text-center text-md-center">
+				<h1 class="text-white font-weight-bold mb-4">Joiner 系列 Scriptable 桌面小组件</h1>
+				<p class="text-white mb-5">在 iOS 桌面上时刻掌握一汽大众（VW）或一汽奥迪（Audi）车辆的状态</p>
+        <p>
+          <a href="#start" class="btn btn-main-md get-audi-joiner">获取挂件</a>
+        </p>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="section pt-0 position-relative pull-top">
+	<div class="container">
+		<div class="rounded shadow p-5 bg-white">
+			<div class="row">
+				<div class="col-lg-4 col-md-6 mt-5 mt-md-0 text-center">
+					<i class="ti-thought text-primary h1"></i>
+					<h3 class="mt-4 text-capitalize h5 ">实时同步</h3>
+					<p class="regular text-muted">小组件和您的车辆管理应用实时同步，随时可以查看车辆动态</p>
+				</div>
+				<div class="col-lg-4 col-md-6 mt-5 mt-md-0 text-center">
+					<i class="ti-shine text-primary h1"></i>
+					<h3 class="mt-4 text-capitalize h5 ">开源免费</h3>
+					<p class="regular text-muted">小组件已在 GitHub 社区开源，随时进行代码审查并且随时下载最新代码进行使用</p>
+				</div>
+				<div class="col-lg-4 col-md-12 mt-5 mt-lg-0 text-center">
+					<i class="ti-palette text-primary h1"></i>
+					<h3 class="mt-4 text-capitalize h5 ">风格多样</h3>
+					<p class="regular text-muted">具有多种风格，根据您的喜好进行配置选出最喜欢的风格</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<section class="feature section pt-0">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 mr-auto text-center align-self-center">
+        <h2>当前小组件版本</h2>
+        <div id="fvw-audi-version" class="version-text">一汽奥迪：v1.0.0</div>
+        <div id="fvw-version" class="version-text">一汽大众：v1.0.0</div>
+        <div id="comfort-version" class="version-text">体验版：v1.0.0</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="feature section pt-0 mt-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 mr-auto text-center align-self-center">
+        <div id="start" class="feature-content">
+          <p class="mx-auto mt-3 mb-0" style="font-weight: bold;color: red;">⚠️️️⚠️️️⚠️️️</p>
+          <p class="mx-auto my-0" style="font-weight: bold;color: red;">请务必确认自己车辆已经开通车联网️️</p>
+          <p class="mx-auto mb-3 mt-0" style="font-weight: bold;color: red;">登陆车辆管理应用的管理页面能看到自己车辆续航燃料等信息，就是已经激活车联网</p>
+          <h2>1. 安装 Scriptable 应用</h2>
+          <a href="https://apps.apple.com/cn/app/scriptable/id1405459188" target="_blank">
+            <img src="images/appple-store.jpeg" alt="app store">
+          </a>
+          <p class="m-5">Scriptable 可以让您脑海中所有想法展示出来，我所开发的小组件基于该平台运行</p>
+        </div>
+        <div class="feature-content">
+          <h2>2. 安装 Joiner 下载器</h2>
+          <textarea id="js" readonly class="d-none">const alert = new Alert();
+alert.title = '大众集团 iOS 桌面挂件下载器';
+alert.message = '根据您的对应车企进行下载对应的脚本';
+const menuList = [
+  {
+    name: 'FVW-Audi-Joiner.js',
+    text: '一汽奥迪'
+  },
+  {
+    name: 'FVW-Joiner.js',
+    text: '一汽大众'
+  },
+  {
+    name: 'Comfort-Joiner.js',
+    text: '体验版'
+  }
+];
+menuList.forEach(item => {
+  alert.addAction(item.text);
+});
+const menuId = await alert.presentSheet();
+const obj = menuList[menuId];
+const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']();
+let REQ = new Request(`https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/${encodeURIComponent(obj.name)}`);
+const RES = await REQ.load();
+FILE_MGR.write(FILE_MGR.joinPath(FILE_MGR.documentsDirectory(), obj.name), RES);
+FILE_MGR.remove(module.filename);
+Safari.open('scriptable:///run?scriptName='+encodeURIComponent(obj.name[0]));
+          </textarea>
+          <a id="copy" class="btn btn-success mt-3">复制代码</a>
+          <p class="mt-5"><strong>点击上面按钮进行复制代码</strong></p>
+        </div>
+        <div class="feature-content">
+          <h2>3. 执行 Joiner 下载器</h2>
+          <a id="open" href="scriptable:///add?scriptName=AudiJoinerInstaller" class="btn btn-primary">打开 Scriptable</a>
+          <p class="m-5"><strong>点击上面按钮后，在 Scriptable 应用点击 ➕，粘贴，运行 ▶️</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="feature section pt-0">
+	<div class="container">
+		<div class="row">
+      <div class="col-lg-12 mr-auto text-center align-self-center">
+        <h2>视频教程</h2>
+        <iframe class="w-100" style="height: 600px" src="//player.bilibili.com/player.html?aid=422112002&bvid=BV1V341147du&cid=452723435&page=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+      </div>
+		</div>
+	</div>
+</section>
+
+@@include('blocks/footer.htm')
+
+@@include('footer.htm')

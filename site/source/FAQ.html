@@ -1,0 +1,260 @@
+@@include('header.htm')
+
+@@include('blocks/navigation.htm', {"faq" : "active"})
+
+@@include('blocks/page-title.htm',{
+	"title"		: "Joiner  小组件疑难解答",
+	"description" : "在这里将会收集一些常见的问题解答，点开问题标题即可查看详细解答"
+})
+
+<!--=================================
+=            FAQ Section            =
+==================================-->
+<section class="faq section pt-0">
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-10 m-auto">
+				<div class="block shadow">
+					<div class="faq-item">
+						<div class="faq-item-title">
+							<h2>
+								Scriptable 应用
+							</h2>
+						</div>
+						<div id="gstAccordion" data-children=".item">
+						  <div class="item">
+						  	<div class="item-link">
+							    <a data-toggle="collapse" data-parent="#gstAccordion" href="#gstAccordion1">
+                    Scriptable 应用收费吗？为什么是英文的？
+							    </a>
+						  	</div>
+						    <div id="gstAccordion1" class="collapse show accordion-block">
+						      <p>
+						        目前 Scriptable 应用是免费的，作者后续会添加简体中文支持，不过这也没关系，因为用上 Joiner 小组件接触到 Scriptable 核心内容很少，无需担心软件带来心智负担的问题。
+						      </p>
+						    </div>
+						  </div>
+						  <div class="item">
+						  	<div class="item-link">
+							    <a data-toggle="collapse" data-parent="#gstAccordion" href="#gstAccordion2">
+                    运行脚本或者打开软件提示：「Access to contacts is not granted. Grant access from the system Settings.」问题？
+							    </a>
+						  	</div>
+						    <div id="gstAccordion2" class="collapse accordion-block">
+						      <p class="pb-0">
+                    1. 请到「设置 - 隐私 - 通讯录」找到 Scriptable 应用赋予权限
+						      </p>
+                  <p class="pt-0">
+                    2. 请到「设置—通知—scriptable」 打开通知。
+                  </p>
+						    </div>
+						  </div>
+						</div>
+					</div>
+					<div class="faq-item">
+						<div class="faq-item-title">
+							<h2>
+								Joiner 小组件
+							</h2>
+						</div>
+						<div id="accountAccordion" data-children=".item">
+						  <div class="item">
+						  	<div class="item-link">
+							    <a data-toggle="collapse" data-parent="#accountAccordion" href="#accountAccordion1">
+                    Joiner 小组件是否存在安全性问题？
+							    </a>
+						  	</div>
+						    <div id="accountAccordion1" class="collapse accordion-block">
+						      <p>
+						        目前 Joiner 小组件代码社区开源，没有后门也没有广告，安全透明，并且编译的代码没有混淆，欢迎大家来审查代码！
+						      </p>
+						    </div>
+						  </div>
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#accountAccordion2">
+                    为什么我的车辆位置信息一直不出现？
+                  </a>
+                </div>
+                <div id="accountAccordion2" class="collapse accordion-block">
+                  <p class="pb-0">1. 例如首先打开一汽奥迪 - 用车 - 更多功能 - 车辆定位 是否正确显示车辆位置，大众根据自己情况而定。</p>
+                  <p class="py-0">2. 如果不能，则需要车上的 mib 系统关闭隐私选项，并且开启车辆位置开关</p>
+                  <p class="py-0">3. 如果还不能请确保车辆是否自带导航功能，不带定位功能被阉割</p>
+                  <p class="py-0">4. 如果上述描述都正常，请申请高德 key 密钥，后期版本不内置，请自行注册高德 key。</p>
+                  <p class="pt-0">5. 如果上面不管用，可能你的车设备出现问题</p>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#accountAccordion5">
+                    高德 Key 是什么，如何去申请它？
+                  </a>
+                </div>
+                <div id="accountAccordion5" class="collapse accordion-block">
+                  <p class="pb-0">目前服务器返回的数据是经纬度</p>
+                  <p class="py-0">这个高德 key 密钥是可以通过高德服务器的逆地理编码，查出来具体的位置/p>
+                  <p class="py-0">如果你不填写高德 key，地址是默认不显示的，提前是你的车辆返回的经纬度是正常的。</p>
+                  <p class="py-0">具体申请教程可以查阅如下：</p>
+                  <p class="py-0">官方教程：<a href="https://lbs.amap.com/api/webservice/guide/create-project/get-key" target="_blank" rel="nofollow">https://lbs.amap.com/api/webservice/guide/create-project/get-key</a></p>
+                  <p class="pt-0">图文并茂：<a href="https://docs.qq.com/doc/DQWJjS2hSbE9QSGJo" target="_blank" rel="nofollow">https://docs.qq.com/doc/DQWJjS2hSbE9QSGJo</a></p>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#accountAccordion3">
+                    出现莫名其妙的红色错误怎么办？
+                  </a>
+                </div>
+                <div id="accountAccordion3" class="collapse accordion-block">
+                  <p>
+                    能正常使用小组件提前需要你的车辆管理应用中的用车功能是正常的，即能看到续航、燃料、锁车车窗等状态，如果应用都不能正常显示，那么小组件也无法正常显示。
+                  </p>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#accountAccordion4">
+                    为什么要准备俩个车辆管理（例如一汽奥迪、一汽大众等）账户
+                  </a>
+                </div>
+                <div id="accountAccordion4" class="collapse accordion-block">
+                  <p class="pb-0">目前大众集团车辆应用支持单点登陆，即设备A登陆账户，如果设备B再登陆会把设备A的账户挤出去。</p>
+                  <p class="py-0">所以建议再注册一个大众集团车辆的账户，例如：一汽奥迪 - 用车 - 更多功能 - 用户管理 - 添加授权用户。</p>
+                  <p class="pt-0">这个授权用户只用于小组件登陆使用，这样不会出现顶号并且组件莫名其妙报错的问题。</p>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#carImages">
+                    奥迪车辆照片收集
+                  </a>
+                </div>
+                <div id="carImages" class="collapse accordion-block">
+                  <p class="pb-0">
+                    点击访问：<a href="https://www.aliyundrive.com/s/u3ssBhGtqUK" target="_blank">https://www.aliyundrive.com/s/u3ssBhGtqUK</a>
+                  </p>
+                  <div class="audi-car-images-list"></div>
+                  <p class="pt-0">
+                    云盘含有全透明图片，用于隐藏车辆图片
+                  </p>
+                </div>
+              </div>
+						</div>
+					</div>
+          <div class="faq-item">
+            <div class="faq-item-title">
+              <h2>
+                快捷指令
+              </h2>
+            </div>
+            <div id="siriContent" data-children=".item">
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#siriContent1">
+                    怎么和 Siri 进行交互呢？
+                  </a>
+                </div>
+                <div id="siriContent1" class="collapse accordion-block">
+                  <p>
+                    目前「FVW Joiner v1.0.0」第一版本支持，而「FVW Audi Joiner v1.3.0」以上版本包括此版本支持和系统的 Siri 交互，请到脚本的弹窗脚本进行检查版本。
+                  </p>
+                  <p>
+                    然后进行在下列资源列表下载快捷指令导入就可以使用了。
+                  </p>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#siriContent2">
+                    如果用「Joiner」小组件和「Siri」进行交互需要注意什么？
+                  </a>
+                </div>
+                <div id="siriContent2" class="collapse accordion-block">
+                  <p>
+                    除了版本限制以外，还要保证「FVW Audi Joiner」、「FVW Joiner」的脚本名称是不允许更改的，否则快捷指令无法使用。
+                  </p>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#siriContent4">
+                    如果我想根据「Joiner」自定义新的快捷指令，怎么设计？
+                  </a>
+                </div>
+                <div id="siriContent4" class="collapse accordion-block">
+                  <p class="pb-0">
+                    目前脚本只把车辆的基本信息暴露出来，作为一个词典数据（也叫 JSON 格式数据），目前数据格式如下：
+                  </p>
+                  <pre>
+{
+  size: '', // 暂无用处
+  seriesName: '', // 车辆名称
+  modelShortName: '', // 车辆功率
+  vin: '', // 车架号
+  plateNo: '', // 车牌号码
+  endurance: 0, // 当前车辆续航
+  fuelLevel: 0, // 当前燃油/电池容量
+  oilLevel: undefined, // 机油信息（如果出现 undefined 则车辆不支持显示）
+  mileage: 0, // 当前车辆总里程
+  updateDate: '', // 更新日期
+  carSimpleLocation: '', // 简洁的地理位置
+  carCompleteLocation: '', // 完整的地理位置
+  longitude: '', // 车辆纬度
+  latitude: '', // 车辆经度
+  status: true, // 车辆锁车状态 布尔值 true = 已锁车 false = 未锁车
+  doorAndWindow: '', // 车窗状态 布尔值 true = 车门车窗已关闭 false = 车门车窗没有关闭
+  myOne: 'xxxx' // 一言
+}
+                </pre>
+                </div>
+              </div>
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#siriContent3">
+                    快捷指令下载列表（如果你制作好的快捷指令可以和开发者分享到此网站）
+                  </a>
+                </div>
+                <div id="siriContent3" class="collapse accordion-block">
+                  <p class="pt-0">
+                    一汽奥迪专属：「嘿 Siri，我的车状态如何」：<a href="https://www.icloud.com/shortcuts/2830ed8e802048a28c02f5d5ade73a5a" target="_blank">点击打开</a>
+                  </p>
+                  <p class="pb-0">
+                    一汽大众专属：「嘿 Siri，我的车状态如何」：<a href="https://www.icloud.com/shortcuts/880f11ccf3034ec4a2b627959685a8b2" target="_blank">点击打开</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-item-title">
+              <h2>
+                联系方式
+              </h2>
+            </div>
+            <div id="contactAccordion" data-children=".item">
+              <div class="item">
+                <div class="item-link">
+                  <a data-toggle="collapse" data-parent="#accountAccordion" href="#contactAccordion1">
+                    怎么进入小组件交流群？
+                  </a>
+                </div>
+                <div id="contactAccordion1" class="collapse accordion-block">
+                  <p class="text-center">
+                    <img src="https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/groups/Joiner.png" class="donation-image" alt="png" />
+                  </p>
+                  <p class="text-center">
+                    添加群主微信，加入小组件交流群
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+@@include('blocks/footer.htm')
+
+@@include('footer.htm')

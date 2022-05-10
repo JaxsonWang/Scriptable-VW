@@ -1,0 +1,21 @@
+{
+  "name": "themefisher-boilerplate-free",
+  "version": "2.2.3",
+  "description": "Gulp environment for running HTML themes by themefisher",
+  "keywords": [
+    "gulp",
+    "frontend"
+  ],
+  "author": "Themefisher",
+  "license": "MIT",
+  "dependencies": {
+    "browser-sync": "^2.27.5",
+    "gulp": "^4.0.2",
+    "gulp-autoprefixer": "^8.0.0",
+    "gulp-file-include": "^2.3.0",
+    "gulp-sass": "^5.0.0",
+    "gulp-sourcemaps": "^3.0.0",
+    "sass": "^1.37.5",
+    "rimraf": "^3.0.2"
+  }
+}
