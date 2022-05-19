@@ -160,7 +160,7 @@ const md5 = string => {
 class Core {
   constructor(arg = '') {
     this.arg = arg;
-    this.staticUrl = 'https://cdn.staticaly.com/gh/JaxsonWang/Scriptable-VW/master';
+    this.staticUrl = 'https://gitlab.com/JaxsonWang/Scriptable-VW/-/raw/master';
     this._actions = {};
     this.init();
   }
@@ -522,7 +522,7 @@ class UIRender extends Core {
     this.locationBorderRadius = 15;
     this.locationMapZoom = 12;
 
-    this.version = '2.4.0';
+    this.version = '2.4.1';
   }
 
   /**
