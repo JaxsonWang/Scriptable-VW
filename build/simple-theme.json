@@ -1,9 +1,8 @@
 {
   "inherit": true,
-  "version": "1.0.5",
-  "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/Simple.js",
+  "version": "1.0.6",
+  "download": "https://cdn.staticaly.com/gh/JaxsonWang/Scriptable-VW/master/build/Simple.js",
   "changelog": [
-    "1. 更新资源源地址",
-    "2. 支持文字和图标描述展示"
+    "1. 支持自定义资源源地址"
   ]
 }

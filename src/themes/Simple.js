@@ -13,7 +13,7 @@ class Widget extends Core {
     this.desc = '依赖 Joiner 组件，额外支持全新风格主题'
 
     this.appSettings = this.settings['parentSettings'] ? this.getSettings(true, md5(this.settings['parentSettings'])) : null
-    this.version = '1.0.5'
+    this.version = '1.0.6'
 
     if (config.runsInApp) {
       this.registerAction('引用组件', this.setParentSettings)
@@ -211,13 +211,13 @@ class Widget extends Core {
     const scriptName = this.appSettings['scriptName']
     switch (scriptName) {
       case 'FVW-Audi-Joiner':
-        myCarPhoto = await this.getImageByUrl('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/fvw_audi_default.png')
+        myCarPhoto = await this.getImageByUrl(`${this.getStaticUrl()}/build/assets/images/fvw_audi_default.png`)
         break
       case 'FVW-Joiner':
-        myCarPhoto = await this.getImageByUrl('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/fvw_default.png')
+        myCarPhoto = await this.getImageByUrl(`${this.getStaticUrl()}/build/assets/images/fvw_default.png`)
         break
       case 'SVW-Joiner':
-        myCarPhoto = await this.getImageByUrl('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/svw_default.png')
+        myCarPhoto = await this.getImageByUrl(`${this.getStaticUrl()}/build/assets/images/svw_default.png`)
         break
     }
     if (this.appSettings['myCarPhoto']) myCarPhoto = await FileManager.local().readImage(this.appSettings['myCarPhoto'])
@@ -234,13 +234,13 @@ class Widget extends Core {
     const scriptName = this.appSettings['scriptName']
     switch (scriptName) {
       case 'FVW-Audi-Joiner':
-        myCarLogo = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/logo_20211127.png'
+        myCarLogo = `${this.getStaticUrl()}/build/assets/images/logo_20211127.png`
         break
       case 'FVW-Joiner':
-        myCarLogo = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/vw_logo.png'
+        myCarLogo = `${this.getStaticUrl()}/build/assets/images/vw_logo.png`
         break
       case 'SVW-Joiner':
-        myCarLogo = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/vw_logo.png'
+        myCarLogo = `${this.getStaticUrl()}/build/assets/images/vw_logo.png`
         break
     }
     return myCarLogo
@@ -270,7 +270,7 @@ class Widget extends Core {
    * @returns {Promise<Image>}
    */
   async getSFSymbolImage(sfSymbolName) {
-    return await this.getImageByUrl(`https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/joiner_v2/${sfSymbolName}@2x.png`)
+    return await this.getImageByUrl(`${this.getStaticUrl()}/build/assets/joiner_v2/${sfSymbolName}%402x.png`)
   }
 
   /**
@@ -290,6 +290,10 @@ class Widget extends Core {
       {
         name: 'FVW-Joiner',
         text: '一汽大众'
+      },
+      {
+        name: 'SVW-Joiner',
+        text: '上汽大众'
       },
       {
         name: 'Comfort-Joiner',
@@ -411,7 +415,7 @@ class Widget extends Core {
    */
   async actionCheckUpdate() {
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
-    const request = new Request('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/simple-theme.json')
+    const request = new Request(`${this.getStaticUrl()}/build/simple-theme.json`)
     const response = await request.loadJSON()
     console.log(`远程版本：${response?.version}`)
     if (response?.version === this.version) return this.notify('无需更新', '远程版本一致，暂无更新')
@@ -447,7 +451,7 @@ class Widget extends Core {
    * @return {string}
    */
   simpleTemplatePath(name) {
-    return 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/simple/' + name + '.png'
+    return `${this.getStaticUrl()}/build/assets/simple/${name}.png`
   }
 
   /**

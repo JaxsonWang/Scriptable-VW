@@ -10,13 +10,12 @@ class Widget extends DataRender {
     super(arg)
     this.name = 'Audi 挂件'
     this.desc = 'Audi 车辆桌面组件展示'
-    this.version = '2.3.9'
 
     this.appName = 'MyAuDi'
     this.appVersion = '3.0.2'
 
-    this.myCarPhotoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/fvw_audi_default.png'
-    this.myCarLogoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/logo_20211127.png'
+    this.myCarPhotoUrl = `${this.getStaticUrl()}/build/assets/images/fvw_audi_default.png`
+    this.myCarLogoUrl = `${this.getStaticUrl()}/build/assets/images/logo_20211127.png`
     this.logoWidth = 40
     this.logoHeight = 14
 

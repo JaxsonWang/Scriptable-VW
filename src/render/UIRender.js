@@ -17,6 +17,8 @@ class UIRender extends Core {
     this.defaultMyOne = ''
     this.locationBorderRadius = 15
     this.locationMapZoom = 12
+
+    this.version = '2.4.0'
   }
 
   /**
@@ -315,7 +317,7 @@ class UIRender extends Core {
    * @returns {Promise<Image>}
    */
   async getSFSymbolImage(sfSymbolName) {
-    return await this.getImageByUrl(`https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/joiner_v2/${sfSymbolName}@2x.png`)
+    return await this.getImageByUrl(`${this.getStaticUrl()}/build/assets/joiner_v2/${sfSymbolName}%402x.png`)
   }
 
   /**
@@ -348,7 +350,7 @@ class UIRender extends Core {
   async actionDownloadThemes() {
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
 
-    const request = new Request('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/themes.json')
+    const request = new Request(`${this.getStaticUrl()}/build/themes.json`)
     const response = await request.loadJSON()
     const themes = response['themes']
 
@@ -503,6 +505,11 @@ class UIRender extends Core {
 
     const menuList = [
       {
+        name: 'setStaticUrl',
+        text: '自定义资源地址',
+        icon: '🛠'
+      },
+      {
         name: 'setMyCarName',
         text: '自定义车辆名称',
         icon: '💡'
@@ -619,6 +626,26 @@ class UIRender extends Core {
     const id = await alert.presentSheet()
     if (id === -1) return
     await this[menuList[id].name]()
+  }
+
+  /**
+   * 自定义资源地址
+   * @returns {Promise<void>}
+   */
+  async setStaticUrl() {
+    const alert = new Alert()
+    alert.title = '资源地址'
+    alert.message = '如果你所用的资源服务器无法正常使用，可以自行定义资源服务器地址'
+    alert.addTextField('请输入自定义资源地址', this.settings['staticUrl'] || this.staticUrl)
+    alert.addAction('确定')
+    alert.addCancelAction('取消')
+
+    const id = await alert.presentAlert()
+    if (id === -1) return await this.actionPreferenceSettings()
+    this.settings['staticUrl'] = alert.textFieldValue(0) || this.staticUrl
+    await this.saveSettings()
+
+    return await this.actionPreferenceSettings()
   }
 
   /**
@@ -1264,7 +1291,7 @@ class UIRender extends Core {
   async checkUpdate(jsonName) {
     const fileName = Script.name() + '.js'
     const FILE_MGR = FileManager[module.filename.includes('Documents/iCloud~') ? 'iCloud' : 'local']()
-    const request = new Request(`https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/${jsonName}.json`)
+    const request = new Request(`${this.getStaticUrl()}/build/${jsonName}.json`)
     const response = await request.loadJSON()
     console.log(`远程版本：${response?.version}`)
     if (response?.version === this.version) return this.notify('无需更新', '远程版本一致，暂无更新')
@@ -2169,7 +2196,7 @@ class UIRender extends Core {
   async renderEmpty() {
     const widget = new ListWidget()
 
-    widget.backgroundImage = await this.shadowImage(await this.getImageByUrl('https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/fvw_audi_default.png'))
+    widget.backgroundImage = await this.shadowImage(await this.getImageByUrl(`${this.getStaticUrl()}/build/assets/images/fvw_audi_default.png`))
 
     const text = widget.addText('欢迎使用 Joiner 系列汽车组件')
     switch (this.widgetFamily) {

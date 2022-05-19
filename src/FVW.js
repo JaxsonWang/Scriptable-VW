@@ -10,13 +10,12 @@ class Widget extends DataRender {
     super(arg)
     this.name = '一汽大众挂件'
     this.desc = '一汽大众车辆桌面组件展示'
-    this.version = '2.2.7'
 
     this.appName = 'BootstrapApp'
     this.appVersion = '1.0'
 
-    this.myCarPhotoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/fvw_default.png'
-    this.myCarLogoUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/assets/images/vw_logo.png'
+    this.myCarPhotoUrl = `${this.getStaticUrl()}/build/assets/images/fvw_default.png`
+    this.myCarLogoUrl = `${this.getStaticUrl()}/build/assets/images/vw_logo.png`
     this.logoWidth = 14
     this.logoHeight = 14
 

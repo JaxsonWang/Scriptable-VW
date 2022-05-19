@@ -3,6 +3,7 @@ import md5 from '../utils/md5'
 class Core {
   constructor(arg = '') {
     this.arg = arg
+    this.staticUrl = 'https://cdn.staticaly.com/gh/JaxsonWang/Scriptable-VW/master'
     this._actions = {}
     this.init()
   }
@@ -112,6 +113,14 @@ class Core {
       result = `${u}?${q}`
     }
     return result
+  }
+
+  /**
+   * 获取资源服务器地址
+   * @returns {string}
+   */
+  getStaticUrl() {
+    return this.settings['staticUrl'] || this.staticUrl
   }
 
   /**
@@ -239,7 +248,7 @@ class Core {
         text: '版权说明',
         title: '版权说明',
         message: '\n' +
-          'Joiner 小组件是开源免费的，由大众系粉丝车主兴趣开发，所有责任与一汽奥迪、一汽大众等大众集团车企无关。\n' +
+          'Joiner 小组件是开源免费的，由大众系粉丝车主兴趣开发，所有责任与一汽奥迪、一汽大众、上汽大众等大众集团车企无关。\n' +
           'Joiner 小组件不会收集您的个人账户信息，所有账号信息将存在 iCloud 或者 iPhone 上但也请您妥善保管自己的账号。\n' +
           'Joiner 小组件会不定期推出新功能，如果车企官方推出了小组件，Joiner 将会停止更新与支持。\n' +
           '如果市面上第三方开发组件和本组件没有任何关系，请认证开发者《淮城一只猫》所开发的 Joiner 小组件。\n' +

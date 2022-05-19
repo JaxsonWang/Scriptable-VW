@@ -1,8 +1,8 @@
 {
   "inherit": true,
-  "version": "2.2.7",
-  "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/FVW-Joiner.js",
+  "version": "2.4.0",
+  "download": "https://cdn.staticaly.com/gh/JaxsonWang/Scriptable-VW/master/build/FVW-Joiner.js",
   "changelog": [
-    "1. 禁用地图关闭"
+    "1. 支持自定义资源源地址"
   ]
 }
