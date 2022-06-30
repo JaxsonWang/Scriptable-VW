@@ -1,0 +1,8 @@
+{
+  "inherit": true,
+  "version": "2.4.1",
+  "download": "https://gitlab.com/JaxsonWang/Scriptable-VW/-/raw/master/build/FVW-Joiner.js",
+  "changelog": [
+    "1. 支持自定义资源源地址"
+  ]
+}
