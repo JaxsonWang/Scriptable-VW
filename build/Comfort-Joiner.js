@@ -2989,7 +2989,7 @@ class Widget extends UIRender {
    * 检查更新
    */
   async actionCheckUpdate() {
-    await this.checkUpdate('comfort-version');
+    await this.checkUpdate('joiner-version');
   }
 
   /**

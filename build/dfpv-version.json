@@ -1,6 +1,6 @@
 {
   "inherit": true,
-  "version": "2.4.3",
+  "version": "2.4.4",
   "download": "https://gitlab.com/JaxsonWang/Scriptable-VW/-/raw/master/build/FVW-Audi-Joiner.js",
   "changelog": [
     "1. 更换 jsdelivr 服务器作为资源服务器",

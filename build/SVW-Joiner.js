@@ -3727,7 +3727,7 @@ class Widget extends DataRender {
    * 检查更新
    */
   async actionCheckUpdate() {
-    await this.checkUpdate('svw-version');
+    await this.checkUpdate('joiner-version');
   }
 
   /**

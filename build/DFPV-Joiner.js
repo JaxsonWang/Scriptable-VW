@@ -3194,7 +3194,7 @@ class Widget extends UIRender {
    * 检查更新
    */
   async actionCheckUpdate() {
-    await this.checkUpdate('dfpv-version');
+    await this.checkUpdate('joiner-version');
   }
 
   /**
