@@ -160,7 +160,7 @@ const md5 = string => {
 class Core {
   constructor(arg = '') {
     this.arg = arg;
-    this.staticUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest';
+    this.staticUrl = 'https://gitlab.com/JaxsonWang/Scriptable-VW/-/raw/master';
     this._actions = {};
     this.init();
   }
@@ -545,7 +545,7 @@ class Widget extends Core {
     this.desc = '依赖 Joiner 组件，额外支持全新风格主题';
 
     this.appSettings = this.settings['parentSettings'] ? this.getSettings(true, md5(this.settings['parentSettings'])) : null;
-    this.version = '1.0.8';
+    this.version = '1.0.9';
 
     if (config.runsInApp) {
       this.registerAction('引用组件', this.setParentSettings);

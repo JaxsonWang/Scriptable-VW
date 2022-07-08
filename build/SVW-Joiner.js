@@ -531,7 +531,7 @@ class UIRender extends Core {
     this.locationBorderRadius = 15;
     this.locationMapZoom = 12;
 
-    this.version = '2.4.5';
+    this.version = '2.4.6';
   }
 
   /**
@@ -2204,7 +2204,7 @@ class UIRender extends Core {
       if (data.fuelLevel) {
         carInfoTextStack.spacing = 4;
         const fuelStack = this.addStackTo(carInfoTextStack, 'horizontal');
-        fuelStack.setPadding(0, 0, 2, 0);
+        // fuelStack.setPadding(0, 0, 0, 0)
         const fuelText = fuelStack.addText(`${data.fuelLevel}%`);
         this.setFontFamilyStyle(fuelText, 12, 'regular');
         this.setWidgetNodeColor(fuelText, 'textColor');
@@ -2585,8 +2585,8 @@ class UIRender extends Core {
         const dataPackageText = dataPackageTextStack.addText(data.dataPackage);
         this.setFontFamilyStyle(dataPackageText, 14, 'regular');
         this.setWidgetNodeColor(dataPackageText, 'textColor');
+        rowLeftStack.addSpacer(5);
       }
-      rowLeftStack.addSpacer(5);
       // endregion
       // region 数据更新日期
       const dateTimeStack = this.addStackTo(rowLeftStack, 'horizontal');
@@ -3727,7 +3727,7 @@ class Widget extends DataRender {
    * 检查更新
    */
   async actionCheckUpdate() {
-    await this.checkUpdate('joiner-version');
+    await this.checkUpdate('svw-version');
   }
 
   /**
