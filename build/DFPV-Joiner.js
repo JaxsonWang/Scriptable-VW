@@ -160,7 +160,7 @@ const md5 = string => {
 class Core {
   constructor(arg = '') {
     this.arg = arg;
-    this.staticUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest';
+    this.staticUrl = 'https://gitlab.com/JaxsonWang/Scriptable-VW/-/raw/master';
     this._actions = {};
     this.init();
   }
@@ -531,7 +531,7 @@ class UIRender extends Core {
     this.locationBorderRadius = 15;
     this.locationMapZoom = 12;
 
-    this.version = '2.4.2';
+    this.version = '2.4.3';
   }
 
   /**
@@ -3194,7 +3194,7 @@ class Widget extends UIRender {
    * 检查更新
    */
   async actionCheckUpdate() {
-    await this.checkUpdate('svw-version');
+    await this.checkUpdate('dfpv-version');
   }
 
   /**

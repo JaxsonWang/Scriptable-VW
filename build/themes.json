@@ -4,8 +4,8 @@
     {
       "name": "简约风格",
       "fileName": "简约风格.js",
-      "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/Simple.js",
-      "logs": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/simple-theme.json"
+      "download": "https://gitlab.com/JaxsonWang/Scriptable-VW/-/raw/master/build/Simple.js",
+      "logs": "https://gitlab.com/JaxsonWang/Scriptable-VW/-/raw/master/build/simple-theme.json"
     }
   ]
 }

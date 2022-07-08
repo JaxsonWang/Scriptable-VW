@@ -1,7 +1,7 @@
 {
   "inherit": true,
-  "version": "2.4.2",
-  "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/Comfort-Joiner.js",
+  "version": "2.4.3",
+  "download": "https://gitlab.com/JaxsonWang/Scriptable-VW/-/raw/master/build/Comfort-Joiner.js",
   "changelog": [
     "1. 更换 jsdelivr 服务器作为资源服务器",
     "2. 修复暂无位置的时候大组件出现红色方块或者全红背景图的问题",
