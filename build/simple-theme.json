@@ -1,9 +1,0 @@
-{
-  "inherit": true,
-  "version": "1.0.9",
-  "download": "https://gitlab.com/JaxsonWang/Scriptable-VW/-/raw/master/build/Simple.js",
-  "changelog": [
-    "1. 更换 gitlab 服务器作为资源服务器",
-    "2. 支持东风风神车辆支持"
-  ]
-}
