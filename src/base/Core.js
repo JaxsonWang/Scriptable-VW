@@ -161,6 +161,11 @@ class Core {
       FileManager.local().writeImage(cacheFile, img)
       return img
     } catch (e) {
+      // 失败了先尝试获取缓存历史数据，fix无网络情况下图片会变为红色背景的问题
+      if (FileManager.local().fileExists(cacheFile)) {
+        return Image.fromFile(cacheFile)
+      }
+
       // 没有缓存+失败情况下，返回自定义的绘制图片（红色背景）
       let ctx = new DrawContext()
       ctx.size = new Size(100, 100)
