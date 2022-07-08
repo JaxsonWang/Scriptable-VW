@@ -160,7 +160,7 @@ const md5 = string => {
 class Core {
   constructor(arg = '') {
     this.arg = arg;
-    this.staticUrl = 'https://gitlab.com/JaxsonWang/Scriptable-VW/-/raw/master';
+    this.staticUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest';
     this._actions = {};
     this.init();
   }
@@ -200,7 +200,7 @@ class Core {
    * @param { 'regular' || 'bold' } type
    */
   setFontFamilyStyle(widget, size, type = 'regular') {
-    const regularFont = this.settings['regularFont'] || 'PingFangSC-Regular ';
+    const regularFont = this.settings['regularFont'] || 'PingFangSC-Regular';
     const boldFont = this.settings['boldFont'] || 'PingFangSC-Semibold';
 
     widget.font = new Font(type === 'regular' ? regularFont : boldFont, size);
@@ -278,6 +278,15 @@ class Core {
    */
   getStaticUrl() {
     return this.settings['staticUrl'] || this.staticUrl
+  }
+
+  /**
+   * 数据类型判断
+   * @param data
+   * @returns {boolean}
+   */
+  isExist(data) {
+    return data !== undefined && data !== null && data !== ''
   }
 
   /**
@@ -536,7 +545,7 @@ class Widget extends Core {
     this.desc = '依赖 Joiner 组件，额外支持全新风格主题';
 
     this.appSettings = this.settings['parentSettings'] ? this.getSettings(true, md5(this.settings['parentSettings'])) : null;
-    this.version = '1.0.6';
+    this.version = '1.0.8';
 
     if (config.runsInApp) {
       this.registerAction('引用组件', this.setParentSettings);
@@ -676,22 +685,24 @@ class Widget extends Core {
     const rightBottomStack = this.addStackTo(rightStack, 'horizontal');
     rightBottomStack.addSpacer();
     const statusStack = this.addStackTo(rightBottomStack, 'horizontal');
-    statusStack.centerAlignContent();
-    statusStack.backgroundColor = new Color('#ffffff', 0.25);
-    statusStack.borderColor = data.isLocked ? new Color('#ffffff', 0.5) : this.dangerColor(0.5);
-    statusStack.borderWidth = 2;
-    statusStack.cornerRadius = 5;
-    statusStack.setPadding(5, 15, 5, 15);
-    statusStack.centerAlignContent();
-    // 锁车解锁图标
-    const statusIcon = statusStack.addImage(data.isLocked ? await this.getSFSymbolImage('lock.fill') : await this.getSFSymbolImage('lock.open.fill'));
-    statusIcon.imageSize = new Size(18, 18);
-    statusIcon.tintColor = data.isLocked ? new Color('#ffffff', 0.5) : this.dangerColor(1);
-    statusStack.spacing = 5;
-    const statusText = statusStack.addText(data.isLocked ? isEn ? 'Car locked' : '已锁车' : isEn ? 'Car unlocked' : '未锁车');
-    statusText.font = isEn ? new Font('AppleSDGothicNeo-Regular', 14) : new Font('PingFangSC-Medium', 14);
-    statusText.textColor = data.isLocked ? new Color('#ffffff', 0.5) : this.dangerColor(1);
-    rightBottomStack.addSpacer();
+    if (this.isExist(data.isLocked)) {
+      statusStack.centerAlignContent();
+      statusStack.backgroundColor = new Color('#ffffff', 0.25);
+      statusStack.borderColor = data.isLocked ? new Color('#ffffff', 0.5) : this.dangerColor(0.5);
+      statusStack.borderWidth = 2;
+      statusStack.cornerRadius = 5;
+      statusStack.setPadding(5, 15, 5, 15);
+      statusStack.centerAlignContent();
+      // 锁车解锁图标
+      const statusIcon = statusStack.addImage(data.isLocked ? await this.getSFSymbolImage('lock.fill') : await this.getSFSymbolImage('lock.open.fill'));
+      statusIcon.imageSize = new Size(18, 18);
+      statusIcon.tintColor = data.isLocked ? new Color('#ffffff', 0.5) : this.dangerColor(1);
+      statusStack.spacing = 5;
+      const statusText = statusStack.addText(data.isLocked ? isEn ? 'Car locked' : '已锁车' : isEn ? 'Car unlocked' : '未锁车');
+      statusText.font = isEn ? new Font('AppleSDGothicNeo-Regular', 14) : new Font('PingFangSC-Medium', 14);
+      statusText.textColor = data.isLocked ? new Color('#ffffff', 0.5) : this.dangerColor(1);
+      rightBottomStack.addSpacer();
+    }
     container.addSpacer();
     return widget
   }
@@ -736,11 +747,17 @@ class Widget extends Core {
       case 'FVW-Audi-Joiner':
         myCarPhoto = await this.getImageByUrl(`${this.getStaticUrl()}/build/assets/images/fvw_audi_default.png`);
         break
+      case 'SVW-Audi-Joiner':
+        myCarPhoto = await this.getImageByUrl(`${this.getStaticUrl()}/build/assets/images/svw_audi_default.png`);
+        break
       case 'FVW-Joiner':
         myCarPhoto = await this.getImageByUrl(`${this.getStaticUrl()}/build/assets/images/fvw_default.png`);
         break
       case 'SVW-Joiner':
         myCarPhoto = await this.getImageByUrl(`${this.getStaticUrl()}/build/assets/images/svw_default.png`);
+        break
+      case 'DFPV-Joiner':
+        myCarPhoto = await this.getImageByUrl(`${this.getStaticUrl()}/build/assets/images/dfpv_default.png`);
         break
     }
     if (this.appSettings['myCarPhoto']) myCarPhoto = await FileManager.local().readImage(this.appSettings['myCarPhoto']);
@@ -759,11 +776,17 @@ class Widget extends Core {
       case 'FVW-Audi-Joiner':
         myCarLogo = `${this.getStaticUrl()}/build/assets/images/logo_20211127.png`;
         break
+      case 'SVW-Audi-Joiner':
+        myCarLogo = `${this.getStaticUrl()}/build/assets/images/logo_20211127.png`;
+        break
       case 'FVW-Joiner':
         myCarLogo = `${this.getStaticUrl()}/build/assets/images/vw_logo.png`;
         break
       case 'SVW-Joiner':
         myCarLogo = `${this.getStaticUrl()}/build/assets/images/vw_logo.png`;
+        break
+      case 'DFPV-Joiner':
+        myCarLogo = `${this.getStaticUrl()}/build/assets/images/dfpv_logo.png`;
         break
     }
     return myCarLogo
@@ -780,8 +803,17 @@ class Widget extends Core {
       case 'FVW-Audi-Joiner':
         size = new Size(60, 20);
         break
+      case 'SVW-Audi-Joiner':
+        size = new Size(60, 20);
+        break
+      case 'FVW-Joiner':
+        size = new Size(20, 20);
+        break
       case 'SVW-Joiner':
         size = new Size(20, 20);
+        break
+      case 'DFPV-Joiner':
+        size = new Size(60, 20);
         break
     }
     return size
@@ -811,12 +843,20 @@ class Widget extends Core {
         text: '一汽奥迪'
       },
       {
+        name: 'SVW-Audi-Joiner',
+        text: '上汽奥迪'
+      },
+      {
         name: 'FVW-Joiner',
         text: '一汽大众'
       },
       {
         name: 'SVW-Joiner',
         text: '上汽大众'
+      },
+      {
+        name: 'DFPV-Joiner',
+        text: '东风风神'
       },
       {
         name: 'Comfort-Joiner',

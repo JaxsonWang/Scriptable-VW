@@ -160,7 +160,7 @@ const md5 = string => {
 class Core {
   constructor(arg = '') {
     this.arg = arg;
-    this.staticUrl = 'https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest';
+    this.staticUrl = 'https://gitlab.com/JaxsonWang/Scriptable-VW/-/raw/master';
     this._actions = {};
     this.init();
   }
@@ -200,7 +200,7 @@ class Core {
    * @param { 'regular' || 'bold' } type
    */
   setFontFamilyStyle(widget, size, type = 'regular') {
-    const regularFont = this.settings['regularFont'] || 'PingFangSC-Regular';
+    const regularFont = this.settings['regularFont'] || 'PingFangSC-Regular ';
     const boldFont = this.settings['boldFont'] || 'PingFangSC-Semibold';
 
     widget.font = new Font(type === 'regular' ? regularFont : boldFont, size);
@@ -278,15 +278,6 @@ class Core {
    */
   getStaticUrl() {
     return this.settings['staticUrl'] || this.staticUrl
-  }
-
-  /**
-   * 数据类型判断
-   * @param data
-   * @returns {boolean}
-   */
-  isExist(data) {
-    return data !== undefined && data !== null && data !== ''
   }
 
   /**
@@ -531,7 +522,7 @@ class UIRender extends Core {
     this.locationBorderRadius = 15;
     this.locationMapZoom = 12;
 
-    this.version = '2.4.2';
+    this.version = '2.4.1';
   }
 
   /**
@@ -1274,8 +1265,8 @@ class UIRender extends Core {
     alert.title = '设置 LOGO 大小';
     alert.message = `不填为默认，默认图片宽度为 ${this.logoWidth} 高度为 ${this.logoHeight}`;
 
-    alert.addTextField('logo 宽度', this.settings['logoWidth'] || this.logoWidth);
-    alert.addTextField('logo 高度', this.settings['logoHeight'] || this.logoHeight);
+    alert.addTextField('logo 宽度', this.settings['logoWidth']);
+    alert.addTextField('logo 高度', this.settings['logoHeight']);
     alert.addAction('确定');
     alert.addCancelAction('取消');
 
@@ -1335,15 +1326,15 @@ class UIRender extends Core {
       '系统深色模式适用于晚上情景\n' +
       '请根据自己的偏好进行设置，请确保您的手机「设置 - 显示与亮度」外观「自动」选项已打开\n' +
       '颜色列表只写一个为纯色背景，多个则是渐变背景，格式如下：' +
-      '「#fff」或者「#333, #666, #999」\n' +
+      '「#fff」或者「#333,#666,#999」\n' +
       '位置列表规格如下：「0.0, 1.0」请填写 0.0 到 1.0 范围内，根据值选项渲染渐变效果不同\n' +
       '使用英文逗号分隔，颜色值可以不限制填写，全部为空则不启用该功能';
 
-    alert.addTextField('浅色背景颜色列表', this.settings['lightBgColors'] || '#ffffff, #dbefff');
-    alert.addTextField('浅色字体颜色', this.settings['lightTextColor'] || '#000000');
-    alert.addTextField('深色背景颜色列表', this.settings['darkBgColors'] || '#414345, #232526');
-    alert.addTextField('深色字体颜色', this.settings['darkTextColor'] || '#ffffff');
-    alert.addTextField('渐变位置列表值', this.settings['bgColorsLocations'] || '0.0, 1.0');
+    alert.addTextField('浅色背景颜色列表', this.settings['lightBgColors']);
+    alert.addTextField('浅色字体颜色', this.settings['lightTextColor']);
+    alert.addTextField('深色背景颜色列表', this.settings['darkBgColors']);
+    alert.addTextField('深色字体颜色', this.settings['darkTextColor']);
+    alert.addTextField('渐变位置列表值', this.settings['bgColorsLocations']);
     alert.addAction('确定');
     alert.addCancelAction('取消');
 
@@ -1528,7 +1519,7 @@ class UIRender extends Core {
     const alert = new Alert();
     alert.title = '字体颜色';
     alert.message = '仅在设置图片背景情境下进行对字体颜色更改。字体颜色规格：#ffffff';
-    alert.addTextField('请输入字体颜色值', this.settings['backgroundImageTextColor'] || '#ffffff');
+    alert.addTextField('请输入字体颜色值', this.settings['backgroundImageTextColor']);
     alert.addAction('确定');
     alert.addCancelAction('取消');
 
@@ -1560,7 +1551,7 @@ class UIRender extends Core {
     const alert = new Alert();
     alert.title = '输入一言';
     alert.message = `请输入一言，将会在桌面展示语句，不填则显示 「${this.defaultMyOne}」`;
-    alert.addTextField('请输入一言', this.settings['myOne'] || this.defaultMyOne);
+    alert.addTextField('请输入一言', this.settings['myOne']);
     alert.addAction('确定');
     alert.addCancelAction('取消');
 
@@ -1659,8 +1650,8 @@ class UIRender extends Core {
     const alert = new Alert();
     alert.title = '设置字体风格';
     alert.message = '目前默认是「PingFang SC」并且只有标准体和粗体，请到 http://iosfonts.com 选择您喜欢的字体风格吧';
-    alert.addTextField('标准字体', this.settings['regularFont'] || 'PingFangSC-Regular');
-    alert.addTextField('粗体', this.settings['boldFont'] || 'PingFangSC-Semibold');
+    alert.addTextField('标准字体', this.settings['regularFont']);
+    alert.addTextField('粗体', this.settings['boldFont']);
     alert.addAction('确定');
     alert.addCancelAction('取消');
 
@@ -1702,7 +1693,7 @@ class UIRender extends Core {
     const alert = new Alert();
     alert.title = '设置弧度';
     alert.message = `大组件下方长方形弧度设置，默认是 ${this.locationBorderRadius}，请输入数字类型。`;
-    alert.addTextField('弧度大小', this.settings['locationBorderRadius'] || '15');
+    alert.addTextField('弧度大小', this.settings['locationBorderRadius']);
     alert.addAction('确定');
     alert.addCancelAction('取消');
 
@@ -1734,7 +1725,7 @@ class UIRender extends Core {
     const alert = new Alert();
     alert.title = '设置缩放比例';
     alert.message = `大组件下方地图缩放数字越小缩放越大，范围在（1 ~ 17），默认是 ${this.locationMapZoom}，请输入数字类型。`;
-    alert.addTextField('缩放大小', this.settings['locationMapZoom'] || '12');
+    alert.addTextField('缩放大小', this.settings['locationMapZoom']);
     alert.addAction('确定');
     alert.addCancelAction('取消');
 
@@ -2044,47 +2035,44 @@ class UIRender extends Core {
       this.setFontFamilyStyle(updateTimeText, 12, 'regular');
       this.setWidgetNodeColor(updateTimeText, 'textColor');
       updateTimeStack.addSpacer();
+      const statusMainStack = this.addStackTo(containerStack, 'horizontal');
+      statusMainStack.addSpacer();
+      const statusStack = this.addStackTo(statusMainStack, 'horizontal');
+      statusStack.centerAlignContent();
+      statusStack.setPadding(5, 10, 5, 10);
+      statusStack.cornerRadius = 10;
+      statusStack.borderWidth = 2;
+      if (this.getLockSuccessStyle()) statusStack.backgroundColor = this.successColor(0.25);
+      else this.setWidgetNodeColor(statusStack, 'backgroundColor', 0.25);
+      if (doorAndWindowNormal) statusStack.backgroundColor = this.warningColor(0.25);
+      if (!isLocked) statusStack.backgroundColor = this.dangerColor(0.25);
+      if (this.getLockSuccessStyle()) statusStack.borderColor = this.successColor(0.5);
+      else this.setWidgetNodeColor(statusStack, 'borderColor', 0.5);
+      if (doorAndWindowNormal) statusStack.borderColor = this.warningColor(0.5);
+      if (!isLocked) statusStack.borderColor = this.dangerColor(0.5);
 
-      if (this.isExist(isLocked)) {
-        const statusMainStack = this.addStackTo(containerStack, 'horizontal');
-        statusMainStack.addSpacer();
-        const statusStack = this.addStackTo(statusMainStack, 'horizontal');
-        statusStack.centerAlignContent();
-        statusStack.setPadding(5, 10, 5, 10);
-        statusStack.cornerRadius = 10;
-        statusStack.borderWidth = 2;
-        if (this.getLockSuccessStyle()) statusStack.backgroundColor = this.successColor(0.25);
-        else this.setWidgetNodeColor(statusStack, 'backgroundColor', 0.25);
-        if (doorAndWindowNormal) statusStack.backgroundColor = this.warningColor(0.25);
-        if (!isLocked) statusStack.backgroundColor = this.dangerColor(0.25);
-        if (this.getLockSuccessStyle()) statusStack.borderColor = this.successColor(0.5);
-        else this.setWidgetNodeColor(statusStack, 'borderColor', 0.5);
-        if (doorAndWindowNormal) statusStack.borderColor = this.warningColor(0.5);
-        if (!isLocked) statusStack.borderColor = this.dangerColor(0.5);
+      let icon = await this.getSFSymbolImage('lock.fill');
+      if (doorAndWindowNormal) icon = await this.getSFSymbolImage('exclamationmark.shield.fill');
+      if (!isLocked) icon = await this.getSFSymbolImage('lock.open.fill');
+      const statusImage = statusStack.addImage(icon);
+      statusImage.imageSize = new Size(12, 12);
+      if (this.getLockSuccessStyle()) statusImage.tintColor = this.successColor();
+      else this.setWidgetNodeColor(statusImage, 'tintColor');
+      if (doorAndWindowNormal) statusImage.tintColor = this.warningColor();
+      if (!isLocked) statusImage.tintColor = this.dangerColor();
+      statusStack.spacing = 4;
 
-        let icon = await this.getSFSymbolImage('lock.fill');
-        if (doorAndWindowNormal) icon = await this.getSFSymbolImage('exclamationmark.shield.fill');
-        if (!isLocked) icon = await this.getSFSymbolImage('lock.open.fill');
-        const statusImage = statusStack.addImage(icon);
-        statusImage.imageSize = new Size(12, 12);
-        if (this.getLockSuccessStyle()) statusImage.tintColor = this.successColor();
-        else this.setWidgetNodeColor(statusImage, 'tintColor');
-        if (doorAndWindowNormal) statusImage.tintColor = this.warningColor();
-        if (!isLocked) statusImage.tintColor = this.dangerColor();
-        statusStack.spacing = 4;
-
-        const infoStack = this.addStackTo(statusStack, 'vertical');
-        let status = '车辆已锁定';
-        if (doorAndWindowNormal) status = '门窗未锁定';
-        if (!isLocked) status = '未锁车';
-        const statusText = infoStack.addText(status);
-        this.setFontFamilyStyle(statusText, 12, 'regular');
-        if (this.getLockSuccessStyle()) statusText.textColor = this.successColor();
-        else this.setWidgetNodeColor(statusText, 'textColor');
-        if (doorAndWindowNormal) statusText.textColor = this.warningColor();
-        if (!isLocked) statusText.textColor = this.dangerColor();
-        statusMainStack.addSpacer();
-      }
+      const infoStack = this.addStackTo(statusStack, 'vertical');
+      let status = '车辆已锁定';
+      if (doorAndWindowNormal) status = '门窗未锁定';
+      if (!isLocked) status = '未锁车';
+      const statusText = infoStack.addText(status);
+      this.setFontFamilyStyle(statusText, 12, 'regular');
+      if (this.getLockSuccessStyle()) statusText.textColor = this.successColor();
+      else this.setWidgetNodeColor(statusText, 'textColor');
+      if (doorAndWindowNormal) statusText.textColor = this.warningColor();
+      if (!isLocked) statusText.textColor = this.dangerColor();
+      statusMainStack.addSpacer();
 
       return widget
     } catch (error) {
@@ -2144,24 +2132,20 @@ class UIRender extends Core {
       const carLockStack = this.addStackTo(statusStack, 'horizontal');
       carLockStack.centerAlignContent();
       // 门窗状态
-      if (this.isExist(data.doorStatus) && this.isExist(data.windowStatus)) {
-        const doorStatus = data.doorStatus;
-        const windowStatus = data.windowStatus;
-        const doorAndWindowNormal = doorStatus.concat(windowStatus).length !== 0;
-        // const doorAndWindowNormal = true
-        if (doorAndWindowNormal) {
-          const carDoorImage = carLockStack.addImage(await this.getSFSymbolImage('xmark.shield.fill'));
-          carDoorImage.imageSize = new Size(14, 14);
-          carDoorImage.tintColor = this.warningColor();
-        }
-        carLockStack.spacing = 5;
+      const doorStatus = data.doorStatus;
+      const windowStatus = data.windowStatus;
+      const doorAndWindowNormal = doorStatus.concat(windowStatus).length !== 0;
+      // const doorAndWindowNormal = true
+      if (doorAndWindowNormal) {
+        const carDoorImage = carLockStack.addImage(await this.getSFSymbolImage('xmark.shield.fill'));
+        carDoorImage.imageSize = new Size(14, 14);
+        carDoorImage.tintColor = this.warningColor();
       }
+      carLockStack.spacing = 5;
       // 锁车状态
-      if (this.isExist(data.isLocked)) {
-        const carLockImage = carLockStack.addImage(await this.getSFSymbolImage('lock.shield.fill'));
-        carLockImage.imageSize = new Size(14, 14);
-        carLockImage.tintColor = data.isLocked ? this.successColor() : this.dangerColor();
-      }
+      const carLockImage = carLockStack.addImage(await this.getSFSymbolImage('lock.shield.fill'));
+      carLockImage.imageSize = new Size(14, 14);
+      carLockImage.tintColor = data.isLocked ? this.successColor() : this.dangerColor();
       // endregion
       // region mainStack
       const mainStack = this.addStackTo(widget, 'horizontal');
@@ -2396,8 +2380,8 @@ class UIRender extends Core {
       if (data.fuelLevel && data.fuelLevel <= 20 || data.socLevel && data.socLevel <= 20) {
         enduranceText.textColor = this.dangerColor();
       }
-      rowLeftStack.addSpacer(5);
       // endregion
+      rowLeftStack.addSpacer(5);
       // region 燃料信息
       const fuelStack = this.addStackTo(rowLeftStack, 'horizontal');
       fuelStack.bottomAlignContent();
@@ -2456,8 +2440,8 @@ class UIRender extends Core {
           fuelText2.textColor = this.dangerColor();
         }
       }
-      rowLeftStack.addSpacer(5);
       // endregion
+      rowLeftStack.addSpacer(5);
       // region 总里程
       const mileageStack = this.addStackTo(rowLeftStack, 'horizontal');
       mileageStack.bottomAlignContent();
@@ -2478,8 +2462,8 @@ class UIRender extends Core {
       const mileageText = mileageTextStack.addText(data.mileage + 'km');
       this.setFontFamilyStyle(mileageText, 14, 'regular');
       this.setWidgetNodeColor(mileageText, 'textColor');
-      rowLeftStack.addSpacer(5);
       // endregion
+      rowLeftStack.addSpacer(5);
       // region 机油数据
       if (data.oilSupport && data.oilLevel !== '0.0') {
         const oilStack = this.addStackTo(rowLeftStack, 'horizontal');
@@ -2513,81 +2497,31 @@ class UIRender extends Core {
       }
       // endregion
       // region 锁车状态
-      if (this.isExist(data.isLocked)) {
-        const lockedStack = this.addStackTo(rowLeftStack, 'horizontal');
-        lockedStack.bottomAlignContent();
-        const lockedImageStack = this.addStackTo(lockedStack, 'vertical');
-        lockedImageStack.bottomAlignContent();
-        if (this.settings['showType']) {
-          const lockedText = lockedImageStack.addText('车辆状态:');
-          this.setFontFamilyStyle(lockedText, 14);
-          this.setWidgetNodeColor(lockedText, 'textColor');
-        } else {
-          const lockedImage = lockedImageStack.addImage(await this.getSFSymbolImage('lock.circle'));
-          lockedImage.imageSize = new Size(18, 18);
-          if (this.getLockSuccessStyle()) lockedImage.tintColor = this.successColor();
-          else this.setWidgetNodeColor(lockedImage, 'tintColor');
-          if (!data.isLocked) lockedImage.tintColor = this.dangerColor();
-        }
-        lockedStack.addSpacer(5);
-        const lockedTextStack = this.addStackTo(lockedStack, 'horizontal');
-        lockedTextStack.bottomAlignContent();
-        const lockedText = lockedTextStack.addText(data.isLocked ? '已锁车' : '未锁车');
-        this.setFontFamilyStyle(lockedText, 14, 'regular');
-        if (this.getLockSuccessStyle()) lockedText.textColor = this.successColor();
-        else this.setWidgetNodeColor(lockedText, 'textColor');
-        if (!data.isLocked) lockedText.textColor = this.dangerColor();
-        rowLeftStack.addSpacer(5);
+      const lockedStack = this.addStackTo(rowLeftStack, 'horizontal');
+      lockedStack.bottomAlignContent();
+      const lockedImageStack = this.addStackTo(lockedStack, 'vertical');
+      lockedImageStack.bottomAlignContent();
+      if (this.settings['showType']) {
+        const lockedText = lockedImageStack.addText('车辆状态:');
+        this.setFontFamilyStyle(lockedText, 14);
+        this.setWidgetNodeColor(lockedText, 'textColor');
+      } else {
+        const lockedImage = lockedImageStack.addImage(await this.getSFSymbolImage('lock.circle'));
+        lockedImage.imageSize = new Size(18, 18);
+        if (this.getLockSuccessStyle()) lockedImage.tintColor = this.successColor();
+        else this.setWidgetNodeColor(lockedImage, 'tintColor');
+        if (!data.isLocked) lockedImage.tintColor = this.dangerColor();
       }
+      lockedStack.addSpacer(5);
+      const lockedTextStack = this.addStackTo(lockedStack, 'horizontal');
+      lockedTextStack.bottomAlignContent();
+      const lockedText = lockedTextStack.addText(data.isLocked ? '已锁车' : '未锁车');
+      this.setFontFamilyStyle(lockedText, 14, 'regular');
+      if (this.getLockSuccessStyle()) lockedText.textColor = this.successColor();
+      else this.setWidgetNodeColor(lockedText, 'textColor');
+      if (!data.isLocked) lockedText.textColor = this.dangerColor();
       // endregion
-      // region 保养里程
-      if (this.isExist(data.kmMaint)) {
-        const kmMaintStack = this.addStackTo(rowLeftStack, 'horizontal');
-        kmMaintStack.bottomAlignContent();
-        const kmMaintImageStack = this.addStackTo(kmMaintStack, 'vertical');
-        kmMaintImageStack.bottomAlignContent();
-        if (this.settings['showType']) {
-          const kmMaintText = kmMaintImageStack.addText('保养里程:');
-          this.setFontFamilyStyle(kmMaintText, 14);
-          this.setWidgetNodeColor(kmMaintText, 'textColor');
-        } else {
-          const kmMaintImage = kmMaintImageStack.addImage(await this.getSFSymbolImage('gearshape.circle'));
-          kmMaintImage.imageSize = new Size(18, 18);
-          this.setWidgetNodeColor(kmMaintImage, 'tintColor');
-        }
-        kmMaintStack.addSpacer(5);
-        const kmMaintTextStack = this.addStackTo(kmMaintStack, 'horizontal');
-        kmMaintTextStack.bottomAlignContent();
-        const kmMaintText = kmMaintTextStack.addText(data.kmMaint + 'km');
-        this.setFontFamilyStyle(kmMaintText, 14, 'regular');
-        this.setWidgetNodeColor(kmMaintText, 'textColor');
-        rowLeftStack.addSpacer(5);
-      }
-      // endregion
-      // region 流量天数
-      if (this.isExist(data.dataPackage)) {
-        const dataPackageStack = this.addStackTo(rowLeftStack, 'horizontal');
-        dataPackageStack.bottomAlignContent();
-        const dataPackageImageStack = this.addStackTo(dataPackageStack, 'vertical');
-        dataPackageImageStack.bottomAlignContent();
-        if (this.settings['showType']) {
-          const dataPackageText = dataPackageImageStack.addText('随车流量:');
-          this.setFontFamilyStyle(dataPackageText, 14);
-          this.setWidgetNodeColor(dataPackageText, 'textColor');
-        } else {
-          const dataPackageImage = dataPackageImageStack.addImage(await this.getSFSymbolImage('waveform.circle'));
-          dataPackageImage.imageSize = new Size(18, 18);
-          this.setWidgetNodeColor(dataPackageImage, 'tintColor');
-        }
-        dataPackageStack.addSpacer(5);
-        const dataPackageTextStack = this.addStackTo(dataPackageStack, 'horizontal');
-        dataPackageTextStack.bottomAlignContent();
-        const dataPackageText = dataPackageTextStack.addText(data.dataPackage);
-        this.setFontFamilyStyle(dataPackageText, 14, 'regular');
-        this.setWidgetNodeColor(dataPackageText, 'textColor');
-      }
       rowLeftStack.addSpacer(5);
-      // endregion
       // region 数据更新日期
       const dateTimeStack = this.addStackTo(rowLeftStack, 'horizontal');
       dateTimeStack.bottomAlignContent();
@@ -2608,8 +2542,8 @@ class UIRender extends Core {
       const dateTimeText = dateTimeTextStack.addText(this.formatDate(data.updateTimeStamp, 'MM-dd HH:mm'));
       this.setFontFamilyStyle(dateTimeText, 14, 'regular');
       this.setWidgetNodeColor(dateTimeText, 'textColor');
-      rowLeftStack.addSpacer(5);
       // endregion
+      rowLeftStack.addSpacer(5);
       // region 刷新日期
       const updateStack = this.addStackTo(rowLeftStack, 'horizontal');
       updateStack.bottomAlignContent();
@@ -2642,64 +2576,62 @@ class UIRender extends Core {
       const carPhoto = await this.getMyCarPhoto(this.myCarPhotoUrl);
       const carPhotoImage = carPhotoStack.addImage(carPhoto);
       carPhotoImage.centerAlignImage();
-      if (this.isExist(data.doorStatus) || this.isExist(data.windowStatus)) {
-        const statusStack = this.addStackTo(rowRightStack, 'vertical');
-        statusStack.setPadding(5, 0, 0, 0);
-        statusStack.centerAlignContent();
+      const statusStack = this.addStackTo(rowRightStack, 'vertical');
+      statusStack.setPadding(5, 0, 0, 0);
+      statusStack.centerAlignContent();
 
-        const doorStatus = data.doorStatus || [];
-        const windowStatus = data.windowStatus || [];
-        const carStatus = doorStatus.concat(windowStatus);
-        // const carStatus = ['左前门', '后备箱', '右前窗', '右后窗', '天窗']
-        if (carStatus.length !== 0) {
-          const statusArray = format2Array(carStatus, 3);
-          statusArray.forEach(arr => {
-            const statusRowStack = this.addStackTo(statusStack, 'horizontal');
-            statusRowStack.setPadding(2, 0, 2, 0);
-            statusRowStack.centerAlignContent();
-            arr.forEach(async (item) => {
-              const statusItemStack = this.addStackTo(statusRowStack, 'horizontal');
-              statusItemStack.addSpacer();
-              statusItemStack.centerAlignContent();
-              const image = await this.getSFSymbolImage('exclamationmark.shield.fill');
-              const statusItemImage = statusItemStack.addImage(image);
-              statusItemImage.imageSize = new Size(12, 12);
-              statusItemImage.tintColor = this.warningColor();
-              statusItemStack.addSpacer(2);
-              const statusItemText = statusItemStack.addText(item);
-              this.setFontFamilyStyle(statusItemText, 12);
-              statusItemText.textColor = this.warningColor();
-              statusItemText.centerAlignText();
-              statusItemStack.addSpacer();
-            });
+      const doorStatus = data.doorStatus || [];
+      const windowStatus = data.windowStatus || [];
+      const carStatus = doorStatus.concat(windowStatus);
+      // const carStatus = ['左前门', '后备箱', '右前窗', '右后窗', '天窗']
+      if (carStatus.length !== 0) {
+        const statusArray = format2Array(carStatus, 3);
+        statusArray.forEach(arr => {
+          const statusRowStack = this.addStackTo(statusStack, 'horizontal');
+          statusRowStack.setPadding(2, 0, 2, 0);
+          statusRowStack.centerAlignContent();
+          arr.forEach(async (item) => {
+            const statusItemStack = this.addStackTo(statusRowStack, 'horizontal');
+            statusItemStack.addSpacer();
+            statusItemStack.centerAlignContent();
+            const image = await this.getSFSymbolImage('exclamationmark.shield.fill');
+            const statusItemImage = statusItemStack.addImage(image);
+            statusItemImage.imageSize = new Size(12, 12);
+            statusItemImage.tintColor = this.warningColor();
+            statusItemStack.addSpacer(2);
+            const statusItemText = statusItemStack.addText(item);
+            this.setFontFamilyStyle(statusItemText, 12);
+            statusItemText.textColor = this.warningColor();
+            statusItemText.centerAlignText();
+            statusItemStack.addSpacer();
           });
-        } else {
-          statusStack.addSpacer(5);
-          const statusInfoStack = this.addStackTo(statusStack, 'horizontal');
-          statusInfoStack.addSpacer();
-          const statusItemStack = this.addStackTo(statusInfoStack, 'horizontal');
-          // statusItemStack.setPadding(5, 0, 5, 0)
-          statusItemStack.setPadding(5, 10, 5, 10);
-          statusItemStack.cornerRadius = 10;
-          statusItemStack.borderWidth = 2;
-          if (this.getLockSuccessStyle()) statusItemStack.borderColor = this.successColor(0.5);
-          else this.setWidgetNodeColor(statusItemStack, 'borderColor', 0.5);
-          if (this.getLockSuccessStyle()) statusItemStack.backgroundColor = this.successColor(0.25);
-          else this.setWidgetNodeColor(statusItemStack, 'backgroundColor', 0.25);
+        });
+      } else {
+        statusStack.addSpacer(5);
+        const statusInfoStack = this.addStackTo(statusStack, 'horizontal');
+        statusInfoStack.addSpacer();
+        const statusItemStack = this.addStackTo(statusInfoStack, 'horizontal');
+        // statusItemStack.setPadding(5, 0, 5, 0)
+        statusItemStack.setPadding(5, 10, 5, 10);
+        statusItemStack.cornerRadius = 10;
+        statusItemStack.borderWidth = 2;
+        if (this.getLockSuccessStyle()) statusItemStack.borderColor = this.successColor(0.5);
+        else this.setWidgetNodeColor(statusItemStack, 'borderColor', 0.5);
+        if (this.getLockSuccessStyle()) statusItemStack.backgroundColor = this.successColor(0.25);
+        else this.setWidgetNodeColor(statusItemStack, 'backgroundColor', 0.25);
 
-          statusItemStack.centerAlignContent();
-          const statusItemImage = statusItemStack.addImage(await this.getSFSymbolImage('checkmark.shield.fill'));
-          statusItemImage.imageSize = new Size(12, 12);
-          if (this.getLockSuccessStyle()) statusItemImage.tintColor = this.successColor();
-          else this.setWidgetNodeColor(statusItemImage, 'tintColor');
-          statusItemStack.addSpacer(2);
-          const statusItemText = statusItemStack.addText('当前车窗已全关闭');
-          this.setFontFamilyStyle(statusItemText, 12);
-          if (this.getLockSuccessStyle()) statusItemText.textColor = this.successColor();
-          else this.setWidgetNodeColor(statusItemText, 'textColor');
-          statusItemText.centerAlignText();
-          statusInfoStack.addSpacer();
-        }
+        statusItemStack.centerAlignContent();
+        const statusItemImage = statusItemStack.addImage(await this.getSFSymbolImage('checkmark.shield.fill'));
+        statusItemImage.imageSize = new Size(12, 12);
+        if (this.getLockSuccessStyle()) statusItemImage.tintColor = this.successColor();
+        else this.setWidgetNodeColor(statusItemImage, 'tintColor');
+        statusItemStack.addSpacer(2);
+        const statusItemText = statusItemStack.addText('当前车窗已全关闭');
+        this.setFontFamilyStyle(statusItemText, 12);
+        if (this.getLockSuccessStyle()) statusItemText.textColor = this.successColor();
+        else this.setWidgetNodeColor(statusItemText, 'textColor');
+        statusItemText.centerAlignText();
+        statusInfoStack.addSpacer();
       }
       rowRightStack.addSpacer();
       // endregion
@@ -2714,51 +2646,31 @@ class UIRender extends Core {
         footerStack.borderWidth = 2;
         footerStack.setPadding(0, 0, 0, 0);
         footerStack.centerAlignContent();
-
-        const hasLocation = data.completeAddress !== '暂无位置信息';
         if (this.settings['largeMapType']) {
+          const deviceScreen = Device.screenSize();
           // 地图图片
-          const locationPicture = hasLocation ? data.largeLocationPicture : `${this.getStaticUrl()}/build/assets/images/transparent.png`;
-          footerStack.backgroundImage = await this.getImageByUrl(locationPicture, false);
+          footerStack.backgroundImage = await this.getImageByUrl(data.largeLocationPicture, false);
           // 填充内容
-          const footerFillStack = this.addStackTo(footerStack, 'horizontal');
-          footerFillStack.setPadding(25, 0, 25, 0);
-          footerFillStack.addSpacer();
-          const fillText = footerFillStack.addText(hasLocation ? ' ' : data.completeAddress);
-          this.setFontFamilyStyle(fillText, 12);
-          this.setWidgetNodeColor(fillText, 'textColor');
-          footerFillStack.addSpacer();
-          footerWrapperStack.addSpacer();
+          const footerFillStack = this.addStackTo(footerStack, 'vertical');
+          footerFillStack.size = new Size(1, 60);
+          footerFillStack.addText(' ');
+          if (this.settings['largeMapType']) footerWrapperStack.addSpacer();
         } else {
-          if (hasLocation) {
-            const footerLeftStack = this.addStackTo(footerStack, 'vertical');
-            const locationImage = await this.getImageByUrl(data.largeLocationPicture, false);
-            const locationImageStack = footerLeftStack.addImage(locationImage);
-            locationImageStack.imageSize = new Size(100, 60);
-            locationImageStack.centerAlignImage();
-            footerStack.addSpacer();
-            // 地理位置
-            const footerRightStack = this.addStackTo(footerStack, 'horizontal');
-            footerRightStack.addSpacer();
-            const addressText = data.showLocationFormat ? data.customAddress : data.completeAddress;
-            const locationText = footerRightStack.addText(addressText);
-            this.setFontFamilyStyle(locationText, 12);
-            locationText.centerAlignText();
-            this.setWidgetNodeColor(locationText, 'textColor');
-            footerRightStack.addSpacer();
-          } else {
-            // 填充内容
-            const footerFillStack = this.addStackTo(footerStack, 'horizontal');
-            const locationPicture = `${this.getStaticUrl()}/build/assets/images/transparent.png`;
-            footerStack.backgroundImage = await this.getImageByUrl(locationPicture, false);
-            footerFillStack.setPadding(25, 0, 25, 0);
-            footerFillStack.addSpacer();
-            const fillText = footerFillStack.addText(data.completeAddress);
-            this.setFontFamilyStyle(fillText, 12);
-            this.setWidgetNodeColor(fillText, 'textColor');
-            footerFillStack.addSpacer();
-            footerWrapperStack.addSpacer();
-          }
+          const footerLeftStack = this.addStackTo(footerStack, 'vertical');
+          const locationImage = await this.getImageByUrl(data.largeLocationPicture, false);
+          const locationImageStack = footerLeftStack.addImage(locationImage);
+          locationImageStack.imageSize = new Size(100, 60);
+          locationImageStack.centerAlignImage();
+          footerStack.addSpacer();
+          // 地理位置
+          const footerRightStack = this.addStackTo(footerStack, 'horizontal');
+          footerRightStack.addSpacer();
+          const addressText = data.showLocationFormat ? data.customAddress : data.completeAddress;
+          const locationText = footerRightStack.addText(addressText);
+          this.setFontFamilyStyle(locationText, 12);
+          locationText.centerAlignText();
+          this.setWidgetNodeColor(locationText, 'textColor');
+          footerRightStack.addSpacer();
         }
         footerStack.addSpacer();
       }
@@ -3465,26 +3377,27 @@ class Widget extends DataRender {
    */
   constructor(arg) {
     super(arg);
-    this.name = '一汽大众挂件';
-    this.desc = '一汽大众车辆桌面组件展示';
+    this.name = '上汽奥迪挂件';
+    this.desc = '上汽奥迪车辆桌面组件展示';
 
-    this.appId = 'com.tima.aftermarket';
-    this.appName = 'BootstrapApp';
+    this.appId = 'com.svw.sc.audi';
+    this.appName = 'SVW-Audi';
     this.appVersion = '1.0';
-    this.brand = 'VW';
+    this.brand = 'Audi';
 
-    this.myCarPhotoUrl = `${this.getStaticUrl()}/build/assets/images/fvw_default.png`;
-    this.myCarLogoUrl = `${this.getStaticUrl()}/build/assets/images/vw_logo.png`;
-    this.logoWidth = 14;
+    this.myCarPhotoUrl = `${this.getStaticUrl()}/build/assets/images/svw_audi_default.png`;
+    this.myCarLogoUrl = `${this.getStaticUrl()}/build/assets/images/logo_20211127.png`;
+    this.logoWidth = 40;
     this.logoHeight = 14;
 
-    this.defaultMyOne = '与你一路同行';
+    this.defaultMyOne = '世间美好，与您环环相扣';
 
     if (config.runsInApp) {
       this.registerAction('账户登录', this.actionAccountLogin);
       if (this.settings['isLogin']) this.registerAction('偏好配置', this.actionPreferenceSettings);
       if (this.settings['isLogin']) this.registerAction('界面微调', this.actionUIRenderSettings);
       if (this.settings['isLogin']) this.registerAction('刷新数据', this.actionRefreshData);
+      // if (this.settings['isLogin']) this.registerAction('车辆操作', this.actionOperations)
       if (this.settings['isLogin']) this.registerAction('登出重置', this.actionLogOut);
       if (this.settings['isLogin']) this.registerAction('预览组件', this.actionTriggerPreview);
       if (this.settings['isLogin']) this.registerAction('调试日志', this.actionDebug);
@@ -3501,13 +3414,23 @@ class Widget extends DataRender {
    */
   async handleLoginRequest(debug = false) {
     const options = {
-      url: 'https://one-app-h5.faw-vw.com/prod-api/mobile/one-app/user/public/v1/login?appkey=6298289633',
+      url: 'https://audi-api.mos.csvw.com/mos/security/api/v1/app/actions/pwdlogin',
       method: 'POST',
-      headers: this.requestHeader(),
+      headers: {
+        ...this.requestHeader(),
+        ...{
+          Did: this.getDid()
+        }
+      },
       body: JSON.stringify({
-        password: this.settings['password'].trim(),
-        account: this.settings['username'].trim(),
-        scope: 'openid profile mbb'
+        pwd: this.settings['password'].trim(),
+        mobile: this.settings['username'].trim(),
+        picContent: '',
+        picTicket: '',
+        deviceId: this.getDid(),
+        scope: 'openid',
+        brand: 'audi',
+        deviceType: 'ios'
       })
     };
     try {
@@ -3516,15 +3439,18 @@ class Widget extends DataRender {
         console.log('登录接口返回数据：');
         console.log(response);
       }
-      if (response.returnStatus === 'SUCCEED') {
+      if (response.code === '000000') {
         await this.notify('登录成功', '正在从服务器获取车辆数据，请耐心等待！');
         // 解构数据
-        const { tokenInfo } = response.data;
-        this.settings['userIDToken'] = tokenInfo.idToken;
+        const { accessToken, idToken } = response.data;
+        this.settings['userAccessToken'] = accessToken;
+        this.settings['userIDToken'] = idToken;
         await this.saveSettings(false);
-        console.log('账户登录成功，存储用户 idToken 密钥信息，准备交换验证密钥数据和获取个人基础信息');
+        console.log('账户登录成功，存储用户 accessToken, idToken 密钥信息，准备交换验证密钥数据和获取个人基础信息');
+        // 准备交换验证密钥数据
+        await this.getTokenRequest('refreshAuthToken', debug);
         // 获取个人中心数据
-        await this.getTokenRequest(debug);
+        await this.getUserMineRequest(debug);
       } else {
         console.error('账户登录失败：' + response.description);
         await this.notify('账户登录失败', '账户登录失败：' + response.description);
@@ -3537,55 +3463,72 @@ class Widget extends DataRender {
 
   /**
    * 获取密钥数据
+   * @param {'refreshAuthToken' | 'authAccessToken'} type
    * @param {boolean} debug 开启日志输出
    * @returns {Promise<void>}
    */
-  async getTokenRequest(debug = false) {
+  async getTokenRequest(type, debug = false) {
     // 根据交换token请求参数不同
-    // token 参数
-    const requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(this.settings['userIDToken'])}&scope=${encodeURIComponent('t2_fawvw:fal')}`;
+    let requestParams = '';
+    switch (type) {
+    case 'refreshAuthToken':
+      requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(this.settings['userIDToken'])}&scope=${encodeURIComponent('t2_saudi:fal')}`;
+      break
+    case 'authAccessToken':
+      requestParams = `grant_type=${encodeURIComponent('refresh_token')}&token=${encodeURIComponent(this.settings['refreshAuthToken'])}&scope=${encodeURIComponent('t2_saudi:fal')}&vin=${this.settings['carVIN']}`;
+      break
+    }
+
+    const requestHeader = JSON.parse(JSON.stringify(this.requestHeader()));
+    delete requestHeader.Accept;
+    delete requestHeader['Content-Type'];
 
     const options = {
       url: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/oauth2/v1/token',
       method: 'POST',
-      headers: {
-        'X-Client-Id': this.settings['clientID']
-      },
+      headers: requestHeader,
       body: requestParams
     };
     try {
       const response = await this.http(options);
       if (debug) {
-        console.log('密钥接口返回数据：');
+        console.log(`${type} 密钥接口返回数据：`);
         console.log(response);
         console.warn('请注意不要公开此密钥信息，否则会有被丢车、被盗窃等的风险！');
       }
       // 判断接口状态
       if (response.error) {
         switch (response.error) {
-          case 'invalid_grant':
-            if (/expired/g.test(response.error_description)) {
-              console.warn('IDToken 数据过期，正在重新获取数据中，请耐心等待...');
-              await this.getTokenRequest(debug);
-            } else {
-              console.error('Token 授权无效，请联系开发者：');
-              console.error(`${response.error_description} - ${response.error_description}`);
-            }
-            break
-          case 'invalid_request':
-            console.warn('无效 Token，正在重新登录中，请耐心等待...');
-            await this.handleLoginRequest(debug);
-            break
-          default:
-            console.error('交换 Token 请求失败：' + response.error + ' - ' + response.error_description);
+        case 'invalid_grant':
+          if (/expired/g.test(response.error_description)) {
+            console.warn('RefreshToken 数据过期，正在重新获取数据中，请耐心等待...');
+            await this.getTokenRequest('refreshAuthToken', debug);
+          } else {
+            console.error('Token 授权无效，请联系开发者：');
+            console.error(`${response.error_description} - ${response.error_description}`);
+          }
+          break
+        case 'invalid_request':
+          console.warn('IDToken 数据过期，正在重新登录中，请耐心等待...');
+          await this.handleLoginRequest(debug);
+          break
+        default:
+          console.error('交换 Token 请求失败：' + response.error + ' - ' + response.error_description);
         }
       } else {
         // 获取密钥数据成功，存储数据
-        this.settings['authToken'] = response.access_token;
-        await this.saveSettings(false);
-        console.log('authToken 密钥数据获取成功并且存储到本地');
-        // 设置访问接口
-        await this.getVehiclesVIN(debug);
+        if (type === 'refreshAuthToken') {
+          this.settings['refreshAuthToken'] = response.refresh_token;
+          await this.saveSettings(false);
+          console.log('refreshAuthToken 密钥数据获取成功并且存储到本地');
+        }
+        if (type === 'authAccessToken') {
+          this.settings['authToken'] = response.access_token;
+          await this.saveSettings(false);
+          console.log('authToken 密钥数据获取成功并且存储到本地');
+          // 设置访问接口
+          await this.getApiBaseURI(debug);
+        }
       }
     } catch (error) {
       console.error(error);
@@ -3593,34 +3536,45 @@ class Widget extends DataRender {
   }
 
   /**
-   * 获取车辆车架号
-   * @param  debug 开启日志输出
-   * @return {Promise<void>}
+   * 获取用户信息
+   * @param {boolean} debug 开启日志输出
+   * @returns {Promise<void>}
    */
-  async getVehiclesVIN(debug = false) {
+  async getUserMineRequest(debug = false) {
     const options = {
-      url: 'https://mal-1a.prd.cn.vwg-connect.cn/api/usermanagement/users/v1/vehicles',
+      url: 'https://audi-api.mos.csvw.com/mos/security/api/v1/auth/token/relationship',
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer ' + this.settings['authToken']
+        ...{
+          'Authorization': `Bearer ${this.settings['userAccessToken']}`,
+          Did: this.getDid()
+        },
+        ...this.requestHeader()
       }
     };
     try {
       const response = await this.http(options);
-      if (debug) {
-        console.log('车架号接口返回数据：');
-        console.log(response);
-      }
-      if (response?.userVehicles?.vehicle) {
-        this.settings['carVIN'] = response.userVehicles.vehicle[0];
-        // 提示：一汽大众无法获取车辆基本信息，暂时写死
-        this.settings['seriesName'] = '嗨，一汽大众';
-        this.settings['carModelName'] = 'set your car model';
+      console.log('个人中心接口返回数据：');
+      console.log(response);
+      // 判断接口状态
+      if (response.code === '000000') {
+        const { vehicle: { serial, model, vin } } = response.data;
+        this.settings['seriesName'] = serial;
+        this.settings['carModelName'] = model;
+        this.settings['carVIN'] = vin;
         await this.saveSettings(false);
-        await this.getApiBaseURI(debug);
+        console.log('获取用户基本信息成功并将存储本地');
+        if (debug) {
+          console.log('获取个人信息：');
+          console.log('车系名称：' + serial);
+          console.log('车型名称：' + model);
+          console.log('车架号码：' + vin);
+        }
+        // 准备交换验证密钥数据
+        await this.getTokenRequest('authAccessToken', debug);
       } else {
-        console.log('获取车架号失败');
+        console.error('获取个人信息失败，请登出重置后再进行小组件登录！' + response.description);
+        await this.notify('个人信息获取失败', '获取个人信息失败，请登出重置后再进行小组件登录！' + response.description);
       }
     } catch (error) {
       console.error(error);
@@ -3632,19 +3586,19 @@ class Widget extends DataRender {
    */
   async actionAccountLogin() {
     const message = `
-      Joiner 小组件需要使用到您的一汽大众应用的账号，首次登录请配置账号、密码进行令牌获取\n\r
+      Joiner 小组件需要使用到您的上汽奥迪应用的账号，首次登录请配置账号、密码进行令牌获取\n\r
       Joiner 小组件不会收集您的个人账户信息，所有账号信息将存在 iCloud 或者 iPhone 上但也请您妥善保管自己的账号\n\r
-      Joiner 小组件是开源、并且完全免费的，由大众粉丝车主开发，所有责任与一汽大众公司无关\n\r
+      Joiner 小组件是开源、并且完全免费的，由奥迪车主开发，所有责任与上汽奥迪公司无关\n\r
       开发者: 淮城一只猫\n\r
-      温馨提示：由于一汽大众应用支持单点登录，即不支持多终端应用登录，建议在一汽大众应用「爱车 - 用户授权」进行添加用户，这样 Joiner 组件和应用独立执行。
+      温馨提示：由于上汽奥迪应用支持单点登录，即不支持多终端应用登录，建议在上汽奥迪应用「用车 - 更多功能 - 用户管理」进行添加用户，这样 Joiner 组件和应用独立执行。
     `;
     const present = await this.actionStatementSettings(message);
     if (present !== -1) {
       const alert = new Alert();
       alert.title = 'Joiner 登录';
-      alert.message = '使用一汽大众账号登录进行展示数据';
-      alert.addTextField('一汽大众账号', this.settings['username']);
-      alert.addSecureTextField('一汽大众密码', this.settings['password']);
+      alert.message = '使用上汽奥迪账号登录进行展示数据';
+      alert.addTextField('上汽奥迪账号', this.settings['username']);
+      alert.addSecureTextField('上汽奥迪密码', this.settings['password']);
       alert.addAction('确定');
       alert.addCancelAction('取消');
 
@@ -3662,7 +3616,7 @@ class Widget extends DataRender {
    * 检查更新
    */
   async actionCheckUpdate() {
-    await this.checkUpdate('fvw-version');
+    await this.checkUpdate('svw-audi-version');
   }
 
   /**
@@ -3675,7 +3629,7 @@ class Widget extends DataRender {
 
   /**
    * 重写车牌显示
-   * 提示：因为一汽大众暂时没有办法自动获取车辆基础信息
+   * 提示：上汽奥迪暂时不支持自动获取车牌信息
    * @returns {Promise<void>}
    */
   async showPlate() {
@@ -3701,18 +3655,23 @@ class Widget extends DataRender {
   }
 
   /**
+   * 获取设备编码字符串
+   * @returns {string}
+   */
+  getDid() {
+    return `AUDI_APP_iPhone_${this.settings['clientID'].replace(/-/g, '')}_9_4.3.4`
+  }
+
+  /**
    * 请求头信息
    * @returns {Object}
    */
   requestHeader() {
     return {
       Accept: 'application/json',
-      OS: 'iOS',
       'Content-Type': 'application/json',
-      'User-Agent': 'NewAfterMarket-ios/3.17.1 CFNetwork/1329 Darwin/21.3.0',
-      'Did': `VW_APP_iPhone_${this.settings['clientID'].replace(/-/g, '')}_15.1_2.7.0`,
-      'X-Client-Id': this.settings['clientID'],
-      'deviceId': this.settings['clientID']
+      'User-Agent': 'okhttp/4.9.1',
+      'X-Client-ID': this.settings['clientID']
     }
   }
 }

@@ -1,8 +1,10 @@
 {
   "inherit": true,
-  "version": "2.4.1",
-  "download": "https://gitlab.com/JaxsonWang/Scriptable-VW/-/raw/master/build/SVW-Audi-Joiner.js",
+  "version": "2.4.2",
+  "download": "https://cdn.jsdelivr.net/gh/JaxsonWang/Scriptable-VW@latest/build/SVW-Audi-Joiner.js",
   "changelog": [
-    "1. 支持自定义资源源地址"
+    "1. 更换 jsdelivr 服务器作为资源服务器",
+    "2. 修复暂无位置的时候大组件出现红色方块或者全红背景图的问题",
+    "3. 优化菜单配置项默认值显示"
   ]
 }

@@ -2809,611 +2809,6 @@ class UIRender extends Core {
   }
 }
 
-class DataRender extends UIRender {
-  constructor(args = '') {
-    super(args);
-
-    this.appName = '';
-    this.appVersion = '';
-  }
-
-  /**
-   * 处理车辆状态信息
-   * @param {Array} data 状态数据
-   */
-  handleVehiclesData(data) {
-    // region 机油信息
-    const oilSupport = data.find(i => i.id === '0x0204FFFFFF')?.field;
-    let oilLevel = false;
-    // 有些车辆不一定支持机油显示，需要判断下 机油单位百分比
-    if (oilSupport) oilLevel = oilSupport.find(i => i.id === '0x0204040003')?.value;
-    // endregion
-    const statusArr = data.find(i => i.id === '0x0301FFFFFF')?.field;
-    // region 驻车灯
-    // '2' = 已关闭
-    const parkingLights = statusArr.find(i => i.id === '0x0301010001')?.value;
-    // endregion
-    // region 室外温度
-    const kelvinTemperature = statusArr.find(i => i.id === '0x0301020001')?.value;
-    // 开尔文单位转换成摄氏度
-    const outdoorTemperature = (parseInt(kelvinTemperature, 10) / 10 + -273.15).toFixed(1);
-    // endregion
-    // region 驻车制动
-    // '1' = 已激活 / '0' = 未激活
-    const parkingBrakeActive = statusArr.find(i => i.id === '0x0301030001')?.value;
-    // endregion
-    // region 续航里程
-    // 单位 km
-    const fuelRange = parseInt(statusArr.find(i => i.id === '0x0301030005')?.value, 10) || parseInt(statusArr.find(i => i.id === '0x0301030006')?.value, 10);
-    // endregion
-    // region 汽油油量
-    // 单位 %
-    const fuelLevel = statusArr.find(i => i.id === '0x030103000A')?.value;
-    // endregion
-    // region 电池容量
-    // 单位 %
-    const socLevel = statusArr.find(i => i.id === '0x0301030002')?.value;
-    // endregion
-    // region 总里程和更新时间
-    const mileageArr = data.find(i => i.id === '0x0101010002')?.field;
-    const mileage = mileageArr.find(i => i.id === '0x0101010002')?.value;
-    const dateTime = mileageArr.find(i => i.id === '0x0101010002')?.tsCarSentUtc;
-    const updateTimeStamp = new Date(dateTime).valueOf();
-    // endregion
-    // region 锁车状态
-    const isLocked = this.getVehiclesLocked(statusArr);
-    // endregion
-    // region 车门状态
-    const doorStatus = this.getVehiclesDoorStatus(statusArr).map(i => i.name);
-    // endregion
-    // region 车窗状态
-    const windowStatus = this.getVehiclesWindowStatus(statusArr).map(i => i.name);
-    // endregion
-
-    return {
-      oilSupport: oilSupport !== undefined,
-      oilLevel,
-      parkingLights,
-      outdoorTemperature,
-      parkingBrakeActive,
-      fuelRange,
-      fuelLevel,
-      socLevel,
-      mileage,
-      updateTimeStamp,
-      isLocked,
-      doorStatus,
-      windowStatus
-    }
-  }
-
-  /**
-   * 获取车辆锁车状态
-   * @param {Array} arr
-   * @returns {boolean} true = 锁车 false = 没有完全锁车
-   */
-  getVehiclesLocked(arr) {
-    // 先判断车辆是否锁定
-    const lockArr = ['0x0301040001', '0x0301040004', '0x0301040007', '0x030104000A', '0x030104000D'];
-    // 筛选出对应的数组 并且过滤不支持检测状态
-    const filterArr = arr.filter(item => lockArr.some(i => i === item.id)).filter(item => item.value !== '0');
-    // 判断是否都锁门
-    // value === 0 不支持
-    // value === 2 锁门
-    // value === 3 未锁门
-    return filterArr.every(item => item.value === '2')
-  }
-
-  /**
-   * 获取车辆车门/引擎盖/后备箱状态
-   * @param {Array} arr
-   * @return Promise<[]<{
-   *   id: string
-   *   name: string
-   * }>>
-   */
-  getVehiclesDoorStatus (arr) {
-    const doorArr = [
-      {
-        id: '0x0301040002',
-        name: '左前门'
-      }, {
-        id: '0x0301040005',
-        name: '左后门'
-      }, {
-        id: '0x0301040008',
-        name: '右前门'
-      }, {
-        id: '0x030104000B',
-        name: '右后门'
-      }, {
-        id: '0x0301040011',
-        name: '引擎盖'
-      }, {
-        id: '0x030104000E',
-        name: '后备箱'
-      }
-    ];
-    // 筛选出对应的数组
-    const filterArr = arr.filter(item => doorArr.some(i => i.id === item.id));
-    // 筛选出没有关门id
-    // value === 0 不支持
-    // value === 2 关门
-    // value === 3 未关门
-    const result = filterArr.filter(item => item.value === '2').filter(item => item.value !== '0');
-    // 返回开门的数组
-    return doorArr.filter(i => result.some(x => x.id === i.id))
-  }
-
-  /**
-   * 获取车辆车窗/天窗状态
-   * @param {Array} arr
-   * @return Promise<[]<{
-   *   id: string
-   *   name: string
-   * }>>
-   */
-  getVehiclesWindowStatus (arr) {
-    const windowArr = [
-      {
-        id: '0x0301050001',
-        name: '左前窗'
-      }, {
-        id: '0x0301050003',
-        name: '左后窗'
-      }, {
-        id: '0x0301050005',
-        name: '右前窗'
-      }, {
-        id: '0x0301050007',
-        name: '右后窗'
-      }, {
-        id: '0x030105000B',
-        name: '天窗'
-      }
-    ];
-    // 筛选出对应的数组
-    const filterArr = arr.filter(item => windowArr.some(i => i.id === item.id));
-    // 筛选出没有关门id
-    const result = filterArr.filter(item => item.value === '2').filter(item => item.value !== '0');
-    // 返回开门的数组
-    return windowArr.filter(i => result.some(x => x.id === i.id))
-  }
-
-  /**
-   * 车辆操作
-   */
-  async actionOperations() {
-    const alert = new Alert();
-    alert.title = '控车操作';
-    alert.message = '请求时间很慢，毕竟请求还有经过国外服务器，还不一定能响应，凑合用吧。';
-
-    const menuList = [
-      {
-        type: 'HONK_ONLY',
-        time: 10,
-        text: '鸣笛10秒'
-      },
-      {
-        type: 'HONK_ONLY',
-        time: 20,
-        text: '鸣笛20秒'
-      },
-      {
-        type: 'HONK_ONLY',
-        time: 30,
-        text: '鸣笛30秒'
-      },
-      {
-        type: 'FLASH_ONLY',
-        time: 10,
-        text: '闪灯10秒'
-      },
-      {
-        type: 'FLASH_ONLY',
-        time: 20,
-        text: '闪灯20秒'
-      },
-      {
-        type: 'FLASH_ONLY',
-        time: 30,
-        text: '闪灯30秒'
-      },
-      {
-        type: 'HONK_AND_FLASH',
-        time: 10,
-        text: '鸣笛和闪灯10秒'
-      },
-      {
-        type: 'HONK_AND_FLASH',
-        time: 20,
-        text: '鸣笛和闪灯20秒'
-      },
-      {
-        type: 'HONK_AND_FLASH',
-        time: 30,
-        text: '鸣笛和闪灯30秒'
-      }
-    ];
-
-    menuList.forEach(item => {
-      alert.addAction(item.text);
-    });
-
-    alert.addCancelAction('退出菜单');
-    const id = await alert.presentSheet();
-    if (id === -1) return
-    // 执行函数
-    await this.handleHonkAndFlash(menuList[id].type, menuList[id].time);
-  }
-
-  /**
-   * 获取数据
-   * @param {boolean} debug 开启日志输出
-   * @return {Promise<Object>}
-   */
-  async getData(debug = false) {
-    // 日志追踪
-    if (this.settings['trackingLogEnabled']) {
-      if (this.settings['debug_bootstrap_date_time']) {
-        this.settings['debug_bootstrap_date_time'] += this.formatDate(new Date(), 'yyyy年MM月dd日 HH:mm:ss 更新\n');
-      } else {
-        this.settings['debug_bootstrap_date_time'] = '\n' + this.formatDate(new Date(), 'yyyy年MM月dd日 HH:mm:ss 更新\n');
-      }
-      await this.saveSettings(false);
-    }
-
-    const showLocation = this.settings['aMapKey'] !== '' && this.settings['aMapKey'] !== undefined;
-    const showLocationFormat = this.settings['locationFormat'] !== '' && this.settings['locationFormat'] !== undefined;
-    const showPlate = this.settings['showPlate'] || false;
-    const showOil = this.settings['showOil'] || false;
-
-    const getVehiclesStatusData = await this.getVehiclesStatus(debug);
-
-    const vehiclesPosition = await this.getVehiclesPosition(debug);
-
-    const data = {
-      carPlateNo: this.settings['carPlateNo'],
-      seriesName: this.settings['myCarName'] || this.settings['seriesName'],
-      carModelName: this.settings['myCarModelName'] || this.settings['carModelName'],
-      carVIN: this.settings['carVIN'],
-      myOne: this.settings['myOne'] || this.defaultMyOne,
-      oilSupport: showOil ? getVehiclesStatusData.oilSupport : false,
-      oilLevel: getVehiclesStatusData.oilLevel || false,
-      parkingLights: getVehiclesStatusData.parkingLights || '0',
-      outdoorTemperature: getVehiclesStatusData.outdoorTemperature || '0',
-      parkingBrakeActive: getVehiclesStatusData.parkingBrakeActive || '0',
-      fuelRange: getVehiclesStatusData.fuelRange || '0',
-      fuelLevel: getVehiclesStatusData.fuelLevel || false,
-      socLevel: getVehiclesStatusData.socLevel || false,
-      mileage: getVehiclesStatusData.mileage || '0',
-      updateNowDate: new Date().valueOf(),
-      updateTimeStamp: getVehiclesStatusData.updateTimeStamp || new Date().valueOf(),
-      isLocked: getVehiclesStatusData.isLocked || false,
-      doorStatus: getVehiclesStatusData.doorStatus || [],
-      windowStatus: getVehiclesStatusData.windowStatus || [],
-      showLocation,
-      showLocationFormat,
-      showPlate,
-      // 获取车辆经纬度
-      ...showLocation ? vehiclesPosition : {},
-      // 获取车辆位置信息 / 手机位置信息
-      ...showLocation ? await this.getCarAddressInfo(vehiclesPosition, debug) : {},
-      // 获取静态位置图片
-      ...showLocation ? { largeLocationPicture: this.getCarAddressImage(vehiclesPosition, debug) } : {}
-    };
-    // 保存数据
-    this.settings['widgetData'] = data;
-    this.settings['scriptName'] = Script.name();
-    await this.saveSettings(false);
-    if (debug) {
-      console.log('获取组件所需数据：');
-      console.log(data);
-    }
-    return data
-  }
-
-  /**
-   * 获取设备编码
-   * @returns {Promise<void>}
-   */
-  async getDeviceId(debug = false) {
-    const options = {
-      url: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/register/v1',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        appId: this.appId,
-        client_brand: this.brand,
-        appName: this.appName,
-        client_name: 'Maton',
-        appVersion: this.appVersion,
-        platform: 'iOS'
-      })
-    };
-    try {
-      const response = await this.http(options);
-      if (debug) {
-        console.log('设备编码接口返回数据：');
-        console.log(response);
-      }
-      if (response.client_id) {
-        this.settings['clientID'] = response.client_id;
-        await this.saveSettings(false);
-        console.log(`获取设备编码成功: "${response.client_id}", 准备进行账户登录`);
-        await this.handleLoginRequest(debug);
-      } else {
-        console.error('获取设备编码失败，请稍后再重试！');
-        await this.notify('系统通知', '获取设备编码失败，请稍后再重试！');
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  /**
-   * 根据车架号查询基础访问域
-   * @param {boolean} debug 开启日志输出
-   * @returns {Promise<void>}
-   */
-  async getApiBaseURI(debug = false) {
-    const options = {
-      url: `https://mal-1a.prd.cn.vwg-connect.cn/api/cs/vds/v1/vehicles/${this.settings['carVIN']}/homeRegion`,
-      method: 'GET',
-      headers: {
-        ...this.requestHeader(),
-        'Authorization': 'Bearer ' + this.settings['authToken'],
-      }
-    };
-    try {
-      const response = await this.http(options);
-      if (debug) {
-        console.log('基础访问域接口返回数据：');
-        console.log(response);
-      }
-      // 判断接口状态
-      if (response.error) {
-        // 接口异常
-        console.error('getApiBaseURI 接口异常' + response.error.errorCode + ' - ' + response.error.description);
-      } else {
-        // 接口获取数据成功
-        const { baseUri } = response.homeRegion;
-        this.settings['ApiBaseURI'] = baseUri.content;
-        this.settings['isLogin'] = true;
-        await this.saveSettings(false);
-        console.log(`根据车架号查询基础访问域成功：${baseUri.content}`);
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  /**
-   * 获取车辆状态
-   * @param {boolean} debug 开启日志输出
-   * @returns {Promise<Object>}
-   */
-  async getVehiclesStatus(debug = false) {
-    const options = {
-      url: `${this.settings['ApiBaseURI']}/bs/vsr/v1/vehicles/${this.settings['carVIN']}/status`,
-      method: 'GET',
-      headers: {
-        ...{
-          'Authorization': 'Bearer ' + this.settings['authToken'],
-          'X-App-Name': this.appName,
-          'X-App-Version': '113',
-          'Accept-Language': 'de-DE'
-        },
-        ...this.requestHeader()
-      }
-    };
-    try {
-      const response = await this.http(options);
-      if (debug) {
-        console.log('当前车辆状态接口返回数据：');
-        console.log(response);
-      }
-      // 判断接口状态
-      if (response.error) {
-        // 接口异常
-        switch (response.error.errorCode) {
-        case 'gw.error.authentication':
-          console.error(`获取车辆状态失败：${response.error.errorCode} - ${response.error.description}`);
-          await this.getTokenRequest('authAccessToken');
-          await this.getVehiclesStatus();
-          break
-        case 'mbbc.rolesandrights.unauthorized':
-          await this.notify('unauthorized 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽奥迪应用查看！');
-          break
-        case 'mbbc.rolesandrights.unknownService':
-          await this.notify('unknownService 错误', '请联系开发者！');
-          break
-        case 'mbbc.rolesandrights.unauthorizedUserDisabled':
-          await this.notify('unauthorizedUserDisabled 错误', '未经授权的用户已禁用！');
-          break
-        default:
-          await this.notify('未知错误' + response.error.errorCode, '未知错误:' + response.error.description);
-        }
-        return this.settings['vehicleData']
-      } else {
-        // 接口获取数据成功
-        const vehicleData = response.StoredVehicleDataResponse.vehicleData.data;
-        this.settings['vehicleData'] = this.handleVehiclesData(vehicleData);
-        await this.saveSettings(false);
-        return this.handleVehiclesData(vehicleData)
-      }
-    } catch (error) {
-      console.error(error);
-      return this.settings['vehicleData']
-    }
-  }
-
-  /**
-   * 获取车辆经纬度
-   * @param {boolean} debug 开启日志输出
-   * @return {Promise<{latitude: number, longitude: number}>}
-   */
-  async getVehiclesPosition(debug = false) {
-    const options = {
-      url: `${this.settings['ApiBaseURI']}/bs/cf/v1/vehicles/${this.settings['carVIN']}/position`,
-      method: 'GET',
-      headers: {
-        ...{
-          'Authorization': 'Bearer ' + this.settings['authToken'],
-          'X-App-Name': this.appName,
-          'X-App-Version': '113',
-          'Accept-Language': 'de-DE'
-        },
-        ...this.requestHeader()
-      }
-    };
-    try {
-      const response = await this.http(options);
-      if (debug) {
-        console.log('车辆经纬度接口返回数据：');
-        console.log(response);
-      }
-      // 判断接口状态
-      if (response.error) {
-        // 接口异常
-        switch (response.error.errorCode) {
-        case 'gw.error.authentication':
-          console.error(`获取车辆经纬度失败：${response.error.errorCode} - ${response.error.description}`);
-          await this.getTokenRequest('authAccessToken');
-          await this.getVehiclesPosition(debug);
-          break
-        case 'CF.technical.9031':
-          console.error('获取数据超时，稍后再重试');
-          break
-        case 'mbbc.rolesandrights.servicelocallydisabled':
-          console.error('请检查车辆位置是否开启');
-          break
-        default:
-          console.error('获取车辆经纬度接口异常' + response.error.errorCode + ' - ' + response.error.description);
-        }
-      } else {
-        // 接口获取数据成功储存接口数据
-        let longitude = 0;
-        let latitude = 0;
-        if (response.storedPositionResponse) {
-          longitude = response.storedPositionResponse.position.carCoordinate.longitude;
-          latitude = response.storedPositionResponse.position.carCoordinate.latitude;
-        } else if (response.findCarResponse) {
-          longitude = response.findCarResponse.Position.carCoordinate.longitude;
-          latitude = response.findCarResponse.Position.carCoordinate.latitude;
-        }
-        if (longitude === 0 || latitude === 0) {
-          console.warn('获取车辆经纬度失败');
-          this.settings['longitude'] = undefined;
-          this.settings['latitude'] = undefined;
-          return {
-            longitude: this.settings['longitude'],
-            latitude: this.settings['latitude']
-          }
-        } else {
-          // 转换正常经纬度信息
-          longitude = parseInt(longitude, 10) / 1000000;
-          latitude = parseInt(latitude, 10) / 1000000;
-          this.settings['longitude'] = longitude;
-          this.settings['latitude'] = latitude;
-          await this.saveSettings(false);
-          console.log('获取车辆经纬度信息');
-          if (debug) {
-            console.log('当前车辆经纬度：');
-            console.log('经度：' + longitude);
-            console.log('纬度：' + latitude);
-          }
-          return {
-            longitude,
-            latitude
-          }
-        }
-      }
-    } catch (error) {
-      console.error(error);
-      this.settings['longitude'] = undefined;
-      this.settings['latitude'] = undefined;
-      return {
-        longitude: this.settings['longitude'],
-        latitude: this.settings['latitude']
-      }
-    }
-  }
-
-  /**
-   * 车辆操作
-   * @param type 类型
-   * @param time 请求时间
-   * @return {Promise<void>}
-   */
-  async handleHonkAndFlash(type, time) {
-    const options = {
-      url: `${this.settings['ApiBaseURI']}/bs/rhf/v1/vehicles/${this.settings['carVIN']}/honkAndFlash`,
-      method: 'GET',
-      headers: {
-        ...{
-          'Authorization': 'Bearer ' + this.settings['authToken'],
-          'X-App-Name': this.appName,
-          'X-App-Version': '113',
-          'Accept-Language': 'de-DE'
-        },
-        ...this.requestHeader()
-      },
-      body: JSON.stringify({
-        honkAndFlashRequest: {
-          userPosition: {
-            longitude: this.settings['longitude'],
-            latitude: this.settings['latitude']
-          },
-          serviceOperationCode: type,
-          serviceDuration: time
-        }
-      })
-    };
-    try {
-      const response = await this.http(options);
-      if (debug) {
-        console.log('当前车辆状态接口返回数据：');
-        console.log(response);
-      }
-      // 判断接口状态
-      if (response.error) {
-        // 接口异常
-        switch (response.error.errorCode) {
-        case 'gw.error.authentication':
-          console.error(`获取车辆状态失败：${response.error.errorCode} - ${response.error.description}`);
-          await this.getTokenRequest('authAccessToken');
-          await this.getVehiclesStatus();
-          break
-        case 'mbbc.rolesandrights.unauthorized':
-          await this.notify('unauthorized 错误', '请检查您的车辆是否已经开启车联网服务，请到一汽奥迪应用查看！');
-          break
-        case 'mbbc.rolesandrights.unknownService':
-          await this.notify('unknownService 错误', '请联系开发者！');
-          break
-        case 'mbbc.rolesandrights.unauthorizedUserDisabled':
-          await this.notify('unauthorizedUserDisabled 错误', '未经授权的用户已禁用！');
-          break
-        default:
-          await this.notify('未知错误' + response.error.errorCode, '未知错误:' + response.error.description);
-        }
-        return this.settings['vehicleData']
-      } else {
-        // 接口获取数据成功
-        const vehicleData = response.StoredVehicleDataResponse.vehicleData.data;
-        this.settings['vehicleData'] = this.handleVehiclesData(vehicleData);
-        await this.saveSettings(false);
-        return this.handleVehiclesData(vehicleData)
-      }
-    } catch (error) {
-      console.error(error);
-      return this.settings['vehicleData']
-    }
-  }
-}
-
 const Running = async (Widget, defaultArgs = '') => {
   let M = null;
   // 判断hash是否和当前设备匹配
@@ -3458,30 +2853,25 @@ const Running = async (Widget, defaultArgs = '') => {
   }
 };
 
-class Widget extends DataRender {
+class Widget extends UIRender {
   /**
    * 传递给组件的参数，可以是桌面 Parameter 数据，也可以是外部如 URLScheme 等传递的数据
    * @param {string} arg 自定义参数
    */
   constructor(arg) {
     super(arg);
-    this.name = '一汽大众挂件';
-    this.desc = '一汽大众车辆桌面组件展示';
+    this.name = '东风风神挂件';
+    this.desc = '东风风神车辆桌面组件展示';
 
-    this.appId = 'com.tima.aftermarket';
-    this.appName = 'BootstrapApp';
-    this.appVersion = '1.0';
-    this.brand = 'VW';
+    this.myCarPhotoUrl = `${this.getStaticUrl()}/build/assets/images/dfpv_default.png`;
+    this.myCarLogoUrl = `${this.getStaticUrl()}/build/assets/images/dfpv_logo.png`;
+    this.logoWidth = 40;
+    this.logoHeight = 20;
 
-    this.myCarPhotoUrl = `${this.getStaticUrl()}/build/assets/images/fvw_default.png`;
-    this.myCarLogoUrl = `${this.getStaticUrl()}/build/assets/images/vw_logo.png`;
-    this.logoWidth = 14;
-    this.logoHeight = 14;
-
-    this.defaultMyOne = '与你一路同行';
+    this.defaultMyOne = '纵享驾趣 一路风神';
 
     if (config.runsInApp) {
-      this.registerAction('账户登录', this.actionAccountLogin);
+      if (!this.settings['isLogin']) this.registerAction('账户登录', this.actionAccountLogin);
       if (this.settings['isLogin']) this.registerAction('偏好配置', this.actionPreferenceSettings);
       if (this.settings['isLogin']) this.registerAction('界面微调', this.actionUIRenderSettings);
       if (this.settings['isLogin']) this.registerAction('刷新数据', this.actionRefreshData);
@@ -3497,17 +2887,28 @@ class Widget extends DataRender {
   /**
    * 登录账户
    * @param {boolean} debug 开启日志输出
+   * @param {string} code 验证码id
    * @returns {Promise<void>}
    */
-  async handleLoginRequest(debug = false) {
+  async handleSmsCodeRequest(debug = false, code) {
+    let codeParams = {};
+    if (code) {
+      codeParams = {
+        captchaToken: code,
+        captchaCode: this.settings['verificationCode']
+      };
+    }
     const options = {
-      url: 'https://one-app-h5.faw-vw.com/prod-api/mobile/one-app/user/public/v1/login?appkey=6298289633',
+      url: 'https://app-m.dfpv.com.cn/gateway/micro/app/api/login/fs/snedMoblieLoginSms',
       method: 'POST',
       headers: this.requestHeader(),
       body: JSON.stringify({
-        password: this.settings['password'].trim(),
-        account: this.settings['username'].trim(),
-        scope: 'openid profile mbb'
+        ...{
+          mobile: this.settings['username'].trim(),
+          appCode: 9010,
+          providerCode: 'LCBCAPTCHA',
+        },
+        ...codeParams
       })
     };
     try {
@@ -3516,15 +2917,129 @@ class Widget extends DataRender {
         console.log('登录接口返回数据：');
         console.log(response);
       }
-      if (response.returnStatus === 'SUCCEED') {
+      if (response.statusCode === '200') {
+        await this.notify('请求成功', '已发送短信验证码，请耐心等待！');
+        await this.handleSmsLogin();
+      } else if (response.statusCode === '9135') {
+        console.log('需要输入图文验证码');
+        await this.handleVerificationCodeLogin(response.result, debug);
+      } else {
+        console.error('请求失败：' + response.msg);
+        await this.notify('请求失败', '请求失败：' + response.msg);
+      }
+    } catch (error) {
+      // Error: 似乎已断开与互联网到连接。
+      console.error(error);
+    }
+  }
+
+  /**
+   * 获取图文验证码
+   * @returns {Promise<void>}
+   */
+  async handleVerificationCodeLogin(code, debug) {
+    const options = {
+      url: 'https://app-m.dfpv.com.cn/gateway/micro/app/api/captcha/' + code,
+      method: 'POST',
+      headers: this.requestHeader(),
+      body: JSON.stringify({
+        appCode: 9010
+      })
+    };
+    try {
+      const response = await this.http(options);
+      if (debug) {
+        console.log('登录接口返回数据：');
+        console.log(response);
+      }
+      if (response.statusCode === '200') {
+        await this.notify('获取图文验证码', '查看输入图文验证码');
+        const data = response.result;
+        const imgStr = Data.fromBase64String(data.substring(23, data.length));
+        await QuickLook.present(Image.fromData(imgStr));
+        await this.handleVerificationCode(debug, code);
+      } else {
+        console.error('请求失败：' + response.msg);
+        await this.notify('请求失败', '请求失败：' + response.msg);
+      }
+    } catch (error) {
+      // Error: 似乎已断开与互联网到连接。
+      console.error(error);
+    }
+  }
+
+  /**
+   * 验证图文验证码
+   * @returns {Promise<void>}
+   */
+  async handleVerificationCode(debug, code) {
+    const alert = new Alert();
+    alert.title = 'Joiner 登录';
+    alert.message = '输入图文验证码进行展示数据';
+    alert.addTextField('图文验证码');
+    alert.addAction('确定');
+    alert.addCancelAction('取消');
+
+    const id = await alert.presentAlert();
+    if (id === -1) return
+    this.settings['verificationCode'] = alert.textFieldValue(0);
+    console.log('输入图文验证码，准备进行图文验证码登录');
+    await this.saveSettings(false);
+    await this.handleSmsCodeRequest(debug, code);
+  }
+
+  /**
+   * 短信验证
+   * @returns {Promise<void>}
+   */
+  async handleSmsLogin() {
+    const alert = new Alert();
+    alert.title = 'Joiner 登录';
+    alert.message = '输入短信验证码进行展示数据';
+    alert.addTextField('短信验证码');
+    alert.addAction('确定');
+    alert.addCancelAction('取消');
+
+    const id = await alert.presentAlert();
+    if (id === -1) return
+    this.settings['smsCode'] = alert.textFieldValue(0);
+    console.log('输入短信验证码，准备进行短信验证码登录');
+    await this.saveSettings(false);
+    await this.handleLoginRequest();
+  }
+
+  /**
+   * 登录账户
+   * @param {boolean} debug 开启日志输出
+   * @returns {Promise<void>}
+   */
+  async handleLoginRequest(debug = false) {
+    const options = {
+      url: 'https://app-m.dfpv.com.cn/gateway/micro/app/api/login/fs/mobileLogin',
+      method: 'POST',
+      headers: this.requestHeader(),
+      body: JSON.stringify({
+        mobile: this.settings['username'].trim(),
+        smsCode: this.settings['smsCode'].trim(),
+        appCode: 9010
+      })
+    };
+    try {
+      const response = await this.http(options);
+      if (debug) {
+        console.log('登录接口返回数据：');
+        console.log(response);
+      }
+      if (response.statusCode === '200') {
         await this.notify('登录成功', '正在从服务器获取车辆数据，请耐心等待！');
         // 解构数据
-        const { tokenInfo } = response.data;
-        this.settings['userIDToken'] = tokenInfo.idToken;
+        const { token } = response.result;
+        this.settings['userToken'] = token;
+        this.settings['isLogin'] = true;
         await this.saveSettings(false);
-        console.log('账户登录成功，存储用户 idToken 密钥信息，准备交换验证密钥数据和获取个人基础信息');
+        console.log('账户登录成功，存储用户 userToken 密钥信息，准备获取车辆基本信息');
         // 获取个人中心数据
-        await this.getTokenRequest(debug);
+        await this.getVehiclesStatus(debug);
       } else {
         console.error('账户登录失败：' + response.description);
         await this.notify('账户登录失败', '账户登录失败：' + response.description);
@@ -3536,95 +3051,113 @@ class Widget extends DataRender {
   }
 
   /**
-   * 获取密钥数据
+   * 获取车辆状态
    * @param {boolean} debug 开启日志输出
-   * @returns {Promise<void>}
+   * @returns {Promise<Object>}
    */
-  async getTokenRequest(debug = false) {
-    // 根据交换token请求参数不同
-    // token 参数
-    const requestParams = `grant_type=${encodeURIComponent('id_token')}&token=${encodeURIComponent(this.settings['userIDToken'])}&scope=${encodeURIComponent('t2_fawvw:fal')}`;
-
+  async getVehiclesStatus(debug = false) {
     const options = {
-      url: 'https://mbboauth-1d.prd.cn.vwg-connect.cn/mbbcoauth/mobile/oauth2/v1/token',
+      url: 'https://app-m.dfpv.com.cn/gateway/micro/app/api/newcar/index/queryNewCarIndex',
       method: 'POST',
-      headers: {
-        'X-Client-Id': this.settings['clientID']
-      },
-      body: requestParams
+      headers: this.requestHeader(this.settings['userToken']),
+      body: JSON.stringify({
+        appCode: 9010
+      })
     };
     try {
       const response = await this.http(options);
       if (debug) {
-        console.log('密钥接口返回数据：');
+        console.log('当前车辆状态接口返回数据：');
         console.log(response);
-        console.warn('请注意不要公开此密钥信息，否则会有被丢车、被盗窃等的风险！');
       }
       // 判断接口状态
-      if (response.error) {
-        switch (response.error) {
-          case 'invalid_grant':
-            if (/expired/g.test(response.error_description)) {
-              console.warn('IDToken 数据过期，正在重新获取数据中，请耐心等待...');
-              await this.getTokenRequest(debug);
-            } else {
-              console.error('Token 授权无效，请联系开发者：');
-              console.error(`${response.error_description} - ${response.error_description}`);
-            }
-            break
-          case 'invalid_request':
-            console.warn('无效 Token，正在重新登录中，请耐心等待...');
-            await this.handleLoginRequest(debug);
-            break
-          default:
-            console.error('交换 Token 请求失败：' + response.error + ' - ' + response.error_description);
-        }
-      } else {
-        // 获取密钥数据成功，存储数据
-        this.settings['authToken'] = response.access_token;
+      if (response.statusCode === '200' && response.result.indexType === 4) {
+        // 接口获取数据成功
+        this.settings['vehicleData'] = response.result.windLink;
         await this.saveSettings(false);
-        console.log('authToken 密钥数据获取成功并且存储到本地');
-        // 设置访问接口
-        await this.getVehiclesVIN(debug);
+        return response.result.windLink
+      } else {
+        // 接口异常
+        await this.notify('获取车辆状态异常', '获取车辆状态异常，请重新登录！');
+        console.log('获取车辆状态异常');
+        if (Keychain.contains(this.SETTING_KEY)) Keychain.remove(this.SETTING_KEY);
       }
     } catch (error) {
       console.error(error);
+      return this.settings['vehicleData']
     }
   }
 
   /**
-   * 获取车辆车架号
-   * @param  debug 开启日志输出
-   * @return {Promise<void>}
+   * 获取数据
+   * @param {boolean} debug 开启日志输出
+   * @return {Promise<Object>}
    */
-  async getVehiclesVIN(debug = false) {
-    const options = {
-      url: 'https://mal-1a.prd.cn.vwg-connect.cn/api/usermanagement/users/v1/vehicles',
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Bearer ' + this.settings['authToken']
-      }
-    };
-    try {
-      const response = await this.http(options);
-      if (debug) {
-        console.log('车架号接口返回数据：');
-        console.log(response);
-      }
-      if (response?.userVehicles?.vehicle) {
-        this.settings['carVIN'] = response.userVehicles.vehicle[0];
-        // 提示：一汽大众无法获取车辆基本信息，暂时写死
-        this.settings['seriesName'] = '嗨，一汽大众';
-        this.settings['carModelName'] = 'set your car model';
-        await this.saveSettings(false);
-        await this.getApiBaseURI(debug);
+  async getData(debug = false) {
+    // 日志追踪
+    if (this.settings['trackingLogEnabled']) {
+      if (this.settings['debug_bootstrap_date_time']) {
+        this.settings['debug_bootstrap_date_time'] += this.formatDate(new Date(), 'yyyy年MM月dd日 HH:mm:ss 更新\n');
       } else {
-        console.log('获取车架号失败');
+        this.settings['debug_bootstrap_date_time'] = '\n' + this.formatDate(new Date(), 'yyyy年MM月dd日 HH:mm:ss 更新\n');
       }
-    } catch (error) {
-      console.error(error);
+      await this.saveSettings(false);
     }
+
+    const showLocation = this.settings['aMapKey'] !== '' && this.settings['aMapKey'] !== undefined;
+    const showLocationFormat = this.settings['locationFormat'] !== '' && this.settings['locationFormat'] !== undefined;
+    const showPlate = this.settings['showPlate'] || false;
+
+    const getVehiclesStatusData = await this.getVehiclesStatus(debug);
+    const { homeResp, carDetailInfoList } = getVehiclesStatusData;
+    const carDetailInfo = carDetailInfoList[0];
+
+    const vehiclesPosition = {
+      longitude: homeResp.data.lon,
+      latitude: homeResp.data.lat
+    };
+
+    const data = {
+      carPlateNo: carDetailInfo.carNumber || '暂无车牌',
+      seriesName: this.settings['myCarName'] || carDetailInfo.yearType + carDetailInfo.carTypeName,
+      carModelName: this.settings['myCarModelName'] || carDetailInfo.carName || '暂无车辆信息',
+      carVIN: homeResp.vin,
+      myOne: this.settings['myOne'] || this.defaultMyOne,
+      oilSupport: null,
+      oilLevel: null,
+      parkingLights: null,
+      outdoorTemperature: null,
+      parkingBrakeActive: null,
+      fuelRange: homeResp.data.autonomie, // 燃油
+      fuelLevel: homeResp.data.nivHuile, // 燃油百分比
+      socLevel: null,
+      mileage: homeResp.data.kmTotal,
+      updateNowDate: new Date().valueOf(),
+      updateTimeStamp: carDetailInfo.updatedTime,
+      dataPackage: homeResp.data.dataPackage,
+      kmMaint: homeResp.data.kmMaint,
+      isLocked: null,
+      doorStatus: null,
+      windowStatus: null,
+      showLocation,
+      showLocationFormat,
+      showPlate,
+      // 获取车辆经纬度
+      ...showLocation ? vehiclesPosition : {},
+      // 获取车辆位置信息 / 手机位置信息
+      ...showLocation ? await this.getCarAddressInfo(vehiclesPosition, debug) : {},
+      // 获取静态位置图片
+      ...showLocation ? { largeLocationPicture: this.getCarAddressImage(vehiclesPosition, debug) } : {}
+    };
+    // 保存数据
+    this.settings['widgetData'] = data;
+    this.settings['scriptName'] = Script.name();
+    await this.saveSettings(false);
+    if (debug) {
+      console.log('获取组件所需数据：');
+      console.log(data);
+    }
+    return data
   }
 
   /**
@@ -3632,29 +3165,28 @@ class Widget extends DataRender {
    */
   async actionAccountLogin() {
     const message = `
-      Joiner 小组件需要使用到您的一汽大众应用的账号，首次登录请配置账号、密码进行令牌获取\n\r
+      Joiner 小组件需要使用到您的东风风神应用的账号，首次登录请配置账号、密码进行令牌获取\n\r
       Joiner 小组件不会收集您的个人账户信息，所有账号信息将存在 iCloud 或者 iPhone 上但也请您妥善保管自己的账号\n\r
-      Joiner 小组件是开源、并且完全免费的，由大众粉丝车主开发，所有责任与一汽大众公司无关\n\r
+      Joiner 小组件是开源、并且完全免费的，由大众粉丝车主开发，所有责任与东风风神公司无关\n\r
       开发者: 淮城一只猫\n\r
-      温馨提示：由于一汽大众应用支持单点登录，即不支持多终端应用登录，建议在一汽大众应用「爱车 - 用户授权」进行添加用户，这样 Joiner 组件和应用独立执行。
+      温馨提示：由于东风风神应用支持单点登录，即不支持多终端应用登录，建议在东风风神应用「爱车 - 智慧车联 - 车辆授权」进行添加用户，这样 Joiner 组件和应用独立执行。
     `;
     const present = await this.actionStatementSettings(message);
     if (present !== -1) {
       const alert = new Alert();
       alert.title = 'Joiner 登录';
-      alert.message = '使用一汽大众账号登录进行展示数据';
-      alert.addTextField('一汽大众账号', this.settings['username']);
-      alert.addSecureTextField('一汽大众密码', this.settings['password']);
+      alert.message = '使用手机号请求短信验证码登录进行展示数据';
+      alert.addTextField('东风风神手机号', this.settings['username']);
       alert.addAction('确定');
       alert.addCancelAction('取消');
 
       const id = await alert.presentAlert();
       if (id === -1) return
       this.settings['username'] = alert.textFieldValue(0);
-      this.settings['password'] = alert.textFieldValue(1);
-      console.log('您已经同意协议，并且已经储存账户信息，开始进行获取设备编码');
+      console.log('您已经同意协议，并且请求短信验证码登录');
       await this.saveSettings(false);
-      await this.getDeviceId();
+      // await this.getDeviceId()
+      await this.handleSmsCodeRequest();
     }
   }
 
@@ -3662,7 +3194,7 @@ class Widget extends DataRender {
    * 检查更新
    */
   async actionCheckUpdate() {
-    await this.checkUpdate('fvw-version');
+    await this.checkUpdate('svw-version');
   }
 
   /**
@@ -3674,45 +3206,16 @@ class Widget extends DataRender {
   }
 
   /**
-   * 重写车牌显示
-   * 提示：因为一汽大众暂时没有办法自动获取车辆基础信息
-   * @returns {Promise<void>}
-   */
-  async showPlate() {
-    const alert = new Alert();
-    alert.title = '设置车牌';
-    alert.message = '请设置您的车辆牌照信息，不填牌照默认关闭牌照展示';
-    alert.addTextField('车牌信息', this.settings['carPlateNo']);
-    alert.addAction('确定');
-    alert.addCancelAction('取消');
-
-    const id = await alert.presentAlert();
-    if (id === -1) return await this.actionUIRenderSettings()
-    // 写入车牌信息
-    const carPlateNo = alert.textFieldValue(0);
-    if(carPlateNo) {
-      this.settings['carPlateNo'] = alert.textFieldValue(0);
-      this.settings['showPlate'] = true;
-    } else {
-      this.settings['showPlate'] = false;
-    }
-    await this.saveSettings();
-    return await this.actionUIRenderSettings()
-  }
-
-  /**
    * 请求头信息
    * @returns {Object}
    */
-  requestHeader() {
+  requestHeader(token) {
     return {
       Accept: 'application/json',
       OS: 'iOS',
       'Content-Type': 'application/json',
-      'User-Agent': 'NewAfterMarket-ios/3.17.1 CFNetwork/1329 Darwin/21.3.0',
-      'Did': `VW_APP_iPhone_${this.settings['clientID'].replace(/-/g, '')}_15.1_2.7.0`,
-      'X-Client-Id': this.settings['clientID'],
-      'deviceId': this.settings['clientID']
+      'User-Agent': 'taroDemo/1 CFNetwork/1329 Darwin/21.3.0',
+      'x-request-info': `${token ? `token=${token};` : ''}appCode=9010;groupId=9503;groupType=8;version=1.4.0`
     }
   }
 }
