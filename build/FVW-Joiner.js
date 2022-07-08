@@ -531,7 +531,7 @@ class UIRender extends Core {
     this.locationBorderRadius = 15;
     this.locationMapZoom = 12;
 
-    this.version = '2.4.3';
+    this.version = '2.4.5';
   }
 
   /**
